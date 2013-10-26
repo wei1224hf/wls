@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE root [   <!ELEMENT root ANY>   <!ELEMENT item ANY>   <!ATTLIST item ID ID #REQUIRED>   <!ATTLIST item Explanation CDATA #IMPLIED>]>
+<root>
+	<item ID="basic_user">
+		<item ID="basic_user__session_update">
+			update basic_user_session set
+
+			session = __r_session__
+			,lastaction = 'session_update'
+			,lastactiontime = now()
+			,count_actions = count_actions + 1
+
+			where user_code = __user_code__ and
+			(
+			md5( concat( session, hour(now()) ) ) = __session__ or
+			md5( concat( session, hour(now())-1 ) ) = __session__
+			)
+		</item>
+		<item ID="basic_user__getMySession">
+			select user_type,group_code,permissions,groups from basic_user_session where
+			user_code = __user_code__ and 
+			(
+			md5( concat( session, hour(now()) ) ) = __session__ or
+			md5( concat( session, hour(now())-1 ) ) = __session__
+			)
+		</item>
+		<item ID="basic_user__getSession">
+			select user_type,group_code,permissions,groups from basic_user_session where
+			user_code = __user_code__
+		</item>
+		<item ID="basic_user__logout">
+			delete from basic_user_session where user_code = __user_code__ and
+			(
+			md5( concat( session, hour(now()) ) ) = __session__ or
+			md5( concat( session, hour(now())-1 ) ) = __session__
+			)
+		</item>
+		<item ID="basic_user__login_session">
+			insert into basic_user_session
+			(
+			user_id
+			,user_code
+			,group_code
+			,groups
+			,user_type
+			,permissions
+			,session
+			,ip
+			,client
+			,gis_lat
+			,gis_lot
+			) values (
+			(select id from basic_user where username = __username__)
+			,__username__
+			,(select group_code from basic_user where username = __username__)
+			,(select group_all from basic_user where username = __username__)
+			,(select type from basic_user where username = __username__)
+			,__permissions__
+			,__session__
+			,__ip__
+			,__client__
+			,__gis_lat__
+			,__gis_lot__
+			);
+		</item>
+		<item ID="basic_user__login_check">
+			select
+
+			username,
+			money,
+			credits,
+			group_code,
+			group_all,
+			id,
+			type,
+			status,
+
+			(select value from basic_parameter where reference = 'basic_user__type' and
+			basic_parameter.code = basic_user.type) as type_,
+			(select value from basic_parameter where reference = 'basic_user__status'
+			and basic_parameter.code = basic_user.status) as status_
+
+			from basic_user where username = __username__ and
+			(
+			md5(concat(password, hour(now()) )) = __password__ or
+			md5(concat(password, hour(now())-1 )) = __password__
+			) and
+			EXISTS (select basic_group.code from basic_group where basic_group.code =
+			basic_user.group_code and basic_group.status = '10')
+
+		</item>
+		<item ID="basic_user__login_logout">
+			delete from basic_user_session where user_code = __user_code__
+		</item>
+		<item ID="basic_user__getPermission">
+			SELECT
+			basic_permission.code,
+			Min(basic_group_2_permission.cost) as cost,
+			Max(basic_group_2_permission.credits) as credits,
+			basic_permission.name,
+			basic_permission.path,
+			basic_permission.type,
+			basic_permission.icon
+			FROM
+			basic_permission
+			Right Join
+			basic_group_2_permission ON basic_permission.code =
+			basic_group_2_permission.permission_code
+			Right Join basic_group_2_user
+			ON
+			basic_group_2_permission.group_code = basic_group_2_user.group_code
+			Right
+			Join basic_user ON basic_group_2_user.user_code = basic_user.username
+
+			where basic_user.username = __username__ GROUP BY
+			basic_permission.code ORDER BY basic_permission.code ASC
+		</item>
+		<item ID="basic_user__grid">
+			select
+
+			username
+			,money
+			,credits
+			,lastlogintime
+			,lastlogouttime
+			,(select name from basic_group where code = basic_user.group_code ) as
+			group_name
+			,group_code
+			,type
+			,id
+			,status
+			,time_created
+			,creater_code
+			,creater_group_code,
+			(select extend4 from basic_memory where code = basic_user.type and extend5 =
+			'basic_user__type') as type_,
+			(select extend4 from basic_memory where code = basic_user.status and extend5
+			= 'basic_user__status') as status_
+
+			from basic_user
+		</item>
+		<item ID="basic_user__view">
+			SELECT
+
+			basic_user.username,
+			basic_user.money,
+			basic_user.credits,
+			left(basic_user.lastlogintime,10) as lastlogintime,
+			left(basic_user.lastlogouttime,10) as lastlogouttime,
+			basic_user.count_login,
+			basic_user.count_actions_period,
+			basic_user_session.client,
+			basic_user_session.ip,
+			basic_user_session.session,
+			basic_user.count_actions,
+			basic_user.group_code,
+			basic_user.group_all,
+
+			basic_user.id,
+			basic_user.creater_code,
+			basic_user.creater_group_code,
+			left(basic_user.time_created,10) as time_created,
+			left(basic_user.time_lastupdated,10) as time_lastupdated,
+			basic_user.count_updated,
+			basic_user.`type`,
+			basic_user.`status`,
+			(select extend4 from basic_memory where code = basic_user.type and extend5 =
+			'basic_user__type') as type_,
+			(select extend4 from basic_memory where code = basic_user.status and extend5
+			= 'basic_user__status') as status_,
+
+			basic_user.remark
+
+			FROM
+			basic_user
+			Left Join basic_user_session ON basic_user.username =
+			basic_user_session.user_code
+			where basic_user.id = __id__
+
+		</item>
+		<item ID="basic_user__group_get">
+			SELECT
+			basic_group.name,
+			basic_group.code,
+			t.user_code
+			FROM
+			basic_group
+			Left Join (select user_code,group_code from basic_group_2_user where
+			user_code = __username__) t ON basic_group.code = t.group_code
+
+			order by basic_group.code
+		</item>
+		<item ID="TEMP">
+
+		</item>
+	</item>
+	<item ID="basic_group">
+		<item ID="basic_group__permission_get">
+			SELECT
+			basic_permission.name,
+			basic_permission.code,
+			basic_permission.icon,
+			basic_permission.id,
+
+			basic_group_2_permission.cost,
+			basic_group_2_permission.credits
+
+			FROM
+			basic_permission
+			left Join ( select * from basic_group_2_permission where group_code =
+			__group_code__ ) basic_group_2_permission ON basic_permission.code =
+			basic_group_2_permission.permission_code
+
+		</item>
+		<item ID="basic_group__grid">
+			SELECT
+			basic_group.name,
+			basic_group.code,
+			basic_group.count_users,
+
+			type,id,status,
+			(select extend4 from basic_memory where code = basic_group.type and extend5
+			= 'basic_group__type') as type_,
+			(select extend4 from basic_memory where code = basic_group.status and
+			extend5 = 'basic_group__status') as status_
+
+			FROM
+			basic_group
+
+		</item>
+	</item>
+	<item ID="basic_memory">
+		<item ID="basic_memory__init">
+			delete from basic_memory where type = 4 and extend4 = 'exam_subject__code';
+			insert into basic_memory (code,type,extend4,extend5) ( select code,'4' as type,name,'exam_subject__code' as extend5 from exam_subject where type = '20' );
+			delete from basic_memory where type = 2;
+			insert into basic_memory (code,type,extend1) values ('basic_user','2',0);
+			update basic_memory set extend1 = (select max(id) from basic_user) where code = 'basic_user' and type = 2;
+			insert into basic_memory (code,type,extend1) values ('exam_paper','2',0);
+			update basic_memory set extend1 = (select max(id) from exam_paper) where code = 'exam_paper' and type = 2 and (select max(id) from exam_paper) > 0;
+			insert into basic_memory (code,type,extend1) values ('exam_paper_log','2',0);
+			update basic_memory set extend1 = (select max(id) from exam_paper_log) where code = 'exam_paper_log' and type = 2 and (select count(id) from exam_paper_log) > 0;
+			insert into basic_memory (code,type,extend1) values ('exam_paper_multionline','2',0);
+			update basic_memory set extend1 = (select max(id) from exam_paper_multionline) where code = 'exam_paper_multionline' and
+			type = 2 and (select count(id) from exam_paper_multionline) > 0;
+			insert into basic_memory (code,type,extend1) values ('exam_question','2',0);
+			update basic_memory set extend1 = (select max(id) from exam_question) where code = 'exam_question' and type = 2 and (select count(id) from exam_question) > 0;
+			insert into basic_memory (code,type,extend1) values ('exam_question_log','2',0);
+			update basic_memory set extend1 = (select max(id) from exam_question_log) where code = 'exam_question_log' and type = 2 and (elect count(id) from exam_question_log) > 0;
+			insert into basic_memory (code,type,extend1) values ('exam_question_log_wrongs','2',0);
+			update basic_memory set extend1 = (select max(id) from exam_question_log_wrongs) where code = 'exam_question_log_wrongs' and type = 2 and (select count(id) from exam_question_log_wrongs) > 0;
+			insert into basic_memory (code,type,extend1) values ('exam_subject_2_user_log','2',0);
+			update basic_memory set extend1 = (select max(id) from exam_subject_2_user_log) where code = 'exam_subject_2_user_log' and type = 2 and (select count(id) from exam_subject_2_user_log) > 0;
+			select 1
+		</item>
+		<item ID="basic_memory__id">
+			select extend1 as id from basic_memory where type = 2 and code = __code__
+		</item>
+		<item ID="basic_memory__id_add">
+			update basic_memory set extend1 = (extend1 + 1) where type = 2 and code = __code__
+		</item>
+		<item ID="basic_memory__id_update">
+			update basic_memory set extend1 = ((select max(id) from
+			__code__)) where type
+			= 2 and code =
+			'__code__'
+		</item>
+	</item>
+	<item ID="exam_paper">
+		<item ID="exam_paper__grid">
+			SELECT
+			exam_paper.subject_code,
+			(select extend4 from basic_memory where basic_memory.code =
+			exam_paper.subject_code and basic_memory.type = '4') as subject_name,
+			exam_paper.title,
+			exam_paper.cost,
+			exam_paper.count_used,
+			exam_paper.cent_all,
+			exam_paper.cent,
+			exam_paper.cent_subjective,
+			exam_paper.cent_objective,
+			exam_paper.count_question,
+			exam_paper.count_subjective,
+			exam_paper.count_objective,
+			exam_paper.cent_top,
+			exam_paper.id,
+			exam_paper.creater_code,
+			exam_paper.creater_group_code,
+			exam_paper.time_created,
+			exam_paper.time_lastupdated,
+			exam_paper.count_updated,
+			exam_paper.`type`,
+			exam_paper.`status`,
+			(select extend4 from basic_memory where code = exam_paper.type and extend5 =
+			'exam_paper__type') as type_,
+			(select extend4 from basic_memory where code = exam_paper.status and extend5
+			= 'exam_paper__status') as status_,
+			exam_paper.remark
+			FROM
+			exam_paper
+		</item>
+		<item ID="exam_paper__questions">
+			SELECT
+			exam_question.id,
+			exam_question.id_parent,
+			exam_question.cent,
+			exam_question.`type`,
+			exam_question.title,
+			exam_question.option_length,
+			exam_question.option_1,
+			exam_question.option_2,
+			exam_question.option_3,
+			exam_question.option_4,
+			exam_question.option_5,
+			exam_question.option_6,
+			exam_question.option_7,
+			exam_question.knowledge,
+			exam_question.difficulty,
+			exam_question.layout,
+			exam_question.path_listen,
+			exam_question.path_img
+			FROM
+			exam_question
+			where paper_id = __paper_id__
+
+			order by id
+		</item>
+		<item ID="exam_paper__view">
+			SELECT
+			exam_paper.subject_code,
+			(select extend4 from basic_memory where basic_memory.code = exam_paper.subject_code and basic_memory.type = '4') as subject_name,
+			exam_paper.title,
+			exam_paper.cost,
+			exam_paper.count_used,
+			exam_paper.cent_all,
+			exam_paper.cent,
+			exam_paper.cent_subjective,
+			exam_paper.cent_objective,
+			exam_paper.count_question,
+			exam_paper.count_subjective,
+			exam_paper.count_objective,
+			exam_paper.id,
+			exam_paper.creater_code,
+			exam_paper.creater_group_code,
+			(select name from basic_group where code = exam_paper.creater_group_code) as creater_group,
+			left(exam_paper.time_created,10) as time_created,
+			exam_paper.time_lastupdated,
+			exam_paper.count_updated,
+			exam_paper.`type`,
+			exam_paper.`status`,
+			(select extend4 from basic_memory where code = exam_paper.type and extend5 = 'exam_paper__type') as type_,
+			(select extend4 from basic_memory where code = exam_paper.status and extend5 = 'exam_paper__status') as status_,
+			exam_paper.remark
+			FROM
+			exam_paper
+			where exam_paper.id = __id__
+		</item>
+		<item ID="exam_paper__submit_check">
+			SELECT
+			exam_question.id,
+			exam_question.cent,
+			exam_question.answer,
+			exam_question.description,
+			exam_question.knowledge,
+			exam_question.difficulty,
+			exam_question.type
+			FROM
+			exam_question
+			where exam_question.paper_id = __id__
+			order by exam_question.id
+		</item>
+	</item>
+	<item ID="exam_subject">
+		<item ID="exam_subject__grid">
+			select code,name,weight,type,status,(select extend4 from basic_memory where
+			code = exam_subject.type and extend5 = 'exam_subject__type') as type_
+			from exam_subject
+		</item>
+		<item ID="exam_subject__group_get">
+			select
+			code ,name,t.subject_code
+			from
+			basic_group
+			left join
+			(select * from exam_subject_2_group where subject_code = __code__ ) t on
+			t.group_code = basic_group.code
+			order by code
+		</item>
+	</item>
+	<item ID="exam_paper_log">
+		<item ID="exam_paper_log__grid">
+			SELECT
+			exam_paper_log.mycent,
+			exam_paper_log.count_right,
+			exam_paper_log.paper_id,
+			exam_paper_log.id,
+			exam_paper_log.creater_code,
+			exam_paper_log.creater_group_code,
+			exam_paper_log.type,
+			exam_paper_log.`status`,
+			exam_paper.subject_code,
+			exam_paper.title,
+			exam_paper.cent,
+			exam_paper.cent_top,
+			exam_paper.creater_code as teacher_code,
+			exam_paper_log.count_wrong,
+			exam_paper_log.time_created,
+			exam_paper.count_question,
+			
+			(select extend4 from basic_memory where code = exam_paper_log.type and extend5 = 'exam_paper_log__type') as type_,
+			(select extend4 from basic_memory where code = exam_paper_log.status and extend5 = 'exam_paper_log__status') as status_,
+			(select extend4 from basic_memory where basic_memory.code = exam_paper.subject_code and basic_memory.type = '4') as subject_name,
+			
+			'x'
+			FROM
+			exam_paper_log
+			LEFT JOIN exam_paper ON exam_paper_log.paper_id = exam_paper.id
+
+
+		</item>
+		<item ID="exam_paper_log__questions">
+			SELECT
+			exam_question.id,
+			exam_question_log.myanswer,
+			exam_question_log.img,
+			exam_question.id_parent,
+			exam_question.`type`,
+			exam_question.cent,
+			exam_question.title,
+			exam_question.option_length,
+			exam_question.option_1,
+			exam_question.option_2,
+			exam_question.option_3,
+			exam_question.option_4,
+			exam_question.option_5,
+			exam_question.option_6,
+			exam_question.option_7,
+			exam_question.answer,
+			exam_question.description,
+			exam_question.path_listen,
+			exam_question.path_img,
+			exam_question.layout
+			FROM
+			exam_question_log
+			Left Join exam_question ON exam_question_log.question_id =
+			exam_question.id
+			WHERE
+			exam_question_log.paper_log_id = __id__
+			ORDER BY
+			exam_question_log.question_id ASC
+
+		</item>
+	</item>
+	<item ID="exam_question_log_wrongs">
+		<item ID="exam_question_log_wrongs__grid">
+			SELECT 
+			exam_question_log_wrongs.id,
+			exam_question_log_wrongs.question_id,
+			exam_question_log_wrongs.creater_code,
+			exam_question_log_wrongs.time_created,
+			exam_question.subject_code,
+			(select extend4 from basic_memory where basic_memory.code = exam_question.subject_code and basic_memory.type = '4') as subject_name,
+			exam_question.title,
+			exam_question.difficulty,
+			(select extend4 from basic_memory where code = exam_question.type and extend5 = 'exam_question__type') as type_,
+			exam_question.`type`,
+			'what' 
+			FROM 
+			exam_question_log_wrongs 
+			Left Join exam_question ON exam_question_log_wrongs.question_id = exam_question.id 
+			__WHERE__			
+			order by __ORDER__ 
+			limit __OFFSET__ , __PAGESIZE__
+		</item>
+		<item ID="exam_question_log_wrongs__questions">
+			<![CDATA[
+			SELECT 
+			exam_question.id, 
+			exam_question.`type`,
+			exam_question.id_parent,
+			exam_question.title,
+			exam_question.option_length,
+			exam_question.option_1,
+			exam_question.option_2,
+			exam_question.option_3,
+			exam_question.option_4,
+			exam_question.option_5,
+			exam_question.option_6,
+			exam_question.option_7,
+			exam_question.answer,
+			exam_question.description,
+			exam_question.layout,
+			exam_question.path_img,
+			exam_question.path_listen
+			FROM 
+			exam_question_log_wrongs 
+			Left Join exam_question ON exam_question_log_wrongs.question_id = exam_question.id
+			WHERE 
+			exam_question_log_wrongs.creater_code = __creater_code__ 
+			order by exam_question.id limit 50 
+			]]>
+		</item>
+	</item>
+	<item ID="exam_paper_multionline">
+		<item ID="exam_paper_multionline__grid">
+			select
+			exam_paper_multionline.time_start,
+			exam_paper_multionline.time_stop,
+			exam_paper_multionline.passline,
+			exam_paper_multionline.count_total,
+			exam_paper_multionline.count_giveup,
+			exam_paper_multionline.count_passed,
+			exam_paper_multionline.count_failed,
+			exam_paper_multionline.proportion,
+			exam_paper_multionline.id as mid,
+			exam_paper_multionline.type,
+			exam_paper_multionline.status,
+			(select extend4 from basic_memory where code = exam_paper_multionline.type and extend5 = 'exam_paper_multionline__type') as type_,
+			(select extend4 from basic_memory where code = exam_paper_multionline.status and extend5 = 'exam_paper_multionline__status') as status_,
+			exam_paper.id as pid,
+			exam_paper.subject_code,
+			(select extend4 from basic_memory where basic_memory.code = exam_paper.subject_code and basic_memory.type = '4') as subject_name,
+			exam_paper.title,
+			exam_paper.cent,
+			exam_paper.creater_code,
+			exam_paper.creater_group_code,
+			exam_paper.status,
+			exam_paper.count_question
+			FROM
+			exam_paper_multionline
+			Left Join exam_paper ON exam_paper_multionline.paper_id = exam_paper.id
+			__WHERE__			
+			order by __ORDER__
+			limit __OFFSET__ , __PAGESIZE__
+		</item>
+		<item ID="exam_paper_multionline__grid_student">
+		<![CDATA[
+			SELECT
+			
+			(case (exam_paper_multionline.status='20')
+				when true then exam_paper_log.mycent
+				else '-' 
+				end) as mycent,
+			exam_paper_log.time_lastupdated,
+			exam_paper_log.rank,
+			exam_paper_log.creater_code,
+			exam_paper_log.id as lid,
+			exam_paper.id as pid,
+			exam_paper_multionline.id as mid,
+			exam_paper_multionline.passline,
+			exam_paper_multionline.time_start,
+			exam_paper_multionline.time_stop,
+			exam_paper_multionline.count_total,
+			exam_paper_log.type,
+			exam_paper_log.`status`,
+			exam_paper_multionline.count_giveup,
+			exam_paper_multionline.count_passed,
+			exam_paper_multionline.count_failed,
+			exam_paper.title,
+			exam_paper.subject_code,
+			exam_paper_multionline.creater_code as teacher_code,
+			
+			(select extend4 from basic_memory where code = exam_paper_log.type and extend5 = 'exam_paper_log__type') as type_,
+			(select extend4 from basic_memory where code = exam_paper_log.status and extend5 = 'exam_paper_log__status') as status_,
+			(select extend4 from basic_memory where basic_memory.code = exam_paper.subject_code and basic_memory.type = '4') as subject_name,			
+			exam_paper_multionline.status as ststus2,
+			(select extend4 from basic_memory where code = exam_paper_multionline.status and extend5 = 'exam_paper_multionline__status') as status2_,
+			
+			'what'
+			
+			FROM
+			exam_paper_log
+			INNER JOIN exam_paper_multionline ON exam_paper_log.paper_id = exam_paper_multionline.paper_id
+			LEFT JOIN exam_paper ON exam_paper_log.paper_id = exam_paper.id			
+			__WHERE__			
+			order by __ORDER__
+			limit __OFFSET__ , __PAGESIZE__
+			]]>
+		</item>
+		<item ID="exam_paper_multionline__view">
+			SELECT
+
+			exam_paper.title,
+			exam_paper.subject_code,
+			(select extend4 from basic_memory where basic_memory.code =
+			exam_paper.subject_code and basic_memory.type = '4') as subject_name,
+			exam_paper.cent,
+			exam_paper.cent_all,
+			exam_paper.cent_subjective,
+			exam_paper.cent_objective,
+			exam_paper.count_question,
+			exam_paper.count_subjective,
+			exam_paper.count_objective,
+			exam_paper.count_used,
+
+			exam_paper.id,
+			exam_paper.creater_code,
+			exam_paper.creater_group_code,
+			exam_paper.time_created,
+			exam_paper.time_lastupdated,
+			exam_paper.count_updated,
+			exam_paper.`status`,
+			exam_paper.`type`,
+
+			exam_paper_multionline.time_start,
+			exam_paper_multionline.time_stop,
+			exam_paper_multionline.passline,
+			exam_paper_multionline.count_total,
+			exam_paper_multionline.count_giveup,
+			exam_paper_multionline.count_passed,
+			exam_paper_multionline.count_failed,
+			exam_paper_multionline.proportion,
+
+			exam_paper.remark
+
+			FROM
+			exam_paper_multionline
+			Left Join exam_paper ON exam_paper_multionline.paper_id = exam_paper.id
+
+			where exam_paper.id = __paper_id__
+		</item>
+		<item ID="exam_paper_multionline__order">
+			SELECT
+			exam_paper_log.mycent,
+			exam_paper_log.creater_code,
+			exam_paper_log.creater_group_code,
+			exam_paper_log.count_right,
+			exam_paper_log.count_wrong,
+			exam_paper_log.count_giveup
+			FROM
+			exam_paper_log
+			WHERE
+			exam_paper_log.paper_id = __paper_id__
+			ORDER BY
+			exam_paper_log.mycent DESC
+		</item>
+	</item>
+	<item ID="exam_subject_2_user_log">
+		<item ID="exam_subject_2_user_log__grid">		
+		
+		SELECT 
+		(select name from exam_subject where code = __G2-SUBJECT__) as subject_name
+		,__G2-SUBJECT__ as subject_code
+		,__G1-TIME__ as time
+		,AVG(count_positive) as postive
+		,AVG(count_negative) as negative
+		,AVG(proportion) as proportion
+		,count(*) as count_log
+		FROM
+		(
+		SELECT 
+		exam_subject_2_user_log.subject_code
+		,exam_subject_2_user_log.time_created
+		,exam_subject_2_user_log.count_positive
+		,exam_subject_2_user_log.count_negative
+		,exam_subject_2_user_log.proportion
+		FROM
+		exam_subject_2_user_log
+		__WHERE__
+		
+		) temp_ 
+		group by __G1-TIME__,__G2-SUBJECT__
+		</item>
+		<item ID="exam_subject_2_user_log__statistics_time">
+			select avg(exam_subject_2_user_log.proportion) as data,
+			left(exam_subject_2_user_log.time_created,__gap__) as time,count(*)
+			as count from
+			exam_subject_2_user_log
+			where
+			exam_subject_2_user_log.creater_code = __creater_code__ and exam_subject_2_user_log.subject_code =
+			__subject_code__
+			and exam_subject_2_user_log.time_created __bigger__ __time_start__
+			and exam_subject_2_user_log.time_created __smaller__ __time_stop__
+			group by left(exam_subject_2_user_log.time_created,__gap__)
+		</item>
+		<item ID="exam_subject_2_user_log__statistics_subject">
+			select
+			avg(exam_subject_2_user_log.proportion) as data
+			,exam_subject_2_user_log.subject_code as subject
+			,(select name from exam_subject where code =
+			exam_subject_2_user_log.subject_code ) as subject_name
+			from exam_subject_2_user_log where
+			left(exam_subject_2_user_log.time_created ,__gap__) =
+			left(__date__,__gap__)
+			and exam_subject_2_user_log.creater_code = __creater_code__
+			and exam_subject_2_user_log.subject_code like __subject_code__
+			group by exam_subject_2_user_log.subject_code
+		</item>
+	</item>
+</root>
