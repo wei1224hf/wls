@@ -5,15 +5,27 @@
     <script src="../libs/jquery-1.3.2.min.js" type="text/javascript"></script>
     <script src="../libs/liger/ligerui.min.js" type="text/javascript"></script>
 	<style type="text/css">
-	.log{
-		background-color: #999999
-	}
-	.log_done{
-		background-color: #EEEEEE
-	}
+.log {
+        background-color: #999999
+}
+
+.log_done {
+        background-color: #EEEEEE
+}
+
+.btn_done{
+        background-color: #000000
+}
+	.f_close{
+        display: none
+}
+
+.f_step{
+        display: block
+}
 	</style>    
 	<script type="text/javascript">
-
+	var server_path = "../php/install.php";
 var init_dom = function(){
 	var language = {
 		 "step":"步骤"
@@ -27,6 +39,16 @@ var init_dom = function(){
 			 ,"模拟多人考卷"
 			 ,"多人考卷执行批改"
 			 ]
+		 ,"database":{
+	         "db":"数据库名称"
+	         ,"port":"端口"
+	         ,"unm":"帐号"
+	         ,"pwd":"密码"
+	         ,"host":"域名"
+	         ,"mode":"安装模式"
+	         ,"type":"数据库类型"
+		 } 
+		,"il8n":"语言"
 	};
 	
 	var buttons = $(".btn_step");
@@ -34,6 +56,15 @@ var init_dom = function(){
 		$(buttons[i]).html(language.step+" "+(i+1));
 		$($(".directions_step")[i]).html(language.steps[i]);
 	}
+	
+	$('#mode').html(language.database.mode);
+    $('#host').html(language.database.host);
+    $('#unm').html(language.database.unm);
+    $('#pwd').html(language.database.pwd);
+    $('#db').html(language.database.db);
+    $('#port').html(language.database.port);
+    $('#il8n').html(language.il8n);
+    $('#type').html(language.database.type);
 }
 
 
@@ -57,109 +88,106 @@ var on_mode_changed = function(){
 	if(value=='BAIDU')$('#db').attr('disabled',false);
 }
 
-/**
- * 检查服务端环境
- * 主要是: config.xml 文件是否可写?安装的时候需要将配置参数写入到 config.xml 中
- * file 文件夹是否可写? 系统的文件上传导入下载,都需要 file 文件夹
- * */
-var check_environment = function(){
-	$('#check_env').attr("disabled",true);
-	$.ajax({
-		url: "../php/install.php?class=install&function=check_environment"
-		,dataType: 'json'
-        ,type: "POST"		
-        ,data: {
-			 executor: ""
-			,session: ""
-        }         
-		,success : function(response) {
-			$('#log_environment').append(response.msg+"<br/>");
-			if(response.status=="1"){
-				$('#check_env').attr("disabled",true);
-				$('#log_environment').attr("class","log_done");
-				$('#step2').css("display","block");
-				//$('#step5').css("display","block");
-			}else{
-				$('#check_env').attr("disabled",false);
-			}
-		}
-		,error : function(response){				
-			$('#log_db').append(response.responseText);
-			$('#btn_db').attr("disabled",false);
-		}
-	});	
+var step1 = function() {
+    var log_doms = $('.log');
+    var btn_doms = $('.btn_step');
+    $(btn_doms[0]).attr("disabled", true);
+    $.ajax({
+            url : server_path+"?class=install&function=step1&rand="+Math.random(),
+            dataType : 'json',
+            type : "POST",
+            data : {
+                    executor : "",
+                    session : ""
+            },
+            success : function(response) {
+                    $(log_doms[0]).append(response.msg + "<br/>");
+                    if (response.status == "1") {
+                            $(btn_doms[0]).attr("disabled", true);
+                            $(btn_doms[0]).addClass("btn_done");
+                            $(log_doms[0]).addClass("log_done");
+                            $($("fieldset")[1]).addClass("f_step");
+                    } else {
+                            $(btn_doms[0]).attr("disabled", false);
+                    }
+            },
+            error : function(response) {
+                    $(log_doms[0]).append(response.responseText);
+                    $(btn_doms[0]).attr("disabled", false);
+                    $(btn_doms[0]).attr("class", "btn_step");
+            }
+    });
 }
 
-/**
- * 配置数据库连接参数
- * 需要修改 config.xml 文件
- * */
-var check_db = function(){
-	var status = 1;
-	
-	var host = $('#host').val();	
-	if(host==null||host=="")status = 0;
-	
-	var unm = $('#unm').val();	
-	if(unm==null||unm=="")status = 0;
-	
-	var pwd = $('#pwd').val();	
-	//if(pwd==null||pwd=="")status = 0;
-	
-	var port = $('#port').val();	
-	//if(port==null||port=="")status = 0;
-	
-	var db = $('#db').val();	
-	if(db==null||db=="")status = 0;
-	
-	if(status==0){
-		alert("Must input everything");
-		return;
-	}
-	
-	$('#btn_db').attr("disabled",true);
-	$.ajax({
-		url: "../php/install.php?class=install&function=check_db"
-		,dataType: 'json'
-        ,type: "POST"		
-        ,data: {
-			 executor: ""
-			,session: ""
-			
-			,unm: unm
-			,host: host
-			,pwd: pwd
-			,db: db
-			,port: port
-			,il8n: $('#il8n').val()
-			,mode: $('#mode').val()
-        }         
-		,success : function(response) {
-			$('#log_db').append(response.msg+"<br/>");
-			if(response.status=="1"){
-				$('#btn_db').attr("disabled",true);
-				$('#log_db').attr("class","log_done");
-				$('#step3').css("display","block");
-			}else{
-				$('#btn_db').attr("disabled",false);
-			}
-		}
-		,error : function(response){		
-			$('#log_db').append(response.responseText);
-			$('#btn_db').attr("disabled",false);
-		}
-	});	
+var step2 = function() {
+    var status = 1;
+
+    var host = $('[name=host]').val();
+    if (host == null || host == "")status = 0;
+
+    var unm = $('[name=unm]').val();
+    if (unm == null || unm == "")status = 0;
+
+    var pwd = $('[name=pwd]').val();
+    //if(pwd==null||pwd=="")status = 0;
+
+    var port = $('[name=port]').val();
+    //if(port==null||port=="")status = 0;
+
+    var db = $('[name=db]').val();
+    if (db == null || db == "")status = 0;
+
+    if (status == 0) {
+            alert("Must input everything");
+            return;
+    }
+
+    var log_doms = $('.log');
+    var btn_doms = $('.btn_step');
+    $(btn_doms[1]).attr("disabled", true);
+    $.ajax({
+            url : server_path+"?class=install&function=step2&rand="+Math.random(),
+            dataType : 'json',
+            type : "POST",
+            data : {
+                    executor : "",
+                    session : "",
+                    
+                    unm : unm,
+                    host : host,
+                    pwd : pwd,
+                    db : db,
+                    port : port,
+                    il8n : $('[name=il8n]').val(),
+                    type : $('[name=type]').val(),
+                    mode : $('[name=mode]').val()
+            },
+            success : function(response) {
+                    $(log_doms[1]).append(response.msg + "<br/>");
+                    if (response.status == "1") {
+                            $(btn_doms[1]).attr("disabled", true);
+                            $(btn_doms[1]).addClass("btn_done");
+                            $(log_doms[1]).addClass("log_done");
+                            $($("fieldset")[2]).addClass("f_step");
+                    } else {
+                            $(btn_doms[1]).attr("disabled", false);
+                    }
+            },
+            error : function(response) {
+                    $(log_doms[1]).append(response.responseText);
+                    $(btn_doms[1]).attr("disabled", false);
+                    $(btn_doms[1]).attr("class", "btn_step");
+            }
+    });
 }
 
-/**
- * 初始化数据库表
- * 服务端读取 XLS 文件,抽取 SQL代码并执行
- * SQL中有大量的 数据字典 ,执行会比较费事
- * */
-var init_tables_readxls = function(){
-	$('#btn_init').attr("disabled",true);
+
+var step3 = function(){
+    var log_doms = $('.log');
+    var btn_doms = $('.btn_step');
+    $(btn_doms[2]).attr("disabled", true);
 	$.ajax({
-		url: "../php/install.php?class=install&function=init_tables_readxls"
+		url: "../php/install.php?class=install&function=step3"
 		,dataType: 'json'
         ,type: "POST"		
         ,data: {
@@ -167,31 +195,32 @@ var init_tables_readxls = function(){
 			,session: ""
         }         
 		,success : function(response) {
-			$('#log_init').append(response.msg+"<br/>");
+			$(log_doms[2]).append(response.msg + "<br/>");
 			if(response.status=="1"){
-				$('#btn_init').attr("disabled",true);
 				sqls = response.sql;
-				init_tables_dosql();
+				step3_2();
 			}else{
-				$('#btn_init').attr("disabled",false);
+				$(btn_doms[2]).attr("disabled", false);
 			}			
 		}
 		,error : function(response){				
 			alert("net error");
-			$('#btn_init').attr("disabled",false);
+			$(btn_doms[2]).attr("disabled", false);
 		}
 	});	
 }
 
 var sqls = [];
 var offset = 0;
-var init_tables_dosql = function(){
+var step3_2 = function(){
+    var log_doms = $('.log');
+    var btn_doms = $('.btn_step');
 	var sqls_ = [];
 	for(var i=offset;(i<offset+20)&&(i<sqls.length-1);i++){
 		sqls_.push(sqls[i]);
 	}
 	$.ajax({
-		url: "../php/install.php?class=install&function=init_tables_dosql"
+		url: "../php/install.php?class=install&function=step3_2"
 		,dataType: 'json'
         ,type: "POST"		
         ,data: {
@@ -199,32 +228,35 @@ var init_tables_dosql = function(){
 			,session: ""
 			,sqls: $.ligerui.toJSON(sqls_)
         }         
-		,success : function(response) {
-			$('#log_init').append(response.msg+"<br/>");
-			if(response.status=="1"){
-				$('#btn_init').attr("disabled",true);
-				$('#log_init').attr("class","log_done");
-				offset +=20;
-				if(offset<=sqls.length-1){
-					init_tables_dosql();
-				}else{
-					$('#step4').css("display","block");
-				}				
-			}else{
-				$('#btn_init').attr("disabled",false);
-			}
-		}
-		,error : function(response){				
-			alert("net error");
-			$('#btn_init').attr("disabled",false);
-		}
+        ,success : function(response) {
+            $(log_doms[2]).append(response.msg + "<br/>");
+            if (response.status == "1") {
+   				offset +=20;
+   				if(offset<=sqls.length-1){
+   					step3_2();
+   				}else{
+                    $(btn_doms[2]).addClass("btn_done");
+                    $(log_doms[2]).addClass("log_done");
+   					$($("fieldset")[3]).addClass("f_step");
+   				}                    
+            } else {
+            	$(btn_doms[2]).attr("disabled", false);
+            }
+	    }
+	    ,error : function(response) {
+	            $(log_doms[2]).append(response.responseText);
+	            $(btn_doms[2]).attr("disabled", false);
+	            $(btn_doms[2]).attr("class", "btn_step");
+	    }
 	});	
 };
 
-var basic_data = function(){
-	$('#btn_basic_data').attr("disabled",true);
+var step4 = function(){
+    var log_doms = $('.log');
+    var btn_doms = $('.btn_step');
+    $(btn_doms[3]).attr("disabled", true);
 	$.ajax({
-		url: "../php/install.php?class=install&function=basic_data"
+		url: "../php/install.php?class=install&function=step4"
 		,dataType: 'json'
         ,type: "POST"		
         ,data: {
@@ -232,18 +264,18 @@ var basic_data = function(){
 			,session: ""
         }         
 		,success : function(response) {
-			$('#log_basic_data').append(response.msg+"<br/>");
+			$(log_doms[3]).append(response.msg + "<br/>");
 			if(response.status=="1"){
-				$('#btn_basic_data').attr("disabled",true);
-				$('#log_basic_data').attr("class","log_done");
-				$('#step5').css("display","block");
+                $(btn_doms[3]).addClass("btn_done");
+                $(log_doms[3]).addClass("log_done");
+				$($("fieldset")[4]).addClass("f_step");
 			}else{
-				$('#btn_basic_data').attr("disabled",false);
-			}
+				$(btn_doms[4]).attr("disabled", false);
+			}			
 		}
 		,error : function(response){				
 			alert("net error");
-			$('#btn_insert').attr("disabled",false);
+			$(btn_doms[3]).attr("disabled", false);
 		}
 	});	
 }
@@ -663,53 +695,75 @@ var simulate__exam_paper_multionline__close = function(){
 </head>
 <body onload="init_dom()">
 
-<fieldset id='step1'>
-<legend><button onclick="check_environment()" id='check_env' class='btn_step'></button></legend>
+<fieldset class='f_step'>
+    <legend>
+		<button onclick="step1()" class='btn_step'></button>
+	</legend>
 <div class="directions_step"></div>
 <div id='log_environment' class='log'></div>
 </fieldset>
 
-<fieldset id='step2' style="display: none">
-<legend><button onclick="check_db()" id='btn_db' class='btn_step'></button></legend>
+<fieldset class='f_close'>
+	<legend>
+		<button onclick="step2()" class='btn_step'></button>
+	</legend>
 <div class="directions_step"></div><br/>
-Mode:<select id='mode' onchange='on_mode_changed()'>
-	<option value='WLS'>WLS Independent</option>
-	<option value="DZX">Discuzx 3.x/2.x/1.5</option>
-	<option value="JOOMLA">Joomla 3.0</option>
-	<option value="DEDE">DeDeCMS 5.7</option>
-	<option value="BAIDU">BaiduCloud</option>
-</select><br/>
-Mysql Host:<input id='host' value='localhost' ><br/>
-Mysql UserName:<input id='unm' value='root' ><br/>
-Mysql Password:<input id='pwd' value='' ><br/>
-Mysql Port:<input id='port' value='3306' ><br/>
-Mysql Database:<input id='db' value='wls' ><br/>
-Language:<select id='il8n'><option value='zh-cn'>简体中文</option><!-- option value='en'>Enghlish</option --></select><br/>
+<span id='mode'></span>:
+	<select name='mode' onchange='on_mode_changed()'>
+		<option value='independent'>independent</option>
+		<option value="DZX">Discuzx 3.x/2.x/1.5</option>
+		<option value="JOOMLA">Joomla 3.0</option>
+		<option value="DEDE">DeDeCMS 5.7</option>
+		<option value="BaiduCloud">BaiduCloud</option>
+	</select><br />
+    <span id='host'></span>:<input name='host' value='localhost'><br />
+    <span id='unm'></span>:<input name='unm' value='root'><br /> 
+    <span id='pwd'></span>:<input name='pwd' value=''><br /> 
+    <span id='port'></span>:<input name='port' value='3306'><br /> 
+    <span id='db'></span>:<input name='db' value='myapp'><br /> 
+    <span id='type'></span>:
+    <select name='type'>
+		<option value='mysql'>MySql-Server-Community-5.1 or heigher </option>
+		<option value='postgresql'>PostGreSql-9.1 or heigher</option>
+    </select><br />                
+    <span id='il8n'></span>:
+    <select name='il8n'>
+	    <option value='zh-cn'>简体中文</option>
+	    <option value='en'>Enghlish</option>
+    </select><br />
 <div id='log_db' class='log'></div>
 </fieldset>
 
-<fieldset id='step3' style="display: none">
-<legend><button onclick="init_tables_readxls()" id='btn_init' class='btn_step'></button></legend>
-<div class="directions_step"></div>
-<div id='log_init' class='log'></div>
+<fieldset class='f_close'>
+	<legend>
+		<button onclick="step3()" class='btn_step'></button>
+	</legend>
+    <div class="directions_step"></div>
+    <div class='log'></div>
 </fieldset>
 
-<fieldset id='step4' style="display: none">
-<legend><button onclick="basic_data()" id='btn_basic_data' class='btn_step'></button></legend>
-<div class="directions_step"></div>
-<div id='log_basic_data' class='log'></div>
+<fieldset >
+	<legend>
+		<button onclick="step4()" class='btn_step'></button>
+	</legend>
+    <div class="directions_step"></div>
+    <div class='log'></div>
 </fieldset>
 
-<fieldset id='step5' style="display: none">
-<legend><button onclick="simulate()" id='btn_simulate' class='btn_step'></button></legend>
-<div class="directions_step"></div>
-<div id='log_simulate' class='log'></div>
+<fieldset class='f_close'>
+	<legend>
+		<button onclick="step5()" class='btn_step'></button>
+	</legend>
+    <div class="directions_step"></div>
+    <div class='log'></div>
 </fieldset>
 
-<fieldset id='step6' style="display: none">
-<legend><button onclick="simulate__exam_paper_log()" id='btn_simulate__exam_paper_log' class='btn_step'></button></legend>
-<div class="directions_step"></div>
-<div id='log_simulate__exam_paper_log' class='log'></div>
+<fieldset class='f_close'>
+	<legend>
+		<button onclick="step6()" class='btn_step'></button>
+	</legend>
+    <div class="directions_step"></div>
+    <div class='log'></div>
 </fieldset>
 
 <fieldset id='step7' style="display: none">

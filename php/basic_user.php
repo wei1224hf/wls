@@ -388,7 +388,7 @@ class basic_user {
     		mysql_query($sql,$conn);	    		
         }		
 		
-		$t_return = basic_user::login_wls($temp['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
+		$t_return = basic_user::_login($temp['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
 		return $t_return;		
 	}
 	
@@ -476,7 +476,7 @@ class basic_user {
     		mysql_query($sql2,$conn);	    		
         }		
 		
-		$t_return = basic_user::login_wls($data_dzx['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
+		$t_return = basic_user::_login($data_dzx['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
 		$t_return['logindata']['money'] = $data_dzx['money'];
 		$t_return['logindata']['credits'] = $data_dzx['credits'];
 		return $t_return;
@@ -547,7 +547,7 @@ class basic_user {
     		mysql_query($sql2,$conn);	    		
         }		
 		
-		$t_return = basic_user::login_wls($temp['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
+		$t_return = basic_user::_login($temp['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
 		$t_return['sql1'] = $sql;
 		$t_return['sql2'] = $sql2;
 		return $t_return;
@@ -573,8 +573,8 @@ class basic_user {
 		if($mode=='DZX'){
 			$t_return = basic_user::login_dzx();
 		}
-		else if($mode=='WLS'){
-			$t_return = basic_user::login_wls(
+		else if($mode=='independent'){
+			$t_return = basic_user::_login(
 					$username
 					,$md5PasswordTime
 					,$ip
@@ -592,7 +592,7 @@ class basic_user {
 		return $t_return;
 	}
 
-	public static function login_wls(
+	private static function _login(
 			 $username=NULL
 			,$md5PasswordTime=NULL
 			,$ip=NULL

@@ -167,8 +167,7 @@ class tools{
 				$item = $sqls->item($i);
 				$item->setIdAttribute('ID', true);
 			}
-		}
-	
+		}	
 		return tools::$xmlSQL->getElementById($id)->nodeValue;
 	}
 	
@@ -188,16 +187,16 @@ class tools{
             for($i2=2;$i2<$len;$i2+=2){            	
             	$a = end($aa);
             	$p = count($a)-1;
-            	if(!isset($a[$p]['children']))$a[$p]['children'] = array();
-            	$aa[] = $a[$p]['children'];
+            	$item = $a[$p];
+            	if(!isset($item['children']))$item['children'] = array();
+            	$aa[] = $item['children'];
             }
-            end($aa)[] = $temp;
+            $aa[count($aa)-1][] = $temp;
             for($i3=count($aa)-1;$i3>0;$i3--){
             	$aa[$i3-1][count($aa[$i3-1])-1]['children'] = $aa[$i3];
             }
             $data = $aa[0];
-        }
-        
+        }        
         return $data;	
 	}
 	

@@ -13,7 +13,7 @@ include_once '../libs/phpexcel/Classes/PHPExcel/Writer/Excel5.php';
 
 class install{
 	
-	public static function check_environment(){
+	public static function step1(){
 		$t_return = array("status"=>"2","msg"=>"");
 		
 		$version=phpversion();
@@ -22,9 +22,11 @@ class install{
 			$t_return["msg"] .= "<br/>"." Php version unsupported. System need php 5.2 or heiger , while the environment's ".$version;
 		}
 
+		/*
 		if(!function_exists('json_encode')){
 			$t_return["msg"] .= "<br/>"." Php function json_encode unsupported. ";
 		}
+		*/
 		
 		/*
 		if(function_exists('get_magic_quotes_gpc')){
@@ -70,7 +72,8 @@ class install{
 		return $t_return;
 	}	
 
-	public static function check_db(){
+	public static function step2(){
+
 		$t_return = array("status"=>"2","msg"=>"");
 		
 		$host = $_REQUEST['host'];
@@ -80,6 +83,7 @@ class install{
 		$db = $_REQUEST['db'];
 		$MODE = $_REQUEST['mode'];
 		$il8n = $_REQUEST['il8n'];
+		$type = $_REQUEST['type'];
 		
 		if($MODE=='DZX'){
 			include_once '../../config/config_global.php';
@@ -123,15 +127,17 @@ class install{
 		$conn = mysql_connect($host,$unm,$pwd);
 		if($conn!=FALSE){
 			$db_ = mysql_select_db($db,$conn);
-			if(!$db_) $t_return["msg"] .= "<br/>". " Database name wrong";
-			$t_return["status"] .= 2;
-			return $t_return;
+			if(!$db_){
+				$t_return["msg"] =  " Database name wrong";
+				$t_return["status"] = 2;
+				return $t_return;
+			}
 		}else{
-			$t_return["msg"] .= "<br/>". " Can not connect the database";
-			$t_return["status"] .= 2;
+			$t_return["msg"] =  " Can not connect the database";
+			$t_return["status"] = 23;
 			return $t_return;
 		}
-		
+
 		if($t_return['msg']==""){
 			$t_return = array(
 					"status"=>"1"
@@ -144,37 +150,43 @@ class install{
 		$num = 1;
 		while(!feof($fp)){
 			$line = trim(fgets($fp));
-		
-			if($num == 4){
-				$line = "<item ID=\"IL8N\">".$il8n."</item>";
+			
+			if(strpos($line,'APPPATH') !== false){
+				$line = "<item ID=\"APPPATH\">".$_SERVER['DOCUMENT_ROOT']."</item>";
 			}
-			if($num == 5){
+			else if(strpos($line,'DB_NAME') !== false){
 				$line = "<item ID=\"DB_NAME\">".$db."</item>";
 			}
-			if($num == 6){
+			else if(strpos($line,'DB_UNM') !== false){
 				$line = "<item ID=\"DB_UNM\">".$unm."</item>";
 			}
-			if($num == 7){
+			else if(strpos($line,'DB_PWD') !== false){
 				$line = "<item ID=\"DB_PWD\">".$pwd."</item>";
 			}
-			if($num == 8){
+			else if(strpos($line,'DB_HOST') !== false){
 				$line = "<item ID=\"DB_HOST\">".$host."</item>";
 			}
-			if($num == 9){
+			else if(strpos($line,'MODE') !== false){
 				$line = "<item ID=\"MODE\">".$MODE."</item>";
 			}
+			else if(strpos($line,'IL8N') !== false){
+				$line = "<item ID=\"IL8N\">".$il8n."</item>";
+			}	
+			else if(strpos($line,'DB_TYPE') !== false){
+				$line = "<item ID=\"DB_TYPE\">".$type."</item>";
+			}					
 			 
 			$arr[] = $line;
 			$num++;
 		}
 		fclose($fp);
 		$s = implode("\r\n", $arr);
-		file_put_contents("../".tools::$configfilename, $s);
-		
+		file_put_contents($file, $s);
+
 		return $t_return;
 	}
 	
-	public static function init_tables_readxls(){
+	public static function step3(){
 		$t_return = array("status"=>"2","msg"=>"");
 		$path_xls = "../sql/sql.xls";
 		$PHPReader = PHPExcel_IOFactory::createReader('Excel5');
@@ -203,7 +215,7 @@ class install{
 		return $t_return;
 	}
 	
-	public static function init_tables_dosql(){
+	public static function step3_2(){
 		$t_return = array("status"=>"2","msg"=>"");
 		$sqls = json_decode2($_REQUEST['sqls'],TRUE);
 		if(count($sqls)==0){
@@ -226,7 +238,7 @@ class install{
 		return $t_return;
 	}
 	
-	public static function basic_data(){
+	public static function step4(){
 		$t_return = array("status"=>"2","msg"=>"");
 		$path_xls = "../sql/data.xls";
 		$PHPReader = PHPExcel_IOFactory::createReader('Excel5');
@@ -250,17 +262,25 @@ class install{
 		$currentSheet = $phpexcel->getSheetByName("data_basic_group");		
 		$row = $currentSheet->getHighestRow();
 		for($i=2;$i<=$row;$i++){
-			$cellvalue = "insert into basic_group(name,code,type,status) values ('".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('B'.$i)->getValue()."','".$currentSheet->getCell('C'.$i)->getValue()."','".$currentSheet->getCell('D'.$i)->getValue()."');";
-			$sqls[] = $cellvalue."\n";
-			mysql_query($cellvalue,$conn);
+			$sql_insert = "insert into basic_group(id,name,code,type,status) values ('".$i."','".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('B'.$i)->getValue()."','".$currentSheet->getCell('C'.$i)->getValue()."','".$currentSheet->getCell('D'.$i)->getValue()."');";
+			$sqls[] = $sql_insert."\n";
+			$res = mysql_query($sql_insert,$conn);
+			if($res==FALSE){
+				$t_return['msg'] = $sql_insert;
+				return $t_return;
+			}
 		}
 		
 		$currentSheet = $phpexcel->getSheetByName("data_basic_permission");
 		$row = $currentSheet->getHighestRow();
 		for($i=2;$i<=$row;$i++){
-			$cellvalue = "insert into basic_permission(name,code,type,icon,path) values ('".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('C'.$i)->getValue()."','".$currentSheet->getCell('B'.$i)->getValue()."','".$currentSheet->getCell('D'.$i)->getCalculatedValue()."','".$currentSheet->getCell('E'.$i)->getValue()."');";
-			$sqls[] = $cellvalue."\n";
-			mysql_query($cellvalue,$conn);
+			$sql_insert = "insert into basic_permission(name,code,type,icon,path) values ('".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('C'.$i)->getValue()."','".$currentSheet->getCell('B'.$i)->getValue()."','".$currentSheet->getCell('D'.$i)->getCalculatedValue()."','".$currentSheet->getCell('E'.$i)->getValue()."');";
+			$sqls[] = $sql_insert."\n";
+			$res = mysql_query($sql_insert,$conn);
+			if($res==FALSE){
+				$t_return['msg'] = $sql_insert;
+				return $t_return;
+			}
 		}
 		
 		$currentSheet = $phpexcel->getSheetByName("data_basic_group_2_permission");
@@ -294,20 +314,20 @@ class install{
 
 $functionName = $_REQUEST['function'];
 $data = array();
-if($functionName=="check_environment"){
-	$data = install::check_environment();
+if($functionName=="step1"){
+	$data = install::step1();
 }
-else if($functionName=="check_db"){
-	$data = install::check_db();
+else if($functionName=="step2"){
+	$data = install::step2();
 }
-else if($functionName=="init_tables_readxls"){
-	$data = install::init_tables_readxls();
+else if($functionName=="step3"){
+	$data = install::step3();
 }	
-else if($functionName=="init_tables_dosql"){
-	$data = install::init_tables_dosql();
+else if($functionName=="step3_2"){
+	$data = install::step3_2();
 }
-else if($functionName=="basic_data"){
-	$data = install::basic_data();
+else if($functionName=="step4"){
+	$data = install::step4();
 }
 else if($functionName=="data4test__basic_group"){
 	$data = basic_group::data4test(100);
