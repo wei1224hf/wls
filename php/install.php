@@ -7,8 +7,6 @@ include_once 'exam_paper.php';
 include_once 'exam_paper_log.php';
 include_once 'exam_paper_multionline.php';
 
-include_once 'simulate.php';
-
 include_once '../libs/phpexcel/Classes/PHPExcel.php';
 include_once '../libs/phpexcel/Classes/PHPExcel/IOFactory.php';
 include_once '../libs/phpexcel/Classes/PHPExcel/Writer/Excel5.php';
@@ -331,97 +329,6 @@ else if($functionName=="step3_2"){
 else if($functionName=="step4"){
 	$data = install::step4();
 }
-else if($functionName=="data4test__basic_group"){
-	$data = simulate::basic_group(2000);
-}
-else if($functionName=="data4test__basic_user"){
-	$data = simulate::basic_user(2000);
-}
-else if($functionName=="data4test__exam_subject"){
-	$data = simulate::exam_subject(2000);
-}
-else if($functionName=="data4test__exam_paper"){
-	$a = json_decode2($_REQUEST['dates'], true);
-	$delete = false;
-	if(isset($_REQUEST['delete']))$delete = true;
-	$data = simulate::exam_paper(20000,$a,$delete);
-}
-else if($functionName=="simulate__get_students"){
-	$data = exam_paper_log::simulate__get_students();
-}
-else if($functionName=="simulate__get_subjects"){
-	$data = exam_paper_multionline::simulate__get_subjects();
-}
-else if($functionName=="simulate__exam_paper_log"){
-	$a = json_decode2($_REQUEST['dates'], true);
-	$delete = false;
-	if(isset($_REQUEST['delete']))$delete = true;	
-	$data = exam_paper_log::simulate(20000,array($a[0],end($a)),$_REQUEST['student'],$delete);
-}
-else if($functionName=="simulate__exam_paper_multionline"){
-	$delete = false;
-	if(isset($_REQUEST['delete']))$delete = true;
-	$dates = json_decode2($_REQUEST['dates'], true);
-	$students = json_decode2($_REQUEST['students'], true);
-	$subjects = json_decode2($_REQUEST['subjects'], true);
-	$data = exam_paper_multionline::simulate__exam_paper_multionline(20000
-			,$dates
-			,$subjects[0]
-			,$students
-			,$delete);
-}
-else if($functionName=="exam_paper_multionline__close"){
-	$ids = json_decode2($_REQUEST['ids'],true);
-	for($i=0;$i<count($ids);$i++){
-		exam_paper_multionline::close($ids[$i]);
-	}
-	$data = array(
-		'msg'=>'ok'
-		,'status'=>'1'
-	);
-}
-else if($functionName=="exam_paper_multionline__close_ids"){
-	$data = exam_paper_multionline::simulate__get_ids();
-}
-else if($functionName=="phpinfo"){
-	phpinfo();
-}
-else if($functionName=="php_test"){
-	echo date('Y-m-d',strtotime("2011-01-01")+86400);
-	print_r(explode("a","bbb"));
-}
-else if($functionName=="toolsTest"){
-	$list = array(
-		array(
-			'code'=>'10'
-		),		array(
-			'code'=>'20'
-		),		array(
-			'code'=>'2010'
-		),		array(
-			'code'=>'2011'
-		),		array(
-			'code'=>'2012'
-		),array(
-			'code'=>'201201'
-		),array(
-			'code'=>'201202'
-		),array(
-			'code'=>'201203'
-		),array(
-			'code'=>'30'
-		),
-			
-	);
-	$data = tools::list2Tree($list);
-}
-else if($functionName=='paperImport'){
-	$data = exam_paper::upload("../file/upload/photo/highschool/example_choice.xls", "admin");
-}
-else if($functionName=='multionlineImport'){
-	$data = exam_paper_multionline::upload("../file/upload/photo/highschool/exam_paper_multionline_high_chinese.xls", "admin");
-}
-
 
 echo json_encode($data);
 if(tools::$conn!=null)mysql_close(tools::$conn);

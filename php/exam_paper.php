@@ -467,7 +467,7 @@ class exam_paper {
 		$id = tools::getTableId("exam_subject_2_user_log",FALSE);
 		$status = ($type=='10')?'10':'20';
 		$kyes = array_keys($result_knowledge);
-		mysql_query("START TRANSACTION;",$conn);
+		//mysql_query("START TRANSACTION;",$conn);
 		
 		for($i=0;$i<count($result_knowledge);$i++){
 			$id++;
@@ -494,7 +494,7 @@ class exam_paper {
 			$sql = "insert into exam_subject_2_user_log (".$keys.") values ('".$values."')";
 			mysql_query($sql,$conn);
 		}
-		mysql_query("COMMIT;",$conn);
+		//mysql_query("COMMIT;",$conn);
 		tools::updateTableId("exam_subject_2_user_log");
 		
 		return $t_return;
@@ -503,7 +503,7 @@ class exam_paper {
 	public static function addWrongs($answers,$paper_log__id,$executor,$type='10'){
 		$t_return = array();
 		$conn = tools::getConn();
-		mysql_query("START TRANSACTION;",$conn);
+		//mysql_query("START TRANSACTION;",$conn);
 		$id = tools::getTableId("exam_question_log_wrongs",FALSE);
 		$status = ($type=='10')?'10':'20';
 		for($i=0;$i<count($answers);$i++){
@@ -514,7 +514,7 @@ class exam_paper {
 			}
 		}
 		
-		mysql_query("COMMIT;",$conn);
+		//mysql_query("COMMIT;",$conn);
 		tools::updateTableId("exam_question_log_wrongs");
 		return $t_return;
 	}
@@ -522,7 +522,7 @@ class exam_paper {
 	public static function addQuestionLog($answers,$paper_log_id,$executor){
 		$t_return = array();
 		$conn = tools::getConn();
-		mysql_query("START TRANSACTION;",$conn);
+		//mysql_query("START TRANSACTION;",$conn);
 		$exam_question_log__id = tools::getTableId("exam_paper_log",FALSE);
 		for($i=0;$i<count($answers);$i++){
 			$exam_question_log__id++;
@@ -541,7 +541,7 @@ class exam_paper {
 			$sql = "insert into exam_question_log (".$keys.") values ('".$values."')";
 			mysql_query($sql,$conn);
 		}
-		mysql_query("COMMIT;",$conn);
+		//mysql_query("COMMIT;",$conn);
 		return $t_return;
 	}	
 	
@@ -863,7 +863,7 @@ class exam_paper {
         unset($data__exam_question['index']);
         $keys = array_keys($data__exam_question);
         $keys = implode(",",$keys);
-        mysql_query("START TRANSACTION;",$conn);
+       // mysql_query("START TRANSACTION;",$conn);
         for($i=0;$i<count($questions);$i++){
             unset($questions[$i]['index']);
             $values = array_values($questions[$i]);
@@ -898,7 +898,7 @@ class exam_paper {
         	);
         }
 
-        mysql_query("COMMIT;",$conn);        
+       // mysql_query("COMMIT;",$conn);        
         tools::updateTableId("exam_paper");
         tools::updateTableId("exam_question");
         

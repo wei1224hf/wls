@@ -1,4 +1,12 @@
 <?php 
+include_once "tools.php";
+include_once 'basic_group.php';
+include_once 'basic_user.php';
+
+include_once 'exam_paper.php';
+include_once 'exam_paper_log.php';
+include_once 'exam_paper_multionline.php';
+
 class simulate{
 	
 	public static function exam_paper($total,$a_times,$delete=FALSE){
@@ -26,18 +34,12 @@ class simulate{
 		
 		$exam_paper__id = tools::getTableId("exam_paper",false);
 		$exam_question__id = tools::getTableId("exam_question",false);
-		//mysql_query("START TRANSACTION;",$conn);
+		mysql_query("START TRANSACTION;",$conn);
 		//echo $exam_paper__id." ".$exam_question__id;
 		
 		$year = substr($a_times[0], 0,4);
-		$sql_where_subject = "";
-		if($year=="2013"){
-			$sql_where_subject = " where type = '20' and ( (code like '8432-03__') or (code like '8432-02__') or (code like '8432-01__'))";
-		}elseif($year=="2012"){
-			$sql_where_subject = " where type = '20' and ( (code like '8432-03__') or (code like '8432-02__'))";
-		}elseif($year=="2011"){
-			$sql_where_subject = " where type = '20' and ( (code like '8432-03__') )";
-		}
+		$sql_where_subject = " where type = '20' and  code like '8432-0".$_REQUEST['grade']."__' ";
+
 		$sql = "select * from exam_subject ".$sql_where_subject;
 		$res = mysql_query($sql,$conn);
 
@@ -88,8 +90,10 @@ class simulate{
 				$sql = "insert into exam_paper (".$keys.") values ('".$values."')";
 				mysql_query($sql,$conn);
 				$total_++;
-								
-				for($i3=0;$i3<50;$i3++){
+				
+				$question_count = (rand()>0.5)?20:50;
+				$question_cent = 100/$question_count;
+				for($i3=0;$i3<$question_count;$i3++){
 					$exam_question__id++;
 					$knowledge = "";
 					$question_title = "题目标题";
@@ -117,7 +121,7 @@ class simulate{
 					$question_path_img = (rand(0,100)>50)?"0":"../file/test/a".rand(1,10).".jpg";
 					$data__exam_question = array(
 						'subject_code'=>$a_subject[$i2]['code']
-						,'cent'=>2
+						,'cent'=>$question_cent
 						,'title'=>$question_title
 						,'option_length'=>4
 						,'option_1'=>$question_option."A"
@@ -146,18 +150,13 @@ class simulate{
 					$sql = "insert into exam_question (".$keys.") values ('".$values."')";
 					mysql_query($sql,$conn);
 					$total_++;					
-
-					if($total_>=$total){
-						mysql_query("COMMIT;",$conn);
-						$t_return['msg']="Total ".$total_;
-						return $t_return;
-					}				
+			
 				}
 				
 			}			
 		}
 		
-		//mysql_query("COMMIT;",$conn);
+		mysql_query("COMMIT;",$conn);
 		
 		tools::updateTableId("exam_paper");
 		tools::updateTableId("exam_question");
@@ -241,7 +240,7 @@ class simulate{
 			$sql = "insert into exam_subject(id,name,code,type,status) values ('".$exam_subject__id."','年级".$i."','8432-0".$i."','10','10')";
 			mysql_query($sql,$conn);
 			$total_++;
-			for($i2=1;$i2<=9;$i2++){
+			for($i2=1;$i2<=count($subjectname);$i2++){
 				$exam_subject__id++;
 				$sql = "insert into exam_subject(id,name,code,type,status) values ('".$exam_subject__id."','".$subjectname[$i2-1].$i."','8432-0".$i."0".$i2."','20','10')";
 				mysql_query($sql,$conn);
@@ -274,17 +273,20 @@ class simulate{
 						$sql = "insert into exam_subject(id,name,code,type,status,weight) values ('".$exam_subject__id."','知识点".$i.$i2.$i3.$i4."','8432-0".$i."0".$i2."-".(($i3>=10)?$i3:"0".$i3).(($i4>=10)?$i4:"0".$i4)."','30','10','".$w2."')";
 						mysql_query($sql,$conn);
 						$total_++;
+						/*
 						if($total_>=$total){
 							mysql_query("COMMIT;",$conn);
 							$t_return['msg']="Total ".$total_;
 							return $t_return;
 						}
+						*/
 					}
 				}
 			}
 		}
-		tools::updateTableId("exam_subject");
 		//mysql_query("COMMIT;",$conn);
+		tools::updateTableId("exam_subject");
+		
 		$t_return['msg']="Table exam_subject added row in total : ".$total_;
 		return $t_return;
 	}
@@ -326,5 +328,461 @@ class simulate{
 		$t_return['msg']="Table basic_user added row in total : ".$total_;
 		return $t_return;
 	}	
+	
+	public static function get_students(){
+		$t_return = array("status"=>"1","msg"=>"");
+		$conn = tools::getConn();
+		$sql = "select username from basic_user where type = '20' limit 50";//TODO
+		$res = mysql_query($sql,$conn);
+		$data = array();
+		while($temp=mysql_fetch_assoc($res)){
+			$data[] = $temp['username'];
+		}
+		$t_return['data']=$data;
+		return $t_return;
+	}
+	
+	public static function exam_paper_log($total,$a_time,$student,$delete=FALSE){
+		$t_return = array("status"=>"1","msg"=>"");
+		$conn = tools::getConn();
+		$conn2 = tools::getConn(true);
+		$total_ = 0;
+		$firstTime = "2013-02-01";
+	
+		if($delete){
+			$sql = "delete from exam_paper_log";
+			mysql_query($sql,$conn);
+			$sql = "delete from exam_subject_2_user_log";
+			mysql_query($sql,$conn);
+			tools::initMemory();
+		}
+	
+		$exam_subject_2_user_log__id = tools::getTableId("exam_subject_2_user_log",false);
+		$exam_paper_log__id = tools::getTableId("exam_paper_log",false);
+	
+		$sql_papers = "select id,subject_code,title,creater_code,count_question,time_created,cent from exam_paper where time_created > '".$a_time[0]."' and time_created < '".$a_time[1]."' and subject_code in (select subject_code from exam_subject_2_group where group_code = '".substr($student, 0 , 20)."' )";
+
+		$res = mysql_query($sql_papers,$conn2);
+		if($res==FALSE)echo $sql_papers;
+		//mysql_query("START TRANSACTION;",$conn);
+		while($temp=mysql_fetch_assoc($res)){
+			$exam_paper_log__id ++;
+			$timeDiff=strtotime($temp['time_created'])-strtotime($firstTime);
+				
+			$rate = ($timeDiff/11318400);
+			if($rate>=1)$rate = rand(90,100)/100;
+			if($rate<=0.8)$rate+=rand(10,20)/100;
+	
+			$data__exam_paper_log = array(
+				'id'=>$exam_paper_log__id
+				,'mycent'=>intval($temp['cent'])*$rate
+				,'mycent_objective'=>intval($temp['cent'])*$rate
+				,'count_right'=>$rate*$temp['count_question']
+				,'count_wrong'=>(1-$rate)*$temp['count_question']
+				,'proportion'=>$rate*100
+				,'paper_id'=>$temp['id']
+				,'creater_code'=>$student
+				,'creater_group_code'=>substr($student, 0,20)
+				,'type'=>'10'
+				,'status'=>'10'
+				,'time_created'=>$temp['time_created']
+			);
+			$keys = array_keys($data__exam_paper_log);
+			$keys = implode(",",$keys);
+			$values = array_values($data__exam_paper_log);
+			$values = implode("','",$values);
+			$sql = "insert into exam_paper_log (".$keys.") values ('".$values."')";
+			mysql_query($sql,$conn);
+			$total_++;
+				
+			$sql_knowledge = "select code from exam_subject where code like '".$temp['subject_code']."-____'";
+			$res2 = mysql_query($sql_knowledge,$conn2);
+			while ($temp2=mysql_fetch_assoc($res2)){
+				$exam_subject_2_user_log__id++;
+				$data__exam_subject_2_user_log = array(
+						'subject_code'=>$temp2['code']
+						,'proportion'=>$rate*100
+						,'paper_id'=>$temp['id']
+						,'paper_log_id'=>$exam_paper_log__id
+						,'id'=>$exam_subject_2_user_log__id
+						,'creater_code'=>$student
+						,'creater_group_code'=>substr($student, 0,20)
+						,'type'=>'10'
+						,'status'=>'10'
+						,'time_created'=>$temp['time_created']
+				);
+	
+				$keys = array_keys($data__exam_subject_2_user_log);
+				$keys = implode(",",$keys);
+				$values = array_values($data__exam_subject_2_user_log);
+				$values = implode("','",$values);
+				$sql = "insert into exam_subject_2_user_log (".$keys.") values ('".$values."')";
+	
+				mysql_query($sql,$conn);
+				$total_++;
+				/*
+				if($total_>=$total){
+					mysql_query("ROLLBACK;",$conn);
+					return array(
+							'status'=>'2'
+							,'msg'=>'Too much sqls, more than '.$total
+					);
+				}
+				*/
+			}
+		}
+		//mysql_query("COMMIT;",$conn);
+	
+		tools::updateTableId("exam_paper_log");
+		tools::updateTableId("exam_subject_2_user_log");
+		$t_return['msg']="Table exam_subject_2_user_log and exam_paper_log added row in total ".$total_.". Now the id in exam_subject_2_user_log is ".$exam_subject_2_user_log__id." and id in exam_paper_log is ".$exam_paper_log__id.". Date from ".$a_time[0]." to ".end($a_time)." student ".$student;
+		return $t_return;
+	}	
+	
+
+	public static function exam_paper_multionline($total,$a_times,$subject,$students,$delete=FALSE){
+		$t_return = array("status"=>"1","msg"=>"");
+		$conn = tools::getConn();
+		$conn2 = tools::getConn(TRUE);
+		$total_ = 0;
+	
+		if($delete){
+			$sql = "delete from exam_paper_multionline";
+			mysql_query($sql,$conn);
+			$sql = "delete from exam_paper where type = '20'";
+			mysql_query($sql,$conn);
+			$sql = "delete from exam_question where remark = 'exam_paper_multionline'";
+			mysql_query($sql,$conn);
+			$sql = "delete from exam_paper_log where remark = 'exam_paper_multionline'";
+			mysql_query($sql,$conn);
+			tools::initMemory();
+		}
+	
+		$sql_knowledge = "select * from exam_subject where type = '30' and code like '".$subject."-____'";
+		//echo $sql_knowledge;
+		$res_knowledge = mysql_query($sql_knowledge,$conn2);
+		$a_knowledge = array();
+		while($temp = mysql_fetch_assoc($res_knowledge)){
+			$a_knowledge[] = $temp['code'];
+		}
+	
+		$exam_paper__id = tools::getTableId("exam_paper",false);
+		$exam_question__id = tools::getTableId("exam_question",false);
+		$exam_paper_multionline__id = tools::getTableId("exam_paper_multionline",false);
+		$exam_paper_log__id = tools::getTableId("exam_paper_log",false);
+		$exam_question_log__id = tools::getTableId("exam_question_log",false);
+		mysql_query("START TRANSACTION;",$conn);
+	
+		for($i=0;$i<count($a_times);$i++){
+			$time = $a_times[$i];
+			$exam_paper__id++;
+			$exam_paper_multionline__id++;
+				
+			$data__exam_paper = array(
+					'id'=>$exam_paper__id
+					,'cost'=>'10'
+					,'subject_code'=>$subject
+					,'title'=>'多人考卷'.$a_times[$i]
+					,'cent'=>'100'
+					,'cent_subjective'=>'100'
+					,'cent_objective'=>'0'
+					,'count_question'=>'50'
+					,'count_subjective'=>'0'
+					,'count_objective'=>'50'
+					,'directions'=>'这是一张多人考卷,来自模拟数据'
+	
+					,'creater_code'=>'330281-8432-04-X1--'.rand(1,9)
+					,'creater_group_code'=>'330281-8432-04-X1'
+					,'type'=>'20'
+					,'status'=>'10'
+					,'remark'=>'exam_paper_multionline'
+					,'time_created'=>$a_times[$i]
+			);
+			$keys = array_keys($data__exam_paper);
+			$keys = implode(",",$keys);
+			$values = array_values($data__exam_paper);
+			$values = implode("','",$values);
+			$sql = "insert into exam_paper (".$keys.") values ('".$values."')";
+			mysql_query($sql,$conn);
+			$total_++;
+				
+			$exam_question__id2 = $exam_question__id;
+			for($i3=0;$i3<50;$i3++){
+				$exam_question__id++;
+				$knowledge = "";
+				$question_title = "题目标题";
+				$question_title_length = rand(5, 40);
+				for($i4=0;$i4<$question_title_length;$i4++){
+					$question_title.="很长";
+				}
+				$question_option = "选项";
+				$question_option_length = rand(3,6);
+				for($i5=0;$i5<$question_option_length;$i5++){
+					$question_option.= "很长";
+				}
+				$question_description = "解题思路";
+				$question_description_length = rand(5,40);
+				for($i6=0;$i6<$question_description_length;$i6++){
+					$question_description.= "很长";
+				}
+				$question_knowledge = "";
+				$question_knowledge_start = rand(0,count($a_knowledge)-3);
+				//echo json_encode($a_knowledge).$a_times[$i].$a_subject[$i2]['code']."<br/>";
+				for($i7=0;$i7<3;$i7++){
+					$question_knowledge.= $a_knowledge[$question_knowledge_start+$i7].",";
+				}
+				$question_knowledge = substr($question_knowledge, 0,strlen($question_knowledge)-1);
+				$question_path_img = (rand(0,100)>50)?"0":"../file/test/a".rand(1,10).".jpg";
+	
+				$data__exam_question = array(
+						'subject_code'=>$subject
+						,'cent'=>'2'
+						,'title'=>$question_title
+						,'option_length'=>4
+						,'option_1'=>$question_option."A"
+						,'option_2'=>$question_option."B"
+						,'option_3'=>$question_option."C"
+						,'option_4'=>$question_option."D"
+						,'answer'=>'A'
+						,'description'=>$question_description
+						,'knowledge'=>$question_knowledge
+						,'difficulty'=>rand(0, 4)
+						,'path_img'=>$question_path_img
+						,'layout'=>'2'
+						,'paper_id'=>$exam_paper__id
+						,'id'=>$exam_question__id
+						,'creater_code'=>'330281-8432-04-X1--'.rand(1,9)
+						,'creater_group_code'=>'330281-8432-04-X1'
+						,'type'=>rand(1,3)
+						,'status'=>'1'
+						,'remark'=>'exam_paper_multionline'
+				);
+				$keys = array_keys($data__exam_question);
+				$keys = implode(",",$keys);
+				$values = array_values($data__exam_question);
+				$values = implode("','",$values);
+				$sql = "insert into exam_question (".$keys.") values ('".$values."')";
+				mysql_query($sql,$conn);
+				$total_++;
+			}
+				
+			$time_stop = "";
+			$time_start = "";
+			$r = rand(1,100);
+			if($r>90){
+				//未开始
+				$time_stop = '2015-01-01';
+				$time_start = '2014-01-01';
+			}
+			else if($r>60){
+				//开始,正常
+				$time_stop = '2014-01-01';
+				$time_start = $a_times[$i];
+			}
+			else{
+				//已结束
+				$time_start = $a_times[$i];
+				$time_stop = date('Y-m-d',strtotime($time_start)+86400);
+			}
+				
+			$data__exam_paper_multionline = array(
+					'time_start'=>$time_start
+					,'time_stop'=>$time_stop
+					,'passline'=>'60'
+					,'paper_id'=>$exam_paper__id
+					,'count_total'=>count($students)
+					,'count_giveup'=>'0'
+					,'count_passed'=>''
+					,'count_failed'=>'0'
+					,'proportion'=>''
+		
+					,'id'=>$exam_paper_multionline__id
+					,'creater_code'=>'330281-8432-04-X1--'.rand(1,9)
+					,'creater_group_code'=>'330281-8432-04-X1'
+					,'type'=>'20'
+					,'status'=>'10'
+					,'remark'=>'exam_paper_multionline'
+					,'time_created'=>$a_times[$i]
+			);
+			$keys = array_keys($data__exam_paper_multionline);
+			$keys = implode(",",$keys);
+			$values = array_values($data__exam_paper_multionline);
+			$values = implode("','",$values);
+			$sql = "insert into exam_paper_multionline (".$keys.") values ('".$values."')";
+			mysql_query($sql,$conn);
+			$total_++;
+				
+			for($i2=0;$i2<count($students);$i2++){
+				$status =  rand(1,100)>50?'20':'30';
+				$student = $students[$i2];
+				$rate = rand(20,99);
+				$exam_paper_log__id++;
+				$count_right = $rate/2;
+				$count_wrong = (100-$rate)/2;
+				$proportion = $rate;
+				$mycent = $rate;
+				$mycent_subjective = $rate;
+				if($status=='30'){
+					$count_right = 0;
+					$count_wrong = 0;
+					$proportion = 0;
+					$mycent = 0;
+					$mycent_subjective = 0;
+				}
+				$data__exam_paper_log = array(
+						'mycent'=>$mycent
+						,'mycent_subjective'=>$mycent_subjective
+						,'mycent_objective'=>'0'
+						,'count_right'=>$count_right
+						,'count_wrong'=>$count_wrong
+						,'count_giveup'=>'0'
+						,'proportion'=>$rate
+						,'paper_id'=>$exam_paper__id
+						,'id'=>$exam_paper_log__id
+						,'creater_code'=>$student
+						,'creater_group_code'=>substr($student, 0,20)
+						,'type'=>'20'
+						,'status'=>$status
+						,'remark'=>'exam_paper_multionline'
+						,'time_created'=>$a_times[$i]
+						,'time_lastupdated'=>$a_times[$i]
+				);
+	
+				$keys = array_keys($data__exam_paper_log);
+				$keys = implode(",",$keys);
+				$values = array_values($data__exam_paper_log);
+				$values = implode("','",$values);
+				$sql = "insert into exam_paper_log (".$keys.") values ('".$values."')";
+				mysql_query($sql,$conn);
+				$total_++;
+	
+				if($status=='30')continue;
+				for($i3=0;$i3<50;$i3++){
+					$exam_question__id2 ++;
+					$exam_question_log__id++;
+					$myanswer = 'A';
+					$mycent = '2';
+					if(rand(20,99)>$rate){
+						$myanswer = 'B';
+						$mycent = '0';
+					}
+					$data__exam_question_log = array(
+							'paper_log_id'=>$exam_paper_log__id
+							,'question_id'=>$exam_question__id2
+							,'myanswer'=>$myanswer
+							,'mycent'=>$mycent
+							,'id'=>$exam_question_log__id
+					);
+					$keys = array_keys($data__exam_question_log);
+					$keys = implode(",",$keys);
+					$values = array_values($data__exam_question_log);
+					$values = implode("','",$values);
+					$sql = "insert into exam_question_log (".$keys.") values ('".$values."')";
+					mysql_query($sql,$conn);
+					$total_++;
+				}
+			}
+	
+		}
+		mysql_query("COMMIT;",$conn);
+		tools::updateTableId("exam_paper");
+		tools::updateTableId("exam_paper_multionline");
+		tools::updateTableId("exam_question");
+		tools::updateTableId("exam_paper_log");
+		tools::updateTableId("exam_question_log");
+		$t_return['msg']="SQL in total ".$total_.", exam_paper id: ".$exam_paper__id.", exam_paper_multionline id: ".$exam_paper_multionline__id.", exam_question id: ".$exam_question__id.", exam_paper_log id: ".$exam_paper_log__id.", exam_question_log id: ".$exam_question_log__id;
+	
+		return $t_return;
+	}
+	
+	public static function exam_paper_multionline__get_ids(){
+		$t_return = array();
+		$conn = tools::getConn();
+		$sql = "select paper_id from exam_paper_multionline where time_stop < now()";
+		$res = mysql_query($sql,$conn);
+		while ($temp=mysql_fetch_assoc($res)){
+			$arr[] = $temp['paper_id'];
+		}
+		$t_return['data'] = $arr;
+		return $t_return;;
+	}
+	
+	public static function get_subjects(){
+		$t_return = array();
+		$conn = tools::getConn();
+		$sql = "select code from exam_subject where type = '20' limit 12";
+		$res = mysql_query($sql,$conn);
+		while ($temp=mysql_fetch_assoc($res)){
+			$arr[] = $temp['code'];
+		}
+		$t_return['data'] = $arr;
+		return $t_return;;
+	}
 }
-?>
+
+$functionName = $_REQUEST['function'];
+$data = array();
+
+if($functionName=="basic_group"){
+	$data = simulate::basic_group(2000);
+}
+else if($functionName=="basic_user"){
+	$data = simulate::basic_user(2000);
+}
+else if($functionName=="exam_subject"){
+	$data = simulate::exam_subject(2000);
+}
+else if($functionName=="exam_paper"){
+	$a = json_decode2($_REQUEST['dates'], true);
+	$delete = false;
+	if(isset($_REQUEST['delete']))$delete = true;
+	$data = simulate::exam_paper(20000,$a,$delete);
+}
+else if($functionName=="get_students"){
+	$data = simulate::get_students();
+}
+else if($functionName=="exam_paper_log"){
+	$a = json_decode2($_REQUEST['dates'], true);
+	$delete = false;
+	if(isset($_REQUEST['delete']))$delete = true;
+	$data = simulate::exam_paper_log(20000,array($a[0],end($a)),$_REQUEST['student'],$delete);
+}
+else if($functionName=="get_subjects"){
+	$data = simulate::get_subjects();
+}
+
+else if($functionName=="exam_paper_multionline"){
+	$delete = false;
+	if(isset($_REQUEST['delete']))$delete = true;
+	$dates = json_decode2($_REQUEST['dates'], true);
+	$students = json_decode2($_REQUEST['students'], true);
+	$subjects = json_decode2($_REQUEST['subjects'], true);
+	$data = simulate::exam_paper_multionline(20000
+			,$dates
+			,$subjects[0]
+			,$students
+			,$delete);
+}
+else if($functionName=="exam_paper_multionline__close"){
+	$ids = json_decode2($_REQUEST['ids'],true);
+	for($i=0;$i<count($ids);$i++){
+		exam_paper_multionline::close($ids[$i]);
+	}
+	$data = array(
+			'msg'=>'ok'
+			,'status'=>'1'
+	);
+}
+else if($functionName=="exam_paper_multionline__close_ids"){
+	$data = simulate::exam_paper_multionline__get_ids();
+}
+
+else if($functionName=='paperImport'){
+	$data = exam_paper::upload("../file/upload/photo/highschool/example_choice.xls", "admin");
+}
+else if($functionName=='multionlineImport'){
+	$data = exam_paper_multionline::upload("../file/upload/photo/highschool/exam_paper_multionline_high_chinese.xls", "admin");
+}
+
+echo json_encode($data);
+if(tools::$conn!=null)mysql_close(tools::$conn);
