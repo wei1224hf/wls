@@ -777,12 +777,6 @@ else if($functionName=="exam_paper_multionline__close_ids"){
 	$data = simulate::exam_paper_multionline__get_ids();
 }
 
-else if($functionName=='paperImport'){
-	$data = exam_paper::upload("../file/upload/photo/highschool/example_choice.xls", "admin");
-}
-else if($functionName=='multionlineImport'){
-	$data = exam_paper_multionline::upload("../file/upload/photo/highschool/exam_paper_multionline_high_chinese.xls", "admin");
-}
 
 echo json_encode($data);
 if(tools::$conn!=null)mysql_close(tools::$conn);
