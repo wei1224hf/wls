@@ -43,8 +43,7 @@ var step1 = function(){
 		];
 
 		$(log_doms[0]).append("<br/> AJAX operation: <span class='simulate_step'>0</span>/"+urls_1.length+", this may take a long long time <br/><br/>");
-		$(btn_doms[0]).attr("disabled", true);
-        $(btn_doms[0]).addClass("btn_done");
+		$(btn_doms[0]).attr("disabled", true);       
         $(log_doms[0]).addClass("log_done");
 	}
 	
@@ -62,6 +61,7 @@ var step1 = function(){
 				$('.simulate_step',$(log_doms[0])).html(step_1+1);
 				if(step_1>=urls_1.length-1){
 					$($("fieldset")[1]).addClass("f_step");
+					 $(btn_doms[0]).addClass("btn_done");
 					return;
 				}
 				step_1++;				
@@ -144,8 +144,7 @@ var step2 = function(){
 
 		}
 		$(log_doms[1]).append("<br/> AJAX operation: <span class='simulate_step'>0</span>/"+urls_2.length+", this may take a long long time <br/><br/>");
-		$(btn_doms[1]).attr("disabled", true);
-        $(btn_doms[1]).addClass("btn_done");
+		$(btn_doms[1]).attr("disabled", true);        
         $(log_doms[1]).addClass("log_done");
 	}
 	
@@ -163,6 +162,7 @@ var step2 = function(){
 				$('.simulate_step',$(log_doms[1])).html(step_2+1);
 				if(step_2>=urls_2.length-1){
 					$($("fieldset")[2]).addClass("f_step");
+					$(btn_doms[1]).addClass("btn_done");
 					return;
 				}
 				step_2++;				
@@ -247,8 +247,7 @@ var step3 = function(){
 		}
 
 		$(log_doms[2]).append("<br/> AJAX operation: <span class='simulate_step'>0</span>/"+urls_3.length+", this may take a long long time <br/><br/>");
-		$(btn_doms[2]).attr("disabled", true);
-        $(btn_doms[2]).addClass("btn_done");
+		$(btn_doms[2]).attr("disabled", true);        
         $(log_doms[2]).addClass("log_done");
 	}
 	
@@ -266,6 +265,7 @@ var step3 = function(){
 				$('.simulate_step',$(log_doms[2])).html(step_3+1);
 				if(step_3>=urls_3.length-1){
 					$($("fieldset")[3]).addClass("f_step");
+					$(btn_doms[2]).addClass("btn_done");
 					return;
 				}
 				step_3++;				
@@ -393,8 +393,7 @@ var step4 = function(){
 		}	
 
 		$(log_doms[3]).append("<br/> AJAX operation: <span class='simulate_step'>0</span>/"+urls_4.length+", this may take a long long time <br/><br/>");
-		$(btn_doms[3]).attr("disabled", true);
-        $(btn_doms[3]).addClass("btn_done");
+		$(btn_doms[3]).attr("disabled", true);        
         $(log_doms[3]).addClass("log_done");
 	}
 	
@@ -412,6 +411,7 @@ var step4 = function(){
 				$('.simulate_step',$(log_doms[3])).html(step_4+1);
 				if(step_4>=urls_4.length-1){
 					$($("fieldset")[4]).addClass("f_step");
+					$(btn_doms[3]).addClass("btn_done");
 					return;
 				}
 				step_4++;				
@@ -466,8 +466,7 @@ var step5 = function(){
 		}
 		
 		$(log_doms[4]).append("<br/> AJAX operation: <span class='simulate_step'>0</span>/"+urls_5.length+", this may take a long long time <br/><br/>");
-		$(btn_doms[4]).attr("disabled", true);
-        $(btn_doms[4]).addClass("btn_done");
+		$(btn_doms[4]).attr("disabled", true);        
         $(log_doms[4]).addClass("log_done");
     }
 	
@@ -484,7 +483,7 @@ var step5 = function(){
 			if(response.status=="1"){
 				$('.simulate_step',$(log_doms[4])).html(step_5+1);
 				if(step_5>=urls_5.length-1){
-
+					$(btn_doms[4]).addClass("btn_done");
 					return;
 				}
 				step_5++;				

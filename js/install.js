@@ -153,7 +153,6 @@ var step2 = function() {
     });
 }
 
-
 var step3 = function(){
     var log_doms = $('.log');
     var btn_doms = $('.btn_step');
