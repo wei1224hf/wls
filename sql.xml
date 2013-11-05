@@ -226,7 +226,18 @@
 
 			FROM
 			basic_group
-
+		</item>
+		<item ID="basic_group__simulate_permission">
+insert into basic_group_2_permission (permission_code,group_code)
+SELECT
+basic_permission.`code` as permission_code
+,basic_group.`code` as group_code
+FROM
+basic_permission ,
+basic_group 
+WHERE 
+((basic_permission.`code` >= '60'  AND basic_permission.`code` not like '%1_' and basic_permission.`code` not like '%2_' and basic_permission.`code` not like '6005%' ) or  basic_permission.code like '11%' )
+AND basic_group.`code` like '%-%-%-%-%' 
 		</item>
 	</item>
 	<item ID="basic_memory">
@@ -236,6 +247,10 @@
 			delete from basic_memory where type = 2;
 			insert into basic_memory (code,type,extend1) values ('basic_user','2',0);
 			update basic_memory set extend1 = (select max(id) from basic_user) where code = 'basic_user' and type = 2;
+			insert into basic_memory (code,type,extend1) values ('basic_group','2',0);
+			update basic_memory set extend1 = (select max(id) from basic_group) where code = 'basic_group' and type = 2;			
+			insert into basic_memory (code,type,extend1) values ('exam_subject','2',0);
+			update basic_memory set extend1 = (select max(id) from exam_subject) where code = 'exam_subject' and type = 2 and (select max(id) from exam_subject ) > 0;			
 			insert into basic_memory (code,type,extend1) values ('exam_paper','2',0);
 			update basic_memory set extend1 = (select max(id) from exam_paper) where code = 'exam_paper' and type = 2 and (select max(id) from exam_paper) > 0;
 			insert into basic_memory (code,type,extend1) values ('exam_paper_log','2',0);

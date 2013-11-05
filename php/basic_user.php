@@ -972,42 +972,4 @@ class basic_user {
 			);
 		}
 	}	
-
-	public static function data4test($total){
-		$t_return = array("status"=>"1","msg"=>"");
-		$conn = tools::getConn();
-		$conn2 = tools::getConn(true);
-		
-		$sql = "delete from basic_user where type in ('20','30')";
-		$sql = "delete from basic_group_2_user where user_code not in ('admin','guest')";
-		mysql_query($sql,$conn);
-		$sql = "select code from basic_group where type = '40' ";
-		mysql_query("START TRANSACTION;",$conn2);
-		$res = mysql_query($sql,$conn);
-		$total_ = 0;
-		while($temp = mysql_fetch_assoc($res)){
-			$r = rand(10, 20);
-			for($i=0;$i<$r;$i++){
-				$code = $temp['code']."--".$i;
-				$sql = "insert into basic_user(username,password,group_code,id,type,status,money) values ('".$code."',md5('".$code."'),'". $temp['code']."','".(1000+$total_)."','20','10','1000');";
-				mysql_query($sql,$conn);
-				$sql = "insert into basic_group_2_user(user_code,group_code) values ('".$code."','". $temp['code']."');";
-				mysql_query($sql,$conn);
-				$total_++;
-				/*
-				if($total_>=$total){
-					mysql_query("COMMIT;",$conn2);
-					return $t_return;
-				}
-				*/
-			}
-		}
-		$code = $temp['code'];
-		mysql_query("COMMIT;",$conn2);
-		
-		$sql = "update basic_user set type = '30' where group_code like '%X%'";
-		mysql_query($sql,$conn2);
-		$t_return['msg']="Table basic_user added row in total : ".$total_;
-		return $t_return;
-	}
 }

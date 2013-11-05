@@ -7,6 +7,8 @@ include_once 'exam_paper.php';
 include_once 'exam_paper_log.php';
 include_once 'exam_paper_multionline.php';
 
+include_once 'simulate.php';
+
 include_once '../libs/phpexcel/Classes/PHPExcel.php';
 include_once '../libs/phpexcel/Classes/PHPExcel/IOFactory.php';
 include_once '../libs/phpexcel/Classes/PHPExcel/Writer/Excel5.php';
@@ -256,7 +258,7 @@ class install{
 		mysql_query("delete from basic_permission;");
 		mysql_query("delete from basic_group;");
 		
-		mysql_query("START TRANSACTION;",$conn);
+		//mysql_query("START TRANSACTION;",$conn);
 		$sqls = array();
 		
 		$currentSheet = $phpexcel->getSheetByName("data_basic_group");		
@@ -303,8 +305,8 @@ class install{
 				}
 			}
 		}
-		
-		mysql_query("COMMIT;",$conn);
+		tools::initMemory();
+		//mysql_query("COMMIT;",$conn);
 		$s = implode(" ", $sqls);
 		file_put_contents("../sql/data.sql", $s);
 		$t_return = array("status"=>"1","msg"=>count($sqls)." sql executed ","sqls"=>$sqls);
@@ -330,20 +332,19 @@ else if($functionName=="step4"){
 	$data = install::step4();
 }
 else if($functionName=="data4test__basic_group"){
-	$data = basic_group::data4test(100);
+	$data = simulate::basic_group(2000);
 }
 else if($functionName=="data4test__basic_user"){
-	$data = basic_user::data4test(2000);
+	$data = simulate::basic_user(2000);
 }
 else if($functionName=="data4test__exam_subject"){
-	include_once 'exam_subject.php';
-	$data = exam_subject::data4test(2000);
+	$data = simulate::exam_subject(2000);
 }
 else if($functionName=="data4test__exam_paper"){
 	$a = json_decode2($_REQUEST['dates'], true);
 	$delete = false;
 	if(isset($_REQUEST['delete']))$delete = true;
-	$data = exam_paper::data4test(20000,$a,$delete);
+	$data = simulate::exam_paper(20000,$a,$delete);
 }
 else if($functionName=="simulate__get_students"){
 	$data = exam_paper_log::simulate__get_students();
