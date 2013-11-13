@@ -285,7 +285,7 @@ class exam_paper {
 	    
 	    if($cost>0){
 			$sql = "";
-    	    if(tools::$systemType=='DZX'){
+    	    if(tools::getConfigItem("MODE") =='DZX'){
     	        $pfx = tools::$dzxConfig['db']['1']['tablepre'];
     	        $sql = " update ".$pfx."common_member_count set extcredits2 = extcredits2 - ".$cost." where extcredits2 >= ".$cost." and uid in ( select uid from ".$pfx."common_member where username = '".$executor."'   )";    
     	    }else{

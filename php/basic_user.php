@@ -241,7 +241,7 @@ class basic_user {
 		$a_return = array();
 		
 		$sql = tools::getSQL("basic_user__getPermission");
-		$sql = str_replace( "__username__", "'".$username."'",$sql);
+		$sql = str_replace( "__username__", $username,$sql);
 		
 		$conn = tools::getConn();
 		$res = mysql_query($sql,$conn);
