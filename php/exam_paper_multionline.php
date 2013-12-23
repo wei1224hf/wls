@@ -194,7 +194,7 @@ class exam_paper_multionline {
 	}
 
 	private static function search($search,$executor){
-		$sql_where = " where 1=1 ";
+		$sql_where = "  ";
 	
 		$search=json_decode2($search,true);
 		$search_keys = array_keys($search);
@@ -228,20 +228,18 @@ class exam_paper_multionline {
     		$sql = tools::getSQL("exam_paper_multionline__grid_student");
     		$sql_where .= " and exam_paper_log.creater_code = '".$executor."' ";
     		$sql_total = "select count(*) as total FROM
-			exam_paper_log
-			INNER JOIN exam_paper_multionline ON exam_paper_log.paper_id = exam_paper_multionline.paper_id
-			LEFT JOIN exam_paper ON exam_paper_log.paper_id = exam_paper.id ".$sql_where;
+			exam_paper_log,exam_paper_multionline,exam_paper
+			where exam_paper_log.paper_id = exam_paper_multionline.paper_id
+			and exam_paper_log.paper_id = exam_paper.id ".$sql_where;
     	}
     	else if($session['user_type']=='30'){
     		$sql_where .= " and exam_paper.creater_code = '".$executor."' ";
     		$sql_total = "select count(*) as total FROM
-			exam_paper_multionline
-			Left Join exam_paper ON exam_paper_multionline.paper_id = exam_paper.id ".$sql_where;
+			exam_paper_multionline,exam_paper where exam_paper_multionline.paper_id = exam_paper.id ".$sql_where;
     	}
     	else{
     		$sql_total = "select count(*) as total FROM
-			exam_paper_multionline
-			Left Join exam_paper ON exam_paper_multionline.paper_id = exam_paper.id ".$sql_where;
+			exam_paper_multionlin,exam_paper where exam_paper_multionline.paper_id = exam_paper.id ".$sql_where;
     	} 	
     	$sql = str_replace("__WHERE__", $sql_where, $sql);
     	$sql = str_replace("__ORDER__", $sortname." ".$sortorder , $sql);
@@ -407,7 +405,7 @@ class exam_paper_multionline {
 		$conn = tools::getConn();
 		$conn2 = tools::getConn(true);
 		$t_return = array();
-		//mysql_query("START TRANSACTION;",$conn);
+		mysql_query("START TRANSACTION;",$conn);
 		$sql = "select passline from exam_paper_multionline where paper_id = ".$exam_paper__id;
 		$res = mysql_query($sql,$conn2);
 		$d = mysql_fetch_assoc($res);
@@ -459,8 +457,9 @@ class exam_paper_multionline {
 				,proportion='".($count_passed/$rank2)."'
 				 where paper_id =".$exam_paper__id;
 		mysql_query($sql,$conn);
-		//mysql_query("COMMIT;",$conn);
+		mysql_query("COMMIT;",$conn);
 		$t_return['status']=1;
+		$t_return['msg']=$sql;
 		return $t_return;
 	}
 	

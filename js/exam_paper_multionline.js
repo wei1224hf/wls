@@ -198,8 +198,8 @@ var exam_paper_multionline = {
 			formD = $.ligerui.get("formD");
 			formD.show();
 		}else{
-			var form = $("<form id='form'></form>");
-			$(form).ligerForm({
+			$(document.body).append("<form id='form'></form>");
+			$("#form").ligerForm({
 				inputWidth: 170
 				,labelWidth: 90
 				,space: 40

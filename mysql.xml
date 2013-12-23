@@ -585,16 +585,14 @@ basic_parameter.reference ASC
             (select extend4 from basic_memory where code = exam_paper_multionline.status and extend5 = 'exam_paper_multionline__status') as status_,
             exam_paper.id as pid,
             exam_paper.subject_code,
-            (select extend4 from basic_memory where basic_memory.code = exam_paper.subject_code and basic_memory.type = '4') as subject_name,
+            (select extend5 from basic_memory where basic_memory.code = exam_paper.subject_code and basic_memory.type = '5') as subject_name,
             exam_paper.title,
             exam_paper.cent,
             exam_paper.creater_code,
             exam_paper.creater_group_code,
-            exam_paper.status,
             exam_paper.count_question
             FROM
-            exam_paper_multionline
-            Left Join exam_paper ON exam_paper_multionline.paper_id = exam_paper.id
+            exam_paper_multionline,exam_paper where exam_paper_multionline.paper_id = exam_paper.id
             __WHERE__           
             order by __ORDER__
             limit __OFFSET__ , __PAGESIZE__
@@ -628,16 +626,16 @@ basic_parameter.reference ASC
             
             (select extend4 from basic_memory where code = exam_paper_log.type and extend5 = 'exam_paper_log__type') as type_,
             (select extend4 from basic_memory where code = exam_paper_log.status and extend5 = 'exam_paper_log__status') as status_,
-            (select extend4 from basic_memory where basic_memory.code = exam_paper.subject_code and basic_memory.type = '4') as subject_name,           
+            (select extend5 from basic_memory where basic_memory.code = exam_paper.subject_code and basic_memory.type = '5') as subject_name,           
             exam_paper_multionline.status as ststus2,
             (select extend4 from basic_memory where code = exam_paper_multionline.status and extend5 = 'exam_paper_multionline__status') as status2_,
             
             'what'
             
             FROM
-            exam_paper_log
-            INNER JOIN exam_paper_multionline ON exam_paper_log.paper_id = exam_paper_multionline.paper_id
-            LEFT JOIN exam_paper ON exam_paper_log.paper_id = exam_paper.id         
+            exam_paper_log,exam_paper_multionline,exam_paper 
+            where exam_paper_log.paper_id = exam_paper_multionline.paper_id
+            and exam_paper_log.paper_id = exam_paper.id         
             __WHERE__           
             order by __ORDER__
             limit __OFFSET__ , __PAGESIZE__

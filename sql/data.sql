@@ -118,10 +118,8 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
  insert into basic_permission(name,code,type,icon,path) values ('作者组','60010232','30','','');
  insert into basic_permission(name,code,type,icon,path) values ('导入','600111','30','','');
  insert into basic_permission(name,code,type,icon,path) values ('导出','600112','30','','');
- insert into basic_permission(name,code,type,icon,path) values ('修改','600122','30','','');
  insert into basic_permission(name,code,type,icon,path) values ('删除','600123','30','','');
  insert into basic_permission(name,code,type,icon,path) values ('练习','600190','30','','');
- insert into basic_permission(name,code,type,icon,path) values ('统计','600192','30','','');
  insert into basic_permission(name,code,type,icon,path) values ('多人考试','6002','20','','exam_paper_multionline__grid.html');
  insert into basic_permission(name,code,type,icon,path) values ('查询','600201','30','','');
  insert into basic_permission(name,code,type,icon,path) values ('详细','600202','30','','');
@@ -136,7 +134,6 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
  insert into basic_permission(name,code,type,icon,path) values ('删除','600223','30','','');
  insert into basic_permission(name,code,type,icon,path) values ('截止','600290','30','../file/icon16x16/90.png','');
  insert into basic_permission(name,code,type,icon,path) values ('考试','600291','30','../file/icon16x16/91.png','');
- insert into basic_permission(name,code,type,icon,path) values ('统计','600292','30','../file/icon16x16/92.png','');
  insert into basic_permission(name,code,type,icon,path) values ('做题记录','6003','20','../file/icon48x48/6003.png','exam_paper_log__grid.html');
  insert into basic_permission(name,code,type,icon,path) values ('查询','600301','30','../file/icon16x16/01.png','');
  insert into basic_permission(name,code,type,icon,path) values ('详细','600302','30','../file/icon16x16/02.png','');
@@ -241,14 +238,10 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
  insert into basic_group_2_permission (permission_code,group_code) values('600111','51');
  insert into basic_group_2_permission (permission_code,group_code) values('600112','10');
  insert into basic_group_2_permission (permission_code,group_code) values('600112','51');
- insert into basic_group_2_permission (permission_code,group_code) values('600122','10');
- insert into basic_group_2_permission (permission_code,group_code) values('600122','51');
  insert into basic_group_2_permission (permission_code,group_code) values('600123','10');
  insert into basic_group_2_permission (permission_code,group_code) values('600123','51');
  insert into basic_group_2_permission (permission_code,group_code) values('600190','10');
  insert into basic_group_2_permission (permission_code,group_code) values('600190','50');
- insert into basic_group_2_permission (permission_code,group_code) values('600192','10');
- insert into basic_group_2_permission (permission_code,group_code) values('600192','51');
  insert into basic_group_2_permission (permission_code,group_code) values('6002','10');
  insert into basic_group_2_permission (permission_code,group_code) values('6002','50');
  insert into basic_group_2_permission (permission_code,group_code) values('6002','51');

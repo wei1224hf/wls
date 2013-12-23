@@ -163,8 +163,8 @@ create table basic_parameter (
  ,creater_code varchar(200) not null
  ,updater_code varchar(200) not null
  ,creater_group_code varchar(200) not null
- ,time_created timestamp 
- ,time_lastupdated timestamp 
+ ,time_created datetime 
+ ,time_lastupdated datetime 
  ,count_updated int default '0'
  ,type int not null
  ,status int not null
@@ -195,8 +195,8 @@ create table basic_parameter (
  ,creater_code varchar(200) not null
  ,updater_code varchar(200) not null
  ,creater_group_code varchar(200) not null
- ,time_created timestamp 
- ,time_lastupdated timestamp 
+ ,time_created datetime 
+ ,time_lastupdated datetime 
  ,count_updated int default '0'
  ,type int not null
  ,status int not null
@@ -223,8 +223,8 @@ create table basic_parameter (
  ,creater_code varchar(200) not null
  ,updater_code varchar(200) not null
  ,creater_group_code varchar(200) not null
- ,time_created timestamp 
- ,time_lastupdated timestamp 
+ ,time_created datetime 
+ ,time_lastupdated datetime 
  ,count_updated int default '0'
  ,type int not null
  ,status int not null
@@ -306,7 +306,7 @@ create table basic_parameter (
  ,question_id int not null
  ,paper_log_id int not null
  ,creater_code varchar(40) 
- ,time_created timestamp 
+ ,time_created datetime 
  ,type int not null
  ,status int not null
  );
@@ -319,8 +319,8 @@ create table basic_parameter (
  insert into basic_parameter (code,value,reference,extend4) values ('40','考卷已批改','exam_question_log_wrongs__status','40');
  
  create table exam_paper_multionline (
-  time_start timestamp not null
- ,time_stop timestamp not null
+  time_start datetime not null
+ ,time_stop datetime not null
  ,passline int not null
  ,paper_id int not null
  ,count_total int not null
@@ -332,8 +332,8 @@ create table basic_parameter (
  ,creater_code varchar(200) not null
  ,updater_code varchar(200) not null
  ,creater_group_code varchar(200) not null
- ,time_created timestamp 
- ,time_lastupdated timestamp 
+ ,time_created datetime 
+ ,time_lastupdated datetime 
  ,count_updated int default '0'
  ,type int not null
  ,status int not null
