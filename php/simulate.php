@@ -15,9 +15,9 @@ class simulate{
 		$total_ = 0;
 		
 		$sql = "select * from basic_user where type = '30'";
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		$a_teachers = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$a_teachers[] = array(
 				 'username'=>$temp['username']
 				,'group_code'=>$temp['group_code']
@@ -25,26 +25,27 @@ class simulate{
 		}	
 		
 		if($delete){		
-			$sql = "delete from exam_paper";
-			mysql_query($sql,$conn);
-			$sql = "delete from exam_question";
-			mysql_query($sql,$conn);
+			$sql = "delete from exam_paper where remark = 'exam_paper'";
+			tools::query($sql,$conn);
+			$sql = "delete from exam_question  where remark = 'exam_paper'";
+			tools::query($sql,$conn);
 			tools::initMemory();
 		}
 		
 		$exam_paper__id = tools::getTableId("exam_paper",false);
 		$exam_question__id = tools::getTableId("exam_question",false);
-		mysql_query("START TRANSACTION;",$conn);
+		tools::query("START TRANSACTION;",$conn);
 		//echo $exam_paper__id." ".$exam_question__id;
 		
 		$year = substr($a_times[0], 0,4);
 		$sql_where_subject = " where type = '20' and  code like '8432-0".$_REQUEST['grade']."__' ";
 
 		$sql = "select * from exam_subject ".$sql_where_subject;
-		$res = mysql_query($sql,$conn);
+		//echo $sql;exit();
+		$res = tools::query($sql,$conn);
 
 		$a_subject = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$a_subject[] = array(
 					'code'=>$temp['code']
 					,'id'=>$temp['id']
@@ -55,9 +56,9 @@ class simulate{
 		for($i2=0;$i2<count($a_subject);$i2++){
 			$sql_knowledge = "select * from exam_subject where type = '30' and code like '".$a_subject[$i2]['code']."-____'";
 			//echo $sql_knowledge;
-			$res_knowledge = mysql_query($sql_knowledge,$conn);
+			$res_knowledge = tools::query($sql_knowledge,$conn);
 			$a_knowledge = array();
-			while($temp = mysql_fetch_assoc($res_knowledge)){
+			while($temp = tools::fetch_assoc($res_knowledge)){
 				$a_knowledge[] = $temp['code'];
 			}
 			//echo json_encode($a_knowledge);
@@ -80,7 +81,7 @@ class simulate{
 						,'creater_group_code'=>$teacher['group_code']
 						,'type'=>10
 						,'status'=>10
-						,'remark'=>"exam_paper__data4test"
+						,'remark'=>"exam_paper"
 						,'time_created'=>$a_times[$i]
 				);
 				$keys = array_keys($data__exam_paper);
@@ -88,7 +89,7 @@ class simulate{
 				$values = array_values($data__exam_paper);
 				$values = implode("','",$values);
 				$sql = "insert into exam_paper (".$keys.") values ('".$values."')";
-				mysql_query($sql,$conn);
+				tools::query($sql,$conn);
 				$total_++;
 				
 				$question_count = (rand()>0.5)?20:50;
@@ -140,7 +141,7 @@ class simulate{
 						,'creater_group_code'=>$teacher['group_code']
 						,'type'=>rand(1,3)
 						,'status'=>1
-						,'remark'=>'exam_paper__data4test'
+						,'remark'=>'exam_paper'
 					);
 					
 					$keys = array_keys($data__exam_question);
@@ -148,7 +149,7 @@ class simulate{
 					$values = array_values($data__exam_question);
 					$values = implode("','",$values);
 					$sql = "insert into exam_question (".$keys.") values ('".$values."')";
-					mysql_query($sql,$conn);
+					tools::query($sql,$conn);
 					$total_++;					
 			
 				}
@@ -156,7 +157,7 @@ class simulate{
 			}			
 		}
 		
-		mysql_query("COMMIT;",$conn);
+		tools::query("COMMIT;",$conn);
 		
 		tools::updateTableId("exam_paper");
 		tools::updateTableId("exam_question");
@@ -169,43 +170,76 @@ class simulate{
 		$t_return = array("status"=>"1","msg"=>"");
 		$conn = tools::getConn();
 	
-		$sql = "delete from basic_group where type = '40'";
-		mysql_query($sql,$conn);
-		$sql = "select code from basic_group where type = '30' and code like '%-%-__' limit 1";
-		$res = mysql_query($sql,$conn);
-		$temp = mysql_fetch_assoc($res);
-		$code = $temp['code'];
+		$sql = "delete from basic_group where remark = 'basic_group'";
+		tools::query($sql,$conn);		
+		$sql = "delete from basic_node where tablename= 'basic_group'";
+		tools::query($sql,$conn);
+		$code = "80";
 	
 		$total_ = 0;
-		//mysql_query("START TRANSACTION;",$conn);
+		tools::transaction($conn);
 		//一个高中,三个年级 2013届,2014届,2015届
 		//每个年纪 4 到6个班级
 		$basic_group__id = tools::getTableId("basic_group",false);
 		for($i=11;$i<=13;$i++){
-			$code_ = $code."-".$i;
 			$basic_group__id++;
-			$sql = "insert into basic_group(id,name,code,type,status) values ('".$basic_group__id."','年级".$i."','".$code_."','30','10')";
-			mysql_query($sql,$conn);
+			
+			$t_data = array(
+				 'name'=>"年级".$i
+				,'code'=> $code."-".$i
+				,'tablename'=>'basic_group'
+			);
+			
+			$sql = "insert into basic_node (";
+			$sql_ = ") values (";
+			$keys = array_keys($t_data);
+			for($j2=0;$j2<count($keys);$j2++){
+				$sql .= $keys[$j2].",";
+				$sql_ .= "'".$t_data[$keys[$j2]]."',";
+			}
+			$sql = substr($sql, 0,strlen($sql)-1);
+			$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+			$sql = $sql.$sql_;
+			
+			tools::query($sql,$conn);
 			$total_++;
-			if($total_>=$total)return $t_return;
 				
 			$r = rand(3, 5);
 			for($i2=1;$i2<=$r;$i2++){
 				$code__ = $code_."-0".$i2;
 				$basic_group__id++;
-				$sql = "insert into basic_group(id,name,code,type,status) values ('".$basic_group__id."','班级".$i.$i2."','".$code__."','40','10')";
-				mysql_query($sql,$conn);
+			
+				$t_data = array(
+					 'id'=>$basic_group__id
+					,'name'=>"班级".$i
+					,'code'=>$code."-".$i."-0".$i2
+					,'type'=>40
+					,'status'=>10
+					,'remark'=>'basic_group'
+					,'count_users'=>rand(1,100)
+				);
+				
+				$sql = "insert into basic_group (";
+				$sql_ = ") values (";
+				$keys = array_keys($t_data);
+				for($j2=0;$j2<count($keys);$j2++){
+					$sql .= $keys[$j2].",";
+					$sql_ .= "'".$t_data[$keys[$j2]]."',";
+				}
+				$sql = substr($sql, 0,strlen($sql)-1);
+				$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+				$sql = $sql.$sql_;
+				
+				tools::query($sql,$conn);
 				$total_++;
-				if($total_>=$total)return $t_return;
 			}
 		}
-		$basic_group__id++;
-		$sql = "insert into basic_group(id,name,code,type,status) values ('".$basic_group__id."','教师','".$code."-X1"."','40','10')";
-		mysql_query($sql,$conn);
-		$sql = "delete from basic_group_2_permission where group_code like '%-%-%-%-%'";
-		mysql_query($sql,$conn);
+
+		$sql = "delete from basic_group_2_permission where group_code like '%-%'";
+		tools::query($sql,$conn);
 		$sql = tools::getSQL("basic_group__simulate_permission");
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
+		tools::commit($conn);
 		tools::updateTableId("basic_group");
 		$t_return['msg']="Table basic_group added row in total : ".$total_;
 		return $t_return;
@@ -217,74 +251,171 @@ class simulate{
 		$total_ = 0;
 	
 		$sql = "delete from exam_subject";
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
+		$sql = "delete from basic_node where tablename= 'exam_subject'";
+		tools::query($sql,$conn);		
 		$sql = "delete from exam_subject_2_group";
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 	
-		//mysql_query("START TRANSACTION;",$conn);
+		tools::query("START TRANSACTION;",$conn);
 		//节点 科目 知识点
 		//节点要参考 国名经济编码 8432 表示高中教育
 		$exam_subject__id = tools::getTableId("exam_subject",false);
+		
 		$exam_subject__id++;
-		$sql = "insert into exam_subject(id,name,code,type,status) values ('".$exam_subject__id."','教育','84','10','10')";
-		mysql_query($sql,$conn);
+		$t_data = array(
+			 'name'=>"教育行业"
+			,'code'=>"84"
+			,'tablename'=>"exam_subject"
+		);		
+		$sql = "insert into basic_node (";
+		$sql_ = ") values (";
+		$keys = array_keys($t_data);
+		for($j2=0;$j2<count($keys);$j2++){
+			$sql .= $keys[$j2].",";
+			$sql_ .= "'".$t_data[$keys[$j2]]."',";
+		}
+		$sql = substr($sql, 0,strlen($sql)-1);
+		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+		$sql = $sql.$sql_;		
+		tools::query($sql,$conn);
 		$total_++;
-		$exam_subject__id++;
-		$sql = "insert into exam_subject(id,name,code,type,status) values ('".$exam_subject__id."','高中教育','8432','10','10')";
-		mysql_query($sql,$conn);
+		
+		$t_data = array(
+			'name'=>"高中教育行业"
+			,'code'=>"8432"
+			,'tablename'=>"exam_subject"
+		);		
+		$sql = "insert into basic_node (";
+		$sql_ = ") values (";
+		$keys = array_keys($t_data);
+		for($j2=0;$j2<count($keys);$j2++){
+			$sql .= $keys[$j2].",";
+			$sql_ .= "'".$t_data[$keys[$j2]]."',";
+		}
+		$sql = substr($sql, 0,strlen($sql)-1);
+		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+		$sql = $sql.$sql_;		
+		tools::query($sql,$conn);
 		$total_++;
 	
 		$subjectname = array("语文","数学","外语","物理","化学","生物","历史","地理","政治");
 		for($i=1;$i<=3;$i++){
 			$exam_subject__id++;
-			$sql = "insert into exam_subject(id,name,code,type,status) values ('".$exam_subject__id."','年级".$i."','8432-0".$i."','10','10')";
-			mysql_query($sql,$conn);
-			$total_++;
+			
+			$t_data = array(
+				 'name'=>"年级".$i
+				,'code'=>"8432-0".$i
+				,'tablename'=>"exam_subject"
+			);
+			$sql = "insert into basic_node (";
+			$sql_ = ") values (";
+			$keys = array_keys($t_data);
+			for($j2=0;$j2<count($keys);$j2++){
+				$sql .= $keys[$j2].",";
+				$sql_ .= "'".$t_data[$keys[$j2]]."',";
+			}
+			$sql = substr($sql, 0,strlen($sql)-1);
+			$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+			$sql = $sql.$sql_;
+			tools::query($sql,$conn);
+			$total_++;			
+			
 			for($i2=1;$i2<=count($subjectname);$i2++){
-				$exam_subject__id++;
-				$sql = "insert into exam_subject(id,name,code,type,status) values ('".$exam_subject__id."','".$subjectname[$i2-1].$i."','8432-0".$i."0".$i2."','20','10')";
-				mysql_query($sql,$conn);
+				$exam_subject__id++;				
+				$t_data = array(
+					 'id'=>$exam_subject__id
+					,'name'=>$subjectname[$i2-1].$i
+					,'code'=>"8432-0".$i."0".$i2
+					,'type'=>20
+					,'status'=>10
+					,'directions'=>'科目的介绍'
+				);
+				$sql = "insert into exam_subject (";
+				$sql_ = ") values (";
+				$keys = array_keys($t_data);
+				for($j2=0;$j2<count($keys);$j2++){
+					$sql .= $keys[$j2].",";
+					$sql_ .= "'".$t_data[$keys[$j2]]."',";
+				}
+				$sql = substr($sql, 0,strlen($sql)-1);
+				$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+				$sql = $sql.$sql_;
+				tools::query($sql,$conn);
+				$total_++;	
+			
 				if($i2==1||$i2==2||$i2==3){
 					$sql = "insert into exam_subject_2_group(group_code,subject_code)
-						select code as group_code,'8432-0".$i."0".$i2."' as subject_code from basic_group where code like '330281-8432-04-".(14-$i)."-__'";
+						select code as group_code,'8432-0".$i."0".$i2."' as subject_code from basic_group where code like '%".(14-$i)."-__'";
 				}
 				else if($i2==4||$i2==5||$i2==6){
 					$sql = "insert into exam_subject_2_group(group_code,subject_code)
-						select code as group_code,'8432-0".$i."0".$i2."' as subject_code from basic_group where code like '330281-8432-04-".(14-$i)."-__' and code not like '%1' and code not like '%2'";
+						select code as group_code,'8432-0".$i."0".$i2."' as subject_code from basic_group where code like '%".(14-$i)."-__' and code not like '%1' and code not like '%2'";
 				}
 				else if($i2==7||$i2==8||$i2==9){
 					$sql = "insert into exam_subject_2_group(group_code,subject_code)
-						select code as group_code,'8432-0".$i."0".$i2."' as subject_code from basic_group where code like '330281-8432-04-".(14-$i)."-__' and (code like '%1' or code  like '%2')";
+						select code as group_code,'8432-0".$i."0".$i2."' as subject_code from basic_group where code like '%".(14-$i)."-__' and (code like '%1' or code  like '%2')";
 				}
-				mysql_query($sql,$conn);
+				tools::query($sql,$conn);
 				$total_++;
 	
 				$r = rand(3, 5);
 				$w = 100/$r ;
 				for($i3=1;$i3<=$r;$i3++){
-					$exam_subject__id++;
-					$sql = "insert into exam_subject(id,name,code,type,status,weight) values ('".$exam_subject__id."','知识点".$i.$i2.$i3."','8432-0".$i."0".$i2."-".(($i3>=10)?$i3:"0".$i3)."','30','10','".$w."')";
-					mysql_query($sql,$conn);
-						
+					$exam_subject__id++;				
+					$t_data = array(
+						 'id'=>$exam_subject__id
+						,'name'=>"知识点".$i.$i2.$i3
+						,'code'=>"8432-0".$i."0".$i2."-".(($i3>=10)?$i3:"0".$i3)
+						,'type'=>30
+						,'status'=>10
+						,'directions'=>'知识点的介绍'
+						,'weight'=>$w
+					);
+					$sql = "insert into exam_subject (";
+					$sql_ = ") values (";
+					$keys = array_keys($t_data);
+					for($j2=0;$j2<count($keys);$j2++){
+						$sql .= $keys[$j2].",";
+						$sql_ .= "'".$t_data[$keys[$j2]]."',";
+					}
+					$sql = substr($sql, 0,strlen($sql)-1);
+					$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+					$sql = $sql.$sql_;
+					tools::query($sql,$conn);
+					$total_++;	
+										
 					$r2 = rand(3, 5);
 					$w2 = 100/$r2 ;
 					for($i4=1;$i4<=$r2;$i4++){
-						$exam_subject__id++;
-						$sql = "insert into exam_subject(id,name,code,type,status,weight) values ('".$exam_subject__id."','知识点".$i.$i2.$i3.$i4."','8432-0".$i."0".$i2."-".(($i3>=10)?$i3:"0".$i3).(($i4>=10)?$i4:"0".$i4)."','30','10','".$w2."')";
-						mysql_query($sql,$conn);
-						$total_++;
-						/*
-						if($total_>=$total){
-							mysql_query("COMMIT;",$conn);
-							$t_return['msg']="Total ".$total_;
-							return $t_return;
+						$exam_subject__id++;				
+						$t_data = array(
+							 'id'=>$exam_subject__id
+							,'name'=>"知识点".$i.$i2.$i3.$i4
+							,'code'=>"8432-0".$i."0".$i2."-".(($i3>=10)?$i3:"0".$i3).(($i4>=10)?$i4:"0".$i4)
+							,'type'=>30
+							,'status'=>10
+							,'directions'=>'知识点的介绍'
+							,'weight'=>$w
+						);
+						$sql = "insert into exam_subject (";
+						$sql_ = ") values (";
+						$keys = array_keys($t_data);
+						for($j2=0;$j2<count($keys);$j2++){
+							$sql .= $keys[$j2].",";
+							$sql_ .= "'".$t_data[$keys[$j2]]."',";
 						}
-						*/
+						$sql = substr($sql, 0,strlen($sql)-1);
+						$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+						$sql = $sql.$sql_;
+						tools::query($sql,$conn);
+						$total_++;	
+
 					}
 				}
 			}
 		}
-		//mysql_query("COMMIT;",$conn);
+		tools::query("COMMIT;",$conn);
 		tools::updateTableId("exam_subject");
 		
 		$t_return['msg']="Table exam_subject added row in total : ".$total_;
@@ -296,76 +427,101 @@ class simulate{
 		$conn = tools::getConn();
 		$conn2 = tools::getConn(true);
 	
-		$sql = "delete from basic_user where type in ('20','30')";
-		$sql = "delete from basic_group_2_user where user_code not in ('admin','guest')";
-		mysql_query($sql,$conn);
+		$sql = "delete from basic_user where username like '%-%' ";
+		tools::query($sql,$conn);
+		$sql = "delete from basic_group_2_user where group_code like '%-%'";
+		tools::query($sql,$conn);
 		$sql = "select code from basic_group where type = '40' ";
-		//mysql_query("START TRANSACTION;",$conn2);
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
+		$id_basic_user = tools::getTableId("basic_user");
+		tools::query("START TRANSACTION;",$conn2);
 		$total_ = 0;
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$r = rand(10, 20);
 			for($i=0;$i<$r;$i++){
 				$code = $temp['code']."--".$i;
-				$sql = "insert into basic_user(username,password,group_code,id,type,status,money) values ('".$code."',md5('".$code."'),'". $temp['code']."','".(1000+$total_)."','20','10','1000');";
-				mysql_query($sql,$conn);
-				$sql = "insert into basic_group_2_user(user_code,group_code) values ('".$code."','". $temp['code']."');";
-				mysql_query($sql,$conn);
-				$total_++;
-				/*
-					if($total_>=$total){
-				mysql_query("COMMIT;",$conn2);
-				return $t_return;
+				
+				$id_basic_user++;
+				$t_data = array(
+					'id'=>$id_basic_user
+					,'username'=>$temp['code']."--".$i
+					,'password'=>md5($temp['code']."--".$i)
+					,'group_code'=>$temp['code']
+					,'status'=>10
+					,'type'=>20
+					,'money'=>10000
+				);
+				$sql = "insert into basic_user (";
+				$sql_ = ") values (";
+				$keys = array_keys($t_data);
+				for($j2=0;$j2<count($keys);$j2++){
+					$sql .= $keys[$j2].",";
+					$sql_ .= "'".$t_data[$keys[$j2]]."',";
 				}
-				*/
+				$sql = substr($sql, 0,strlen($sql)-1);
+				$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+				$sql = $sql.$sql_;
+				tools::query($sql,$conn2);
+				$total_++;
+				
+				$t_data = array(
+					 'user_code'=>$temp['code']."--".$i
+					,'group_code'=>$temp['code']
+				);
+				$sql = "insert into basic_group_2_user (";
+				$sql_ = ") values (";
+				$keys = array_keys($t_data);
+				for($j2=0;$j2<count($keys);$j2++){
+					$sql .= $keys[$j2].",";
+					$sql_ .= "'".$t_data[$keys[$j2]]."',";
+				}
+				$sql = substr($sql, 0,strlen($sql)-1);
+				$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+				$sql = $sql.$sql_;
+				tools::query($sql,$conn2);
+				$total_++;				
 			}
 		}
 		$code = $temp['code'];
-		//mysql_query("COMMIT;",$conn2);
+		tools::query("COMMIT;",$conn2);
 		tools::updateTableId("basic_user");
-		$sql = "update basic_user set type = '30' where group_code like '%X%'";
-		mysql_query($sql,$conn2);
 		$t_return['msg']="Table basic_user added row in total : ".$total_;
 		return $t_return;
 	}	
 	
-	public static function get_students(){
+	public static function exam_paper_log(){
 		$t_return = array("status"=>"1","msg"=>"");
 		$conn = tools::getConn();
-		$sql = "select username from basic_user where type = '20' limit 50";//TODO
-		$res = mysql_query($sql,$conn);
+		$sql = "delete from exam_paper_log where remark = 'exam_paper_log' ";
+		$res = tools::query($sql,$conn);	
+		$sql = "delete from exam_subject_2_user_log where remark = 'exam_paper_log' ";
+		$res = tools::query($sql,$conn);			
+		$sql = "select username,group_code from basic_user where type = '20' ";//TODO
+		$res = tools::query($sql,$conn);
 		$data = array();
-		while($temp=mysql_fetch_assoc($res)){
-			$data[] = $temp['username'];
+		while($temp=tools::fetch_assoc($res)){
+			$data[] = $temp;
 		}
 		$t_return['data']=$data;
 		return $t_return;
 	}
 	
-	public static function exam_paper_log($total,$a_time,$student,$delete=FALSE){
+	public static function exam_paper_log_step($total,$a_time,$student,$delete=FALSE){
 		$t_return = array("status"=>"1","msg"=>"");
 		$conn = tools::getConn();
 		$conn2 = tools::getConn(true);
 		$total_ = 0;
 		$firstTime = "2013-02-01";
 	
-		if($delete){
-			$sql = "delete from exam_paper_log";
-			mysql_query($sql,$conn);
-			$sql = "delete from exam_subject_2_user_log";
-			mysql_query($sql,$conn);
-			tools::initMemory();
-		}
-	
 		$exam_subject_2_user_log__id = tools::getTableId("exam_subject_2_user_log",false);
 		$exam_paper_log__id = tools::getTableId("exam_paper_log",false);
 	
-		$sql_papers = "select id,subject_code,title,creater_code,count_question,time_created,cent from exam_paper where time_created > '".$a_time[0]."' and time_created < '".$a_time[1]."' and subject_code in (select subject_code from exam_subject_2_group where group_code = '".substr($student, 0 , 20)."' )";
-
-		$res = mysql_query($sql_papers,$conn2);
+		$sql_papers = "select id,subject_code,title,creater_code,count_question,time_created,cent from exam_paper where time_created > '".$a_time[0]."' and time_created < '".$a_time[1]."' and subject_code in (select subject_code from exam_subject_2_group where group_code = '".$_REQUEST['group_code']."' )";
+		//echo $sql_papers;exit();
+		$res = tools::query($sql_papers,$conn2);
 		if($res==FALSE)echo $sql_papers;
-		//mysql_query("START TRANSACTION;",$conn);
-		while($temp=mysql_fetch_assoc($res)){
+		tools::query("START TRANSACTION;",$conn);
+		while($temp=tools::fetch_assoc($res)){
 			$exam_paper_log__id ++;
 			$timeDiff=strtotime($temp['time_created'])-strtotime($firstTime);
 				
@@ -381,23 +537,25 @@ class simulate{
 				,'count_wrong'=>(1-$rate)*$temp['count_question']
 				,'proportion'=>$rate*100
 				,'paper_id'=>$temp['id']
-				,'creater_code'=>$student
-				,'creater_group_code'=>substr($student, 0,20)
+				,'creater_code'=>$_REQUEST['username']
+				,'creater_group_code'=>$_REQUEST['group_code']
 				,'type'=>'10'
 				,'status'=>'10'
 				,'time_created'=>$temp['time_created']
+				,'remark'=>'exam_paper_log'
 			);
 			$keys = array_keys($data__exam_paper_log);
 			$keys = implode(",",$keys);
 			$values = array_values($data__exam_paper_log);
 			$values = implode("','",$values);
 			$sql = "insert into exam_paper_log (".$keys.") values ('".$values."')";
-			mysql_query($sql,$conn);
+			//echo $sql;exit();
+			tools::query($sql,$conn);
 			$total_++;
 				
 			$sql_knowledge = "select code from exam_subject where code like '".$temp['subject_code']."-____'";
-			$res2 = mysql_query($sql_knowledge,$conn2);
-			while ($temp2=mysql_fetch_assoc($res2)){
+			$res2 = tools::query($sql_knowledge,$conn2);
+			while ($temp2=tools::fetch_assoc($res2)){
 				$exam_subject_2_user_log__id++;
 				$data__exam_subject_2_user_log = array(
 						'subject_code'=>$temp2['code']
@@ -405,11 +563,12 @@ class simulate{
 						,'paper_id'=>$temp['id']
 						,'paper_log_id'=>$exam_paper_log__id
 						,'id'=>$exam_subject_2_user_log__id
-						,'creater_code'=>$student
-						,'creater_group_code'=>substr($student, 0,20)
+						,'creater_code'=>$_REQUEST['username']
+						,'creater_group_code'=>$_REQUEST['group_code']
 						,'type'=>'10'
 						,'status'=>'10'
 						,'time_created'=>$temp['time_created']
+						,'remark'=>'exam_paper_log'
 				);
 	
 				$keys = array_keys($data__exam_subject_2_user_log);
@@ -418,11 +577,11 @@ class simulate{
 				$values = implode("','",$values);
 				$sql = "insert into exam_subject_2_user_log (".$keys.") values ('".$values."')";
 	
-				mysql_query($sql,$conn);
+				tools::query($sql,$conn);
 				$total_++;
 				/*
 				if($total_>=$total){
-					mysql_query("ROLLBACK;",$conn);
+					tools::query("ROLLBACK;",$conn);
 					return array(
 							'status'=>'2'
 							,'msg'=>'Too much sqls, more than '.$total
@@ -431,7 +590,7 @@ class simulate{
 				*/
 			}
 		}
-		//mysql_query("COMMIT;",$conn);
+		tools::query("COMMIT;",$conn);
 	
 		tools::updateTableId("exam_paper_log");
 		tools::updateTableId("exam_subject_2_user_log");
@@ -439,30 +598,56 @@ class simulate{
 		return $t_return;
 	}	
 	
+	public static function exam_paper_multionline(){
+		$t_return = array("status"=>"1","msg"=>"");
+		$conn = tools::getConn();
+		$sql = "delete from exam_paper_multionline where remark = 'exam_paper_multionline' ";
+		$res = tools::query($sql,$conn);
+		$sql = "delete from exam_paper where remark = 'exam_paper_multionline' ";
+		$res = tools::query($sql,$conn);
+		$sql = "delete from exam_question where remark = 'exam_paper_multionline' ";
+		$res = tools::query($sql,$conn);
+		$sql = "delete from exam_paper_log where remark = 'exam_paper_multionline' ";
+		$res = tools::query($sql,$conn);
+		$sql = "delete from exam_question_log ";
+		$res = tools::query($sql,$conn);		
+		
+		$sql = "select username,group_code from basic_user where type = '20' and username like '%-%' ";
+		$res = tools::query($sql,$conn);
+		$data = array();
+		while($temp=tools::fetch_assoc($res)){
+			$data[] = $temp;
+		}
+		$t_return['students']=$data;
+		
+		$sql = "SELECT
+			exam_subject.code,
+			exam_subject.name
+			FROM
+			exam_subject
+			where type = 20 ";
+		$res = tools::query($sql,$conn);
+		$data = array();
+		while($temp=tools::fetch_assoc($res)){
+			$data[] = $temp;
+		}
+		$t_return['subjects']=$data;		
+		
+		return $t_return;
+	}	
+	
 
-	public static function exam_paper_multionline($total,$a_times,$subject,$students,$delete=FALSE){
+	public static function exam_paper_multionline_step($total,$a_times,$subject,$students,$delete=FALSE){
 		$t_return = array("status"=>"1","msg"=>"");
 		$conn = tools::getConn();
 		$conn2 = tools::getConn(TRUE);
 		$total_ = 0;
 	
-		if($delete){
-			$sql = "delete from exam_paper_multionline";
-			mysql_query($sql,$conn);
-			$sql = "delete from exam_paper where type = '20'";
-			mysql_query($sql,$conn);
-			$sql = "delete from exam_question where remark = 'exam_paper_multionline'";
-			mysql_query($sql,$conn);
-			$sql = "delete from exam_paper_log where remark = 'exam_paper_multionline'";
-			mysql_query($sql,$conn);
-			tools::initMemory();
-		}
-	
 		$sql_knowledge = "select * from exam_subject where type = '30' and code like '".$subject."-____'";
 		//echo $sql_knowledge;
-		$res_knowledge = mysql_query($sql_knowledge,$conn2);
+		$res_knowledge = tools::query($sql_knowledge,$conn2);
 		$a_knowledge = array();
-		while($temp = mysql_fetch_assoc($res_knowledge)){
+		while($temp = tools::fetch_assoc($res_knowledge)){
 			$a_knowledge[] = $temp['code'];
 		}
 	
@@ -471,7 +656,7 @@ class simulate{
 		$exam_paper_multionline__id = tools::getTableId("exam_paper_multionline",false);
 		$exam_paper_log__id = tools::getTableId("exam_paper_log",false);
 		$exam_question_log__id = tools::getTableId("exam_question_log",false);
-		mysql_query("START TRANSACTION;",$conn);
+		tools::query("START TRANSACTION;",$conn);
 	
 		for($i=0;$i<count($a_times);$i++){
 			$time = $a_times[$i];
@@ -491,8 +676,8 @@ class simulate{
 					,'count_objective'=>'50'
 					,'directions'=>'这是一张多人考卷,来自模拟数据'
 	
-					,'creater_code'=>'330281-8432-04-X1--'.rand(1,9)
-					,'creater_group_code'=>'330281-8432-04-X1'
+					,'creater_code'=>'teacher'.rand(1,2)
+					,'creater_group_code'=>'51'
 					,'type'=>'20'
 					,'status'=>'10'
 					,'remark'=>'exam_paper_multionline'
@@ -503,7 +688,7 @@ class simulate{
 			$values = array_values($data__exam_paper);
 			$values = implode("','",$values);
 			$sql = "insert into exam_paper (".$keys.") values ('".$values."')";
-			mysql_query($sql,$conn);
+			tools::query($sql,$conn);
 			$total_++;
 				
 			$exam_question__id2 = $exam_question__id;
@@ -551,8 +736,8 @@ class simulate{
 						,'layout'=>'2'
 						,'paper_id'=>$exam_paper__id
 						,'id'=>$exam_question__id
-						,'creater_code'=>'330281-8432-04-X1--'.rand(1,9)
-						,'creater_group_code'=>'330281-8432-04-X1'
+						,'creater_code'=>'teacher'.rand(1,2)
+						,'creater_group_code'=>'51'
 						,'type'=>rand(1,3)
 						,'status'=>'1'
 						,'remark'=>'exam_paper_multionline'
@@ -562,7 +747,7 @@ class simulate{
 				$values = array_values($data__exam_question);
 				$values = implode("','",$values);
 				$sql = "insert into exam_question (".$keys.") values ('".$values."')";
-				mysql_query($sql,$conn);
+				tools::query($sql,$conn);
 				$total_++;
 			}
 				
@@ -597,8 +782,8 @@ class simulate{
 					,'proportion'=>''
 		
 					,'id'=>$exam_paper_multionline__id
-					,'creater_code'=>'330281-8432-04-X1--'.rand(1,9)
-					,'creater_group_code'=>'330281-8432-04-X1'
+					,'creater_code'=>'teacher'.rand(1,2)
+					,'creater_group_code'=>'51'
 					,'type'=>'20'
 					,'status'=>'10'
 					,'remark'=>'exam_paper_multionline'
@@ -609,12 +794,11 @@ class simulate{
 			$values = array_values($data__exam_paper_multionline);
 			$values = implode("','",$values);
 			$sql = "insert into exam_paper_multionline (".$keys.") values ('".$values."')";
-			mysql_query($sql,$conn);
+			tools::query($sql,$conn);
 			$total_++;
 				
 			for($i2=0;$i2<count($students);$i2++){
 				$status =  rand(1,100)>50?'20':'30';
-				$student = $students[$i2];
 				$rate = rand(20,99);
 				$exam_paper_log__id++;
 				$count_right = $rate/2;
@@ -629,6 +813,8 @@ class simulate{
 					$mycent = 0;
 					$mycent_subjective = 0;
 				}
+				$student_group = explode("--", $students[$i2]);
+				$student_group = $student_group[0];
 				$data__exam_paper_log = array(
 						'mycent'=>$mycent
 						,'mycent_subjective'=>$mycent_subjective
@@ -639,8 +825,8 @@ class simulate{
 						,'proportion'=>$rate
 						,'paper_id'=>$exam_paper__id
 						,'id'=>$exam_paper_log__id
-						,'creater_code'=>$student
-						,'creater_group_code'=>substr($student, 0,20)
+						,'creater_code'=>$students[$i2]
+						,'creater_group_code'=>$student_group
 						,'type'=>'20'
 						,'status'=>$status
 						,'remark'=>'exam_paper_multionline'
@@ -653,7 +839,7 @@ class simulate{
 				$values = array_values($data__exam_paper_log);
 				$values = implode("','",$values);
 				$sql = "insert into exam_paper_log (".$keys.") values ('".$values."')";
-				mysql_query($sql,$conn);
+				tools::query($sql,$conn);
 				$total_++;
 	
 				if($status=='30')continue;
@@ -678,13 +864,13 @@ class simulate{
 					$values = array_values($data__exam_question_log);
 					$values = implode("','",$values);
 					$sql = "insert into exam_question_log (".$keys.") values ('".$values."')";
-					mysql_query($sql,$conn);
+					tools::query($sql,$conn);
 					$total_++;
 				}
 			}
 	
 		}
-		mysql_query("COMMIT;",$conn);
+		tools::query("COMMIT;",$conn);
 		tools::updateTableId("exam_paper");
 		tools::updateTableId("exam_paper_multionline");
 		tools::updateTableId("exam_question");
@@ -699,8 +885,8 @@ class simulate{
 		$t_return = array();
 		$conn = tools::getConn();
 		$sql = "select paper_id from exam_paper_multionline where time_stop < now()";
-		$res = mysql_query($sql,$conn);
-		while ($temp=mysql_fetch_assoc($res)){
+		$res = tools::query($sql,$conn);
+		while ($temp=tools::fetch_assoc($res)){
 			$arr[] = $temp['paper_id'];
 		}
 		$t_return['data'] = $arr;
@@ -711,8 +897,8 @@ class simulate{
 		$t_return = array();
 		$conn = tools::getConn();
 		$sql = "select code from exam_subject where type = '20' limit 12";
-		$res = mysql_query($sql,$conn);
-		while ($temp=mysql_fetch_assoc($res)){
+		$res = tools::query($sql,$conn);
+		while ($temp=tools::fetch_assoc($res)){
 			$arr[] = $temp['code'];
 		}
 		$t_return['data'] = $arr;
@@ -738,30 +924,33 @@ else if($functionName=="exam_paper"){
 	if(isset($_REQUEST['delete']))$delete = true;
 	$data = simulate::exam_paper(20000,$a,$delete);
 }
-else if($functionName=="get_students"){
-	$data = simulate::get_students();
-}
 else if($functionName=="exam_paper_log"){
+	$data = simulate::exam_paper_log();
+}
+else if($functionName=="exam_paper_log_step"){
 	$a = json_decode2($_REQUEST['dates'], true);
 	$delete = false;
 	if(isset($_REQUEST['delete']))$delete = true;
-	$data = simulate::exam_paper_log(20000,array($a[0],end($a)),$_REQUEST['student'],$delete);
+	$data = simulate::exam_paper_log_step(20000,array($a[0],end($a)),$_REQUEST['student'],$delete);
 }
-else if($functionName=="get_subjects"){
-	$data = simulate::get_subjects();
+else if($functionName=="exam_paper_multionline"){
+	$data = simulate::exam_paper_multionline();
 }
 
-else if($functionName=="exam_paper_multionline"){
+else if($functionName=="exam_paper_multionline_step"){
 	$delete = false;
 	if(isset($_REQUEST['delete']))$delete = true;
 	$dates = json_decode2($_REQUEST['dates'], true);
 	$students = json_decode2($_REQUEST['students'], true);
 	$subjects = json_decode2($_REQUEST['subjects'], true);
-	$data = simulate::exam_paper_multionline(20000
-			,$dates
-			,$subjects[0]
-			,$students
-			,$delete);
+	for($i=0;$i<count($subjects);$i++){
+		$data = simulate::exam_paper_multionline_step(20000
+				,$dates
+				,$subjects[$i]
+				,$students
+				,$delete);
+	}
+
 }
 else if($functionName=="exam_paper_multionline__close"){
 	$ids = json_decode2($_REQUEST['ids'],true);

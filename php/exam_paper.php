@@ -233,14 +233,15 @@ class exam_paper {
     	,$sortname
     	,$sortorder){
     	
-    	//数据库连接口,在一次服务端访问中,数据库必定只连接一次,而且不会断开
-    	$conn = tools::getConn();
-    	
-    	$sql_where = exam_paper::search($search, $executor);
-    	$sql_order = " order by exam_paper.".$sortname." ".$sortorder." ";
+    	$conn = tools::getConn();    	
+    	$sql_where = self::search($search, $executor);
     	
     	$sql = tools::getSQL("exam_paper__grid");
-    	$sql .= $sql_where." ".$sql_order." limit ".(($page-1)*$pagesize).", ".$pagesize;
+    	$sql = str_replace("__sortname__", $sortname, $sql);
+    	$sql = str_replace("__sortorder__", $sortorder, $sql);
+    	$sql = str_replace("__where__", $sql_where, $sql);
+    	$sql = str_replace("__offset__", (($page-1)*$pagesize), $sql);
+    	$sql = str_replace("__limit__", $pagesize, $sql);  
     	
     	$res = mysql_query($sql,$conn);
     	$data = array();

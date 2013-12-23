@@ -1,55 +1,37 @@
 <?php
-/**
- * 服务端工具包函数库
- * 一些常用的功能性函数,很难判断具体是属于哪个业务模块,
- * 并且会被频繁的在各个业务模块中反复调用的函数,
- * 就都被放置在这里
- * 函数跟变量一律为 static 格式
- * 
- * @author wei1224hf@gmail.com
- * @version 201209
- * */
+
 class tools{
     
-	public static $conn = null;   
-	public static $LANG = NULL;	 
-	
+	public static $LANG = NULL;	 	
 	public static $systemType = NULL;
-	public static $dzxConfig = NULL;
-	public static $joomlaConfig = NULL;
-	public static $configfilename = "config.xml.php";
+	public static $configfilename = "../config.xml";
+	public static $serverpath = "";
     
-    /**
-     * 得到某一个文件夹内的所有文件,甚至其子文件夹内的所有文件
-     * */
 	public static function getAllFiles($filedir) {
-		$allfiles = array(); //文件名数组
-		$tempArr = array(); //临时文件名数组
-		if (is_dir($filedir)) {//判断要遍历的是否是目录
-			if ($dh = opendir($filedir)) {//打开目录并赋值一个目录句柄(directory handle)
-				while (FALSE !== ($filestring = readdir($dh))) {//读取目录中的文件名
-					if ($filestring != '.' && $filestring != '..' && $filestring != '.svn') {//如果不是.和..(每个目录下都默认有.和..)
-						if (is_dir($filedir . $filestring)) {//该文件名是一个目录时
-							$tempArr = tools::getAllFiles($filedir . $filestring . '/');//继续遍历该子目录
-							$allfiles = array_merge($allfiles, $tempArr); //把临时文件名和临时文件名组合
+		$allfiles = array(); 
+		$tempArr = array();
+		if (is_dir($filedir)) {
+			if ($dh = opendir($filedir)) {
+				while (FALSE !== ($filestring = readdir($dh))) {
+					if ($filestring != '.' && $filestring != '..' && $filestring != '.svn') {
+						if (is_dir($filedir . $filestring)) {
+							$tempArr = tools::getAllFiles($filedir . $filestring . '/');
+							$allfiles = array_merge($allfiles, $tempArr); 
 						} else if (is_file($filedir . $filestring)) {
-							$allfiles[] = $filedir . $filestring; //如果该文件名是一个文件不是目录,直接赋值给文件名数组
+							$allfiles[] = $filedir . $filestring; 
 						}
 					}
 				}
-			} else {//打开目录失败
+			} else {
 				exit('Open the directory failed');
 			}
-			closedir($dh);//关闭目录句柄
-			return $allfiles;//返回文件名数组
-		} else {//目录不存在
+			closedir($dh);
+			return $allfiles;
+		} else {
 			exit('The directory is not exist');
 		}		
 	}	
 
-	/**
-	 * 读取国际化语言包内容
-	 * */
 	public static function readIl8n($class=NULL,$item=NULL){
         if(self::$LANG==NULL){
             $il8n = tools::getConfigItem("IL8N");
@@ -72,77 +54,166 @@ class tools{
 		return self::$LANG[$class][$item];
 	}	
 
-	/**
-	 * 数据库链接
-	 * */
+	public static $conn = null;   
 	public static function getConn($another=FALSE){
+		$conn = null;
 		if($another==FALSE){
 			if(self::$conn==null){
-			    $host = tools::getConfigItem("DB_HOST");
-			    $unm = tools::getConfigItem("DB_UNM");
-			    $pwd = tools::getConfigItem("DB_PWD");
-			    $dbname = tools::getConfigItem("DB_NAME");
-				self::$conn = mysql_connect($host,$unm,$pwd);
-				if(!self::$conn){
-					exit("connenct wrong");
-				}
-				mysql_select_db($dbname,self::$conn);
-				mysql_query("set time_zone='+8:00';");
-				mysql_query("SET NAMES UTF8;");
+			    $conn = self::getConn(TRUE);
+				self::$conn = $conn;
 			}			
 			return self::$conn;
 		}else{
 			$host = tools::getConfigItem("DB_HOST");
-			$unm = tools::getConfigItem("DB_UNM");
-			$pwd = tools::getConfigItem("DB_PWD");
+			$unm = tools::getConfigItem("DB_USERNAME");
+			$pwd = tools::getConfigItem("DB_PASSWORD");
 			$dbname = tools::getConfigItem("DB_NAME");
-			$conn = mysql_connect($host,$unm,$pwd);
-			if(!self::$conn)exit("connenct wrong");
-			mysql_select_db($dbname,self::$conn);
-			mysql_query("set time_zone='+8:00';");
-			mysql_query("SET NAMES UTF8;");
+			$dbtype = tools::getConfigItem("DB_TYPE");
+			self::$dbtype = $dbtype;
+			self::$dbcharset = tools::getConfigItem("DB_CHARSET");
+			if($dbtype=="mysql"){				
+				$conn = mysql_connect($host,$unm,$pwd,$another);
+				if(!$conn)return null;
+				mysql_select_db($dbname,$conn);
+
+				mysql_query("set time_zone='+8:00';");
+				mysql_query("SET NAMES UTF8;");
+				self::$conn = $conn;
+			}
+			else if($dbtype=="mssql"){
+				//$conn = sqlsrv_connect( $host, array("UID"=>$unm,"PWD"=>$pwd, "Database"=>$dbname));
+				$conn = mssql_connect($host,$unm,$pwd,TRUE);
+				if(!$conn)return null;
+				mssql_select_db($dbname,$conn);	
+				self::$conn = $conn;
+			}			
 			return $conn;
 		}
 	}
 	
-	public static function closeConn(){
-	    mysql_close(self::$conn);
-	    self::$conn = NULL;
-	}
-	
-	/**
-	 * 获取数据库表中新的一个主键编号
-	 * 大多数业务表的 id 都不是自动递增的
-	 * */
-	public static function getTableId($tablename,$update=TRUE){
-
-		$sql = tools::getSQL("basic_memory__id");
-		$sql = str_replace("__code__", "'".$tablename."'", $sql);
-		$res = mysql_query($sql,tools::getConn());
-		$temp = mysql_fetch_assoc($res);
-		$id = $temp['id'];
-		
-		if($update){
-			$sql = tools::getSQL("basic_memory__id_add");
-			$sql = str_replace("__code__", "'".$tablename."'", $sql);
-			mysql_query($sql,tools::getConn());
+	public static function closeConn($conn=NULL){
+		$theconn = NULL;
+		if($conn != NULL){
+			$theconn = $conn;
+		}
+		else{
+			$theconn = self::$conn;
 		}
 		
-		return $id+1;
+		if($theconn==NULL)return;
+		$dbtype = tools::getConfigItem("DB_TYPE");
+		if($dbtype=="mysql"){
+			mysql_close($theconn);
+		}
+		else if($dbtype=="mssql"){
+// 			sqlsrv_close(self::$conn);
+			mssql_close($theconn);
+		}
+	}
+	
+	public static $dbtype = FALSE;
+	public static $dbcharset = NULL;
+	public static function query($sql,$conn){
+		$res = FALSE;
+		
+		if(self::$dbcharset!="UTF-8"){
+			$sql = iconv('UTF-8',self::$dbcharset,$sql);
+		}
+
+		if(self::$dbtype=="mysql"){
+			try {
+				$res = mysql_query($sql,$conn);
+				if(!$res)exit($sql." ".self::$dbcharset." ".self::$dbtype." ".mysql_error($conn));
+			}
+			catch (Exception $e) {
+				echo "exc ";
+				exit($sql);
+			}
+		}
+		else if(self::$dbtype=="mssql"){		
+			//$res = sqlsrv_query($conn,$sql);
+			try {
+				$res = mssql_query($sql,$conn);
+			}
+			catch (Exception $e) {
+				echo iconv(self::$dbcharset,'UTF-8',$e);
+			}
+			if(!$res)exit($sql);
+		}			
+		return $res;
+	}
+	
+	public static function transaction($conn){
+		if(self::$dbtype=="mysql"){
+			mysql_query('START TRANSACTION;',$conn);
+		}
+		if(self::$dbtype=="mssql"){
+// 			if ( sqlsrv_begin_transaction( $conn ) === false ) {
+// 			     die( print_r( sqlsrv_errors(), true ));
+// 			}
+			mssql_query('begin transaction',$conn);
+		}
+	}
+	
+	public static function commit($conn){
+		if(self::$dbtype=="mysql"){
+			mysql_query('COMMIT;',$conn);
+		}
+		if(self::$dbtype=="mssql"){
+			//sqlsrv_commit( $conn );
+			mssql_query('COMMIT TRAN',$conn);
+		}
+	}	
+	
+	public static function fetch_assoc($res){
+		$data = FALSE;
+		if(tools::$dbtype=="mysql"){
+			$data = mysql_fetch_assoc($res);
+		}
+		if(tools::$dbtype=="mssql"){
+			//$data = sqlsrv_fetch_array($res,SQLSRV_FETCH_ASSOC);
+			$data = mssql_fetch_assoc($res);
+		}
+		if($data!=FALSE){
+			if(tools::$dbcharset!="UTF-8"){
+				$data = tools::changeCharsetInTree($data);
+			}
+		}
+		
+		return $data;
+	}
+	
+	public static function getTableId($tablename,$update=FALSE){
+		$i_return = 0;
+		$sql = tools::getSQL("basic_memory__id");
+		$sql = str_replace("__code__",$tablename, $sql);
+		$res = tools::query($sql,tools::getConn());
+		if(!$res){
+			$i_return = 1;
+		}
+		$temp = tools::fetch_assoc($res);
+		$i_return = $temp['id'] + 1;
+		
+		if($update){
+			$sql = "update basic_memory set extend1 = ".$i_return." where type = 2 and code = '".$tablename."';";
+			tools::query($sql,tools::getConn());
+		}
+		
+		return $i_return;
 	}
 	
 	public static function updateTableId($tablename){
 		$sql = tools::getSQL("basic_memory__id_update");
 		$sql = str_replace("__code__", $tablename, $sql);
 
-		mysql_query($sql,tools::getConn());
+		tools::query($sql,tools::getConn());
 	}
 	
 	public static $xml = null;
 	public static function getConfigItem($id){
 		if(tools::$xml==null){
     		tools::$xml = new DOMDocument();
-            tools::$xml->load('../'.tools::$configfilename); //读取xml文件
+            tools::$xml->load(tools::$configfilename); //读取xml文件
     
     		$sqls = tools::$xml->getElementsByTagName('ITEM');
             for($i=0; $i<$sqls->length;$i++){                
@@ -160,7 +231,7 @@ class tools{
 			tools::$xmlSQL = new DOMDocument();
 			libxml_clear_errors();
 			libxml_use_internal_errors(FALSE);
-			tools::$xmlSQL->load('../sql.xml');
+			tools::$xmlSQL->load("../".self::$dbtype.".xml");
 	
 			$sqls = tools::$xmlSQL->getElementsByTagName('ITEM');
 			for($i=0; $i<$sqls->length;$i++){
@@ -200,46 +271,102 @@ class tools{
         return $data;	
 	}
 	
-	public static function importIl8n2DB() {
-	    
+	//TODO 
+	public static function localzone2Tree($list){
+		$data = array();
+	
+		for($i=0;$i<count($list);$i++){
+			$temp = $list[$i];
+			$len = strlen($temp['code']);
+			if($len==2){
+				$data[] = $temp;
+				continue;
+			}
+			
+			$arr = explode("-", $temp['code']);
+			
+			$aa = array();
+			$aa[] = $data;
+			for($i2=2;$i2<$len;$i2+=2){
+				$a = end($aa);
+				$p = count($a)-1;
+				$item = $a[$p];
+				if(!isset($item['children']))$item['children'] = array();
+				$aa[] = $item['children'];
+			}
+			$aa[count($aa)-1][] = $temp;
+			for($i3=count($aa)-1;$i3>0;$i3--){
+				$aa[$i3-1][count($aa[$i3-1])-1]['children'] = $aa[$i3];
+			}
+			$data = $aa[0];
+		}
+		return $data;
+	}	
+	
+	public static function importIl8n2DB() {	    
 		$il8n = tools::readIl8n();      
 		$conn = tools::getConn();
 		$sql = "delete from basic_memory where type = '3';";
-		mysql_query($sql,$conn);	
+		tools::query($sql,$conn);	
         
         $keys = array_keys($il8n);
+        tools::transaction($conn);
 		for($i=0;$i<count($keys);$i++){
 		    $keys_ = array_keys($il8n[$keys[$i]]);
 		    for($j=0;$j<count($keys_);$j++){
 		        //echo $keys[$i].$keys_[$j].$il8n[$keys[$i]][$keys_[$j]];
 		        $sql = "insert into basic_memory (code,extend4,extend5,type) values ('".$keys[$i]."','".$keys_[$j]."','".$il8n[$keys[$i]][$keys_[$j]]."','3');";
-		        mysql_query($sql,$conn);
+		        tools::query($sql,$conn);
 		    }
 		}
-
+		tools::commit($conn);
 	}
 	
 	public static function initMemory(){
 		$conn = tools::getConn();
+		$conn_read = tools::getConn(TRUE);
 		$sql = "delete from basic_memory  ;";
-		mysql_query($sql,$conn);
-		$sql = "insert into basic_memory (code,type,extend4,extend5) (select code,'1' as type,value,reference from basic_parameter where reference like '%\\_%\\_\\_%' );";
-		mysql_query($sql,$conn);
-
+		tools::query($sql,$conn);
 		tools::importIl8n2DB();
 		
 		$sqls = tools::getSQL("basic_memory__init");
 		$sqls_arr = explode(";", $sqls);
+		tools::transaction($conn);
 		for($i=0;$i<count($sqls_arr);$i++){
 		    $sql = $sqls_arr[$i];
-		    mysql_query($sql,$conn);
+		    tools::query($sql,$conn);
 		}		
+		tools::commit($conn);
+		
+		$il8n = tools::readIl8n();
+		$json = json_encode($il8n);
+		file_put_contents("../language/il8n.js", "var il8n=".$json.";");
+		
+		$sql = tools::getSQL("basic_parameter__json");
+		$res = tools::query($sql,$conn_read);
+		$data = array();
+		$reference = "";
+		$data2 = array();
+		tools::transaction($conn);
+		while($temp = tools::fetch_assoc($res)){
+			$sql_insert = "insert into basic_memory(code,type,extend4,extend5) values ('".$temp['code']."',1,'".$temp['value']."','".$temp['reference']."')";
+			tools::query($sql_insert,$conn);
+			if($temp['reference']!=$reference){
+				if($reference!=""){
+					$data[$reference]=$data2;
+					$data2 = array();
+				}
+				$reference = $temp['reference'];
+			}
+			unset($temp["reference"]);
+			$data2[] = $temp;
+		}
+		tools::commit($conn);
+		$data[$reference]=$data2;
+		$json = json_encode($data);
+		file_put_contents("../js/basic_parameter_data.js", "var basic_parameter_data=".$json.";");		
 	}	
 	   
-    /**
-     * 判断字符串里的字符个数
-     * 英文字母 汉字 都算一个
-     * */
     public static function cutString($sourcestr,$cutlength)
     {
        $returnstr='';
@@ -307,15 +434,27 @@ class tools{
          if(!tools::checkDateFormat($strArr[0],'Y-m-d'))return false;
          return (bool)preg_match("/^(([0-1]?[0-9])|([2][0-3])):([0-5]?[0-9])(:([0-5]?[0-9]))?$/",$strArr[1]); 
       }
-    }  	
+    }  
+
+    public static function changeCharsetInTree($item){
+   		$keys = array_keys($item);
+   		for($i=0;$i<count($item);$i++){
+   			if(is_array($item[$keys[$i]])){
+   				$item[$keys[$i]] = self::changeCharsetInTree($item[$keys[$i]]);
+   			}else{
+   				$item[$keys[$i]] = iconv(self::$dbcharset,'UTF-8',$item[$keys[$i]]);
+   			}   			
+   		}
+   		return $item;
+    }
 }
 
 function json_decode2($json_string,$what=TRUE){
 	if(ini_get("magic_quotes_gpc")=="1")  {  
 		$json_string=stripslashes($json_string);  
 	} 
-	
-	return json_decode($json_string,$what);  
+
+	return json_decode($json_string,$what);
 }
 
 date_default_timezone_set('Asia/Shanghai');

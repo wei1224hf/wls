@@ -123,7 +123,7 @@ var step2 = function(){
 		}
 		
 		var ddd = [];
-		var len = 1;
+		var len = 14;
 		for(var i=0;i<dates.length;i+=len){
 			var dd = [];
 			for(var ii=i;ii<i+len;ii++){
@@ -179,108 +179,211 @@ var step2 = function(){
 	});	
 }
 
-var step_3 = 0;
-var students_3 = null;
-var urls_3 = [];
-var step3 = function(){
-    var log_doms = $('.log');
-    var btn_doms = $('.btn_step');
-    var fieldset_doms = $('fieldset');
-	if(students_3==null){
-		$.ajax({
-			 url: server_path+"?function=exam_paper_log__get_students"
-			,dataType: 'json'
-	        ,type: "POST"		
-	        ,data: {
-				 executor: ""
-				,session: ""
-	        }         
-			,success : function(response) {
-				students_3 = response.data;
-				step3();
-			}
-			,error : function(response){				
-
-			}
-		});	
-		return;
-	}
-	
-	if(step_3==0){	
-		var dates = [];
-		year_start = $('[name=year_start]',fieldset_doms[1]).val();
-		year_stop = $('[name=year_stop]',fieldset_doms[1]).val();		
-		for(var year=year_start;year<=year_stop;year++){
-			var date_start,date_stop;
-			date_start = new Date(year,'02','04');
-			date_stop = new Date(year,'06','12');
-			for(var i=date_start.getTime();i<date_stop.getTime();i+=86400000){
-				var d = new Date(i);
-				dates.push(1900+d.getYear()+"-"+(d.getMonth()+1)+"-"+d.getDate());
-			}
-
-			date_start = new Date(year,'07','27');
-			date_stop = new Date(year,'11','30');
-			for(var i=date_start.getTime();i<date_stop.getTime();i+=86400000){
-				var d = new Date(i);
-				dates.push(1900+d.getYear()+"-"+(d.getMonth()+1)+"-"+d.getDate());
-			}
-		}
-
-		var ddd = [];
-		var len = 5;
-		for(var i=0;i<dates.length;i+=len){
-			var dd = [];
-			for(var ii=i;ii<i+len;ii++){
-				if(ii>=dates.length)break;
-				dd.push(dates[ii])
-			}
-			ddd.push(dd);
-		}
-
-		for(var i=0;i<ddd.length;i++){
-			for(var i2=0;i2<students_3.length;i2++){
-				var theurl = server_path+"?function=exam_paper_log&dates="+$.ligerui.toJSON(ddd[i])+"&student="+students_3[i2];
-				if(i==0&&i2==0)theurl+="&delete=1";
-				urls_3.push(theurl);
-			}
-		}
-
-		$(log_doms[2]).append("<br/> AJAX operation: <span class='simulate_step'>0</span>/"+urls_3.length+", this may take a long long time <br/><br/>");
-		$(btn_doms[2]).attr("disabled", true);        
-        $(log_doms[2]).addClass("log_done");
-	}
-	
-	$.ajax({
-		url: urls_3[step_3]
-		,dataType: 'json'
-        ,type: "POST"		
+var exam_paper_log = function(){
+    if(exam_paper_log_steps != 0){
+        exam_paper_log_steps ++;
+        exam_paper_log_step();
+        return;
+    }
+    $.ajax({
+        url: server_path+"?function=exam_paper_log"
+        ,dataType: 'json'
+        ,type: "POST"       
         ,data: {
-			 executor: ""
-			,session: ""
+             executor: ""
+            ,session: ""
         }         
-		,success : function(response) {
-			$(log_doms[2]).append(response.msg+"<br/>");
-			if(response.status=="1"){
-				$('.simulate_step',$(log_doms[2])).html(step_3+1);
-				if(step_3>=urls_3.length-1){
-					$($("fieldset")[3]).addClass("f_step");
-					$(btn_doms[2]).addClass("btn_done");
-					return;
-				}
-				step_3++;				
-				step3();
-			}else{
-				$(btn_doms[2]).attr("disabled", false);
-			}
-		}
-		,error : function(response){		
-			$(log_doms[2]).append(response);
-			alert("net error");
-			$(btn_doms[2]).attr("disabled", false);
-		}
-	});	
-}
+        ,success : function(response) {
+            $(".directions",$("[onclick='exam_paper_log()']").parent().parent()).append(response.msg+"<br/>");
+            exam_paper_log_data = response.data;
+            
+            var log_doms = $('.log');
+            var btn_doms = $('.btn_step');
+            var fieldset_doms = $('fieldset');
+            
+            var dates = [];
+    		year_start = $('[name=year_start]',fieldset_doms[1]).val();
+    		year_stop = $('[name=year_stop]',fieldset_doms[1]).val();		
+    		for(var year=year_start;year<=year_stop;year++){
+    			var date_start,date_stop;
+    			date_start = new Date(year,'02','04');
+    			date_stop = new Date(year,'06','12');
+    			for(var i=date_start.getTime();i<date_stop.getTime();i+=86400000){
+    				var d = new Date(i);
+    				dates.push(1900+d.getYear()+"-"+(d.getMonth()+1)+"-"+d.getDate());
+    			}
+
+    			date_start = new Date(year,'07','27');
+    			date_stop = new Date(year,'11','30');
+    			for(var i=date_start.getTime();i<date_stop.getTime();i+=86400000){
+    				var d = new Date(i);
+    				dates.push(1900+d.getYear()+"-"+(d.getMonth()+1)+"-"+d.getDate());
+    			}
+    		}
+
+    		var ddd = [];
+    		var len = 5;
+    		for(var i=0;i<dates.length;i+=len){
+    			var dd = [];
+    			for(var ii=i;ii<i+len;ii++){
+    				if(ii>=dates.length)break;
+    				dd.push(dates[ii])
+    			}
+    			ddd.push(dd);
+    		}
+
+    		for(var i=0;i<ddd.length;i++){
+    			for(var i2=0;i2<exam_paper_log_data.length;i2++){
+    				var theurl = server_path+"?function=exam_paper_log_step&dates="+$.ligerui.toJSON(ddd[i])
+    					+"&username="+exam_paper_log_data[i2]['username']
+    					+"&group_code="+exam_paper_log_data[i2]['group_code'];
+    				exam_paper_log_urls.push(theurl);
+    			}
+    		}    		
+            exam_paper_log_step();
+        }
+        ,error : function(response){        
+            alert("net error");
+        }
+    }); 
+};
+
+var exam_paper_log_urls = [];
+var exam_paper_log_data = [];
+var exam_paper_log_steps = 0;
+var exam_paper_log_step = function(){
+    $.ajax({
+        url: exam_paper_log_urls[exam_paper_log_steps]
+        ,dataType: 'json'
+        ,type: "POST"          
+        ,success : function(response) {
+        	//console.debug(response);return;
+            $(".directions",$("[onclick='exam_paper_log()']").parent().parent()).html(exam_paper_log_urls.length - exam_paper_log_steps);
+            if(response.status!="1")return;
+            if(exam_paper_log_steps>=exam_paper_log_urls.length-1)return;
+            exam_paper_log_steps++;
+            exam_paper_log_step();
+        }
+        ,error : function(response){        
+            alert("net error");
+        }
+    }); 
+};
+
+
+var exam_paper_multionline = function(){
+    if(exam_paper_multionline_steps != 0){
+        exam_paper_multionline_steps ++;
+        exam_paper_multionline_step();
+        return;
+    }
+    $.ajax({
+        url: server_path+"?function=exam_paper_multionline"
+        ,dataType: 'json'
+        ,type: "POST"       
+        ,data: {
+             executor: ""
+            ,session: ""
+        }         
+        ,success : function(response) {
+            $(".directions",$("[onclick='exam_paper_multionline()']").parent().parent()).append(response.msg+"<br/>");
+            exam_paper_multionline_data = response.data;
+            
+            var log_doms = $('.log');
+            var btn_doms = $('.btn_step');
+            var fieldset_doms = $('fieldset');
+            
+            var dates = [];
+    		year_start = $('[name=year_start]',fieldset_doms[1]).val();
+    		year_stop = $('[name=year_stop]',fieldset_doms[1]).val();		
+    		for(var year=year_start;year<=year_stop;year++){
+    			var date_start,date_stop;
+    			date_start = new Date(year,'02','04');
+    			date_stop = new Date(year,'06','12');
+    			for(var i=date_start.getTime();i<date_stop.getTime();i+=86400000){
+    				var d = new Date(i);
+    				dates.push(1900+d.getYear()+"-"+(d.getMonth()+1)+"-"+d.getDate());
+    			}
+
+    			date_start = new Date(year,'07','27');
+    			date_stop = new Date(year,'11','30');
+    			for(var i=date_start.getTime();i<date_stop.getTime();i+=86400000){
+    				var d = new Date(i);
+    				dates.push(1900+d.getYear()+"-"+(d.getMonth()+1)+"-"+d.getDate());
+    			}
+    		}
+
+    		var ddd = [];
+    		var len = 5;
+    		for(var i=0;i<dates.length;i+=len){
+    			var dd = [];
+    			for(var ii=i;ii<i+len;ii++){
+    				if(ii>=dates.length)break;
+    				dd.push(dates[ii])
+    			}
+    			ddd.push(dd);
+    		}
+    		
+    		var sssss = [];
+    		for(var i=0;i<response.students.length;i+=15){
+    			var ssss = [];
+    			for(var i2=i;i2<i+15;i2++){
+    				if(i2>=response.students.length)break;
+    				ssss.push(response.students[i2].username);
+    			}
+    			sssss.push(ssss);
+    		}	
+    		
+    		var ttttt = [];
+    		for(var i=0;i<response.subjects.length;i+=5){
+    			var tttt = [];
+    			for(var i2=i;i2<response.subjects.length,i2<i+5;i2++){
+    				if(i2>=response.subjects.length)break;
+    				tttt.push(response.subjects[i2].code);
+    			}
+    			ttttt.push(tttt);
+    		}
+
+    		for(var i=0;i<ddd.length;i++){
+    			for(var i2=0;i2<sssss.length;i2++){
+    				for(var i3=0;i3<ttttt.length;i3++){
+    					var theurl = server_path+"?function=exam_paper_multionline_step&dates="+$.ligerui.toJSON(ddd[i])+"&students="+$.ligerui.toJSON(sssss[i2])+"&subjects="+$.ligerui.toJSON(ttttt[i3]);
+    					if(i==0&&i2==0&&i3==0)theurl+="&delete=1";
+    					exam_paper_multionline_urls.push(theurl);
+    				}
+    			}
+    		}	    		
+            exam_paper_multionline_step();
+        }
+        ,error : function(response){        
+            alert("net error");
+        }
+    }); 
+};
+
+var exam_paper_multionline_urls = [];
+var exam_paper_multionline_data = [];
+var exam_paper_multionline_steps = 0;
+var exam_paper_multionline_step = function(){
+    $.ajax({
+        url: exam_paper_multionline_urls[exam_paper_multionline_steps]
+        ,dataType: 'json'
+        ,type: "POST"          
+        ,success : function(response) {
+        	//console.debug(response);return;
+            $(".directions",$("[onclick='exam_paper_multionline()']").parent().parent()).html(exam_paper_multionline_urls.length - exam_paper_multionline_steps);
+            if(response.status!="1")return;
+            if(exam_paper_multionline_steps>=exam_paper_multionline_urls.length-1)return;
+            exam_paper_multionline_steps++;
+            exam_paper_multionline_step();
+        }
+        ,error : function(response){        
+            alert("net error");
+        }
+    }); 
+};
+
+
 
 var step_4 = 0;
 var students_4 = null;
@@ -391,10 +494,6 @@ var step4 = function(){
 				}
 			}
 		}	
-
-		$(log_doms[3]).append("<br/> AJAX operation: <span class='simulate_step'>0</span>/"+urls_4.length+", this may take a long long time <br/><br/>");
-		$(btn_doms[3]).attr("disabled", true);        
-        $(log_doms[3]).addClass("log_done");
 	}
 	
 	$.ajax({

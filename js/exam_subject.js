@@ -1,30 +1,5 @@
 var exam_subject = {
-	
-	 config: null
-	,loadConfig: function(afterAjax){
-		$.ajax({
-			url: config_path__exam_subject__loadConfig
-			,dataType: 'json'
-	        ,type: "POST"
-	        ,data: {
-                 executor: top.basic_user.loginData.username
-                ,session: top.basic_user.loginData.session
-	        } 			
-			,success : function(response) {
-				exam_subject.config = response;
-				if ( typeof(afterAjax) == "string" ){
-					eval(afterAjax);
-				}else if( typeof(afterAjax) == "function"){
-					afterAjax();
-				}
-			}
-			,error : function(){				
-				alert(top.getIl8n('disConnect'));
-			}
-		});	
-	}	
-	
-	,grid: function(){		
+	grid: function(){		
 		var config = {
 			columns: [
 			     { display: getIl8n("exam_subject","id"), name: 'id', isSort: true, hide:true }

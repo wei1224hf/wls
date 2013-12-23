@@ -1,30 +1,5 @@
 var exam_paper = {
-	
-	 config: null
-	,loadConfig: function(afterAjax){
-		$.ajax({
-			url: config_path__exam_paper__loadConfig
-			,dataType: 'json'
-	        ,type: "POST"
-	        ,data: {
-                 executor: top.basic_user.loginData.username
-                ,session: top.basic_user.loginData.session
-	        } 			
-			,success : function(response) {
-				exam_paper.config = response;
-				if ( typeof(afterAjax) == "string" ){
-					eval(afterAjax);
-				}else if( typeof(afterAjax) == "function"){
-					afterAjax();
-				}
-			}
-			,error : function(){				
-				alert(top.il8n.disConnect);
-			}
-		});	
-	}	
-
-	,grid: function(){
+	grid: function(){
 		var config = {
 			id: 'exam_paper__grid'
 			,height:'100%'
@@ -202,7 +177,7 @@ var exam_paper = {
 			formD = $.ligerui.get("formD");
 			formD.show();
 		}else{
-			var form = $("<form id='form'></form>");
+			$(document.body).append("<form id='form' ></form>");
 			var config = {
 					inputWidth: 170
 					,labelWidth: 90
@@ -241,7 +216,7 @@ var exam_paper = {
 					config.fields.push({ display: top.getIl8n('time_created')+"-"+top.getIl8n('small'), name: "search__time_created__small", type: "date" });
 				}	
 				else if(permission[i].code=='60010108'){
-					config.fields.push({ display: top.getIl8n('status'), name: "search__status", type: "select", options :{data : exam_paper.config.exam_paper__status , valueField : "code" , textField: "value" } });
+					config.fields.push({ display: top.getIl8n('status'), name: "search__status", type: "select", options :{data : basic_parameter_data.exam_paper__status , valueField : "code" , textField: "value" } });
 				}
 				else if(permission[i].code=='60010150'){
 					config.fields.push({ display: top.getIl8n('exam_paper','cost')+"-"+top.getIl8n('big'), name: "search__cost__big", type: "text" });
@@ -251,11 +226,11 @@ var exam_paper = {
 					config.fields.push({ display: top.getIl8n('exam_paper','count_used'), name: "search__count_used", type: "text" });
 				}	
 				else if(permission[i].code=='60010152'){
-					config.fields.push({ display: top.getIl8n('exam_paper','subject_code'), name: "search__subject_code", type: "select", options :{data : exam_paper.config.subject_code , valueField : "code" , textField: "value" } });
+					config.fields.push({ display: top.getIl8n('exam_paper','subject_code'), name: "search__subject_code", type: "select", options :{data : [] , valueField : "code" , textField: "value" } });
 				}				
 			}
 			
-			$(form).ligerForm(config); 
+			$("#form").ligerForm(config); 
 			$.ligerDialog.open({
 				 id: "formD"
 				,width: 350
@@ -389,13 +364,11 @@ var exam_paper = {
 	,ajaxState: false 	
 	,modify: function(){
 
-		//从服务端读取信息,填充表单内容
 		$.ajax({
 			url: config_path__exam_paper__view
 			,data: {
 				id: getParameter("id", window.location.toString() )
 				
-				//服务端权限验证所需
 				,executor: top.basic_user.loginData.username
 				,session: top.basic_user.loginData.session
 			}
@@ -414,11 +387,11 @@ var exam_paper = {
 				]
 			};
 			
-		$(document.body).append("<form id='form'></form>");
-		$('#form').ligerForm(config);			
-		$('#form').append('<br/><br/><br/><br/><input type="submit" value="'+top.getIl8n('submit')+'" id="exam_paper__submit" class="l-button l-button-submit" />' );
+		$(document.body).append("<form id='form_modify'></form>");
+		$('#form_modify').ligerForm(config);			
+		$('#form_modify').append('<br/><br/><br/><br/><input type="submit" value="'+top.getIl8n('submit')+'" id="exam_paper__submit" class="l-button l-button-submit" />' );
 		
-		var v = $('#form').validate({
+		var v = $('#form_modify').validate({
 			debug: true,
 			//JS前端验证错误
 			errorPlacement: function (lable, element) {

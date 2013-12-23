@@ -3,10 +3,6 @@ include_once "tools.php";
 include_once 'basic_group.php';
 include_once 'basic_user.php';
 
-include_once 'exam_paper.php';
-include_once 'exam_paper_log.php';
-include_once 'exam_paper_multionline.php';
-
 include_once '../libs/phpexcel/Classes/PHPExcel.php';
 include_once '../libs/phpexcel/Classes/PHPExcel/IOFactory.php';
 include_once '../libs/phpexcel/Classes/PHPExcel/Writer/Excel5.php';
@@ -36,7 +32,7 @@ class install{
 		}
 		*/
 		
-		$file = "../".tools::$configfilename;
+		$file = tools::$configfilename;
 		if(!is_writable($file)){
 			$t_return["msg"] .= "<br/>". "File ".$file." is not writable, change it's mode to 777";
 		}
@@ -48,19 +44,9 @@ class install{
 		if(!is_writable($file)){
 			$t_return["msg"] .= "<br/>". "File ".$file." is not writable, change it's mode to 777";
 		}
-		$file = "../file/upload/paper";
+		$file = "../file/upload";
 		if(!is_writable($file)){
 			$t_return["msg"] .= "<br/>"."Folder ".$file." is not writable, change it's mode to 777";
-		}
-		
-		$file = "../file/upload/photo";
-		if(!is_writable($file)){
-			$t_return["msg"] .= "<br/>". "Folder ".$file." is not writable, change it's mode to 777";
-		}
-		
-		$file = "../file/upload/mp3";
-		if(!is_writable($file)){
-			$t_return["msg"] .= "<br/>". "Folder ".$file." is not writable, change it's mode to 777";
 		}
 		
 		if($t_return['msg']==""){
@@ -77,10 +63,10 @@ class install{
 		$t_return = array("status"=>"2","msg"=>"");
 		
 		$host = $_REQUEST['host'];
-		$unm = $_REQUEST['unm'];
-		$pwd = $_REQUEST['pwd'];
+		$unm = $_REQUEST['username'];
+		$pwd = $_REQUEST['password_'];
 		$port = $_REQUEST['port'];
-		$db = $_REQUEST['db'];
+		$db = $_REQUEST['name'];
 		$MODE = $_REQUEST['mode'];
 		$il8n = $_REQUEST['il8n'];
 		$type = $_REQUEST['type'];
@@ -120,31 +106,17 @@ class install{
 			$pwd = getenv('HTTP_BAE_ENV_SK');
 			$host = getenv('HTTP_BAE_ENV_ADDR_SQL_IP');
 			$port = getenv('HTTP_BAE_ENV_ADDR_SQL_PORT');
-			$MODE = "WLS";
+			$MODE = "independent";
 		}		
-
-		if($port!="")$host = $host.":".$port;
-		$conn = mysql_connect($host,$unm,$pwd);
-		if($conn!=FALSE){
-			$db_ = mysql_select_db($db,$conn);
-			if(!$db_){
-				$t_return["msg"] =  " Database name wrong";
-				$t_return["status"] = 2;
-				return $t_return;
-			}
-		}else{
-			$t_return["msg"] =  " Can not connect the database";
-			$t_return["status"] = 23;
-			return $t_return;
+		
+		if($type=="mysql"){
+			if($port!="")$host = $host.":".$port;
 		}
-
-		if($t_return['msg']==""){
-			$t_return = array(
-					"status"=>"1"
-					,"msg"=>"OK");
+		else if($type=="mssql"){
+			if($port!="")$host = $host.",".$port;
 		}
 		
-		$file = "../".tools::$configfilename;
+		$file = tools::$configfilename;
 		$fp = fopen($file, 'r');
 		$arr = array();
 		$num = 1;
@@ -157,11 +129,11 @@ class install{
 			else if(strpos($line,'DB_NAME') !== false){
 				$line = "<item ID=\"DB_NAME\">".$db."</item>";
 			}
-			else if(strpos($line,'DB_UNM') !== false){
-				$line = "<item ID=\"DB_UNM\">".$unm."</item>";
+			else if(strpos($line,'DB_USERNAME') !== false){
+				$line = "<item ID=\"DB_USERNAME\">".$unm."</item>";
 			}
-			else if(strpos($line,'DB_PWD') !== false){
-				$line = "<item ID=\"DB_PWD\">".$pwd."</item>";
+			else if(strpos($line,'DB_PASSWORD') !== false){
+				$line = "<item ID=\"DB_PASSWORD\">".$pwd."</item>";
 			}
 			else if(strpos($line,'DB_HOST') !== false){
 				$line = "<item ID=\"DB_HOST\">".$host."</item>";
@@ -182,21 +154,35 @@ class install{
 		fclose($fp);
 		$s = implode("\r\n", $arr);
 		file_put_contents($file, $s);
+		
+		if(tools::getConn()==FALSE){
+			$t_return["status"] = 2;
+			$t_return["msg"] = "db wrong".tools::$conn;
+		}
+		if($t_return['msg']==""){
+			$t_return["status"] = 1;
+			$t_return["msg"] = "ok";
+		}
+		
 
 		return $t_return;
 	}
 	
 	public static function step3(){
+		
 		$t_return = array("status"=>"2","msg"=>"");
-		$path_xls = "../sql/sql.xls";
+		$path_xls = "../sql/".tools::getConfigItem("DB_TYPE")."_".tools::getConfigItem("IL8N").".xls";
 		$PHPReader = PHPExcel_IOFactory::createReader('Excel5');
 		$PHPReader->setReadDataOnly(true);
 		$phpexcel = $PHPReader->load($path_xls);
-		
+		$conn = tools::getConn();
 		$sqls = array();
 		$sqls2 = "";
-		for($i0=0;$i0<$phpexcel->getSheetCount();$i0++){
+		for($i0=0;$i0<$phpexcel->getSheetCount();$i0++){			
 			$currentSheet = $phpexcel->getSheet($i0);
+			$sheetname = $currentSheet->getTitle();
+			//echo $sheetname;exit();
+			if(tools::$dbtype=="mssql" && $sheetname=="SL323")continue;
 			$row = $currentSheet->getHighestRow();
 			for($i=1;$i<=$row;$i++){
 				$cellvalue =  $currentSheet->getCell('E'.$i)->getValue();
@@ -212,7 +198,11 @@ class install{
 		$s = implode(" ", $sqls);
 		file_put_contents("../sql/sql.sql", $s);
 		$t_return = array("status"=>"1","msg"=>(count(explode(";", $sqls2))-1)." sql in total. Please waite for a while.","sql"=>explode(";", $sqls2));
-		return $t_return;
+		echo json_encode($t_return);
+		tools::closeConn();
+		exit();
+		//print_r(explode(";", $sqls2));exit();
+		//return $t_return;
 	}
 	
 	public static function step3_2(){
@@ -226,13 +216,68 @@ class install{
 		}
 		$conn = tools::getConn();
 		for($i=0;$i<count($sqls);$i++){
-			$res = mysql_query($sqls[$i],$conn);
+			$sql = $sqls[$i];
+			if(tools::$dbtype=="mssql"){
+				if (strpos($sql, "create table") !== false){
+					$sql = str_replace("numeric", "numeric,AAAAAA,", $sql);
+					$parts = explode(",", $sql);
+					
+					$parts2 = array();
+					$spot = 0;
+					for($i2=0;$i2<count($parts);$i2++){						
+						if($parts[$i2]=="AAAAAA"){
+							$parts2[$i2-1] = $parts[$i2-1] ;
+							$parts2[$i2] = $parts[$i2] ;
+							$parts2[$i2+1] = $parts[$i2+1] ;
+							$i2++;							
+							continue;
+						}
+						else{
+							if (
+								!(
+								(strpos($parts[$i2], "unique") !== false)||
+								(strpos($parts[$i2], "primary") !== false)||
+								(strpos($parts[$i2], "default") !== false)||
+								(strpos($parts[$i2], "not null") !== false)
+								)
+							){
+								if($i2== (count($parts)-1) ){
+									$parts2[$i2] = substr($parts[$i2], 0,strlen($parts[$i2])-1);
+									$parts2[$i2] .= " null )";
+								}
+								else{
+									$parts2[$i2] = $parts[$i2]." null ";
+								}
+							}
+							else{
+								$parts2[$i2] = $parts[$i2];
+							}
+						}
+					}
+					//print_r($parts);print_r($parts2);exit();
+					$sql = join(",", $parts2);
+					$sql = str_replace(",AAAAAA,", "", $sql);
+					
+					$sqls[$i] = $sql;
+				}
+			}
+			else if(tools::$dbtype=="mysql"){
+				if (strpos($sql, "create table") !== false){
+					if ( (strpos($sql, "basic_user_session") !== false) || (strpos($sql, "basic_memory") !== false) ){
+						$sql .= " ENGINE=MEMORY ";
+					}					
+					$sql .= " DEFAULT CHARSET=utf8 ";	
+					$sqls[$i] = $sql;
+				}
+			}
+			$res = tools::query(strtolower($sqls[$i]),$conn);
 			if($res==FALSE){
 				return array(
 					'status'=>'2'
 					,'msg'=>'SQL ERROR '.$sqls[$i]
 				);
 			}
+			//exit($sqls[$i]);
 		}
 		$t_return = array("status"=>"1","msg"=>count($sqls)." sql executed ");
 		return $t_return;
@@ -240,47 +285,62 @@ class install{
 	
 	public static function step4(){
 		$t_return = array("status"=>"2","msg"=>"");
-		$path_xls = "../sql/data.xls";
+		$path_xls = "../sql/data_".tools::getConfigItem("IL8N").".xls";
 		$PHPReader = PHPExcel_IOFactory::createReader('Excel5');
 		$PHPReader->setReadDataOnly(true);
 		$phpexcel = $PHPReader->load($path_xls);
 		$conn = tools::getConn();
 		
-		mysql_query("delete from basic_user;");
-		mysql_query("insert into basic_user(username,password,group_code,group_all,id,type,status,money,credits) values ('admin',md5('admin'),'10','10',1,'10','10','10000','10000');");
-		mysql_query("insert into basic_user(username,password,group_code,group_all,id,type,status) values ('guest',md5('guest'),'99','99',2,'10','10');");
-		mysql_query("delete from basic_group_2_user;");
-		mysql_query("insert into basic_group_2_user(user_code,group_code) values ('admin','10');");
-		mysql_query("insert into basic_group_2_user(user_code,group_code) values ('guest','99');");
-		mysql_query("delete from basic_group_2_permission;");
-		mysql_query("delete from basic_permission;");
-		mysql_query("delete from basic_group;");
+		tools::query("delete from basic_user;",$conn);
+		tools::query("delete from basic_group_2_user;",$conn);
+		tools::query("delete from basic_group_2_permission;",$conn);
+		tools::query("delete from basic_permission;",$conn);
+		tools::query("delete from basic_group;",$conn);
+		tools::query("delete from basic_parameter where reference in ('zone','industry','localzone');",$conn);
 		
-		//mysql_query("START TRANSACTION;",$conn);
 		$sqls = array();
+		
+		$currentSheet = $phpexcel->getSheetByName("data_basic_user");
+		$row = $currentSheet->getHighestRow();
+		for($i=2;$i<=$row;$i++){
+			$sql_insert = "insert into basic_user(id,username,password,group_code,type,status,money,credits) values (
+					'".$i."'
+					,'".trim($currentSheet->getCell('A'.$i)->getValue())."'
+					,'".md5($currentSheet->getCell('B'.$i)->getValue())."'
+					,'".$currentSheet->getCell('C'.$i)->getValue()."'
+					,'".$currentSheet->getCell('D'.$i)->getValue()."'
+					,'".$currentSheet->getCell('E'.$i)->getValue()."'
+					,'".$currentSheet->getCell('F'.$i)->getValue()."'
+					,'".$currentSheet->getCell('G'.$i)->getValue()."'									
+			);";
+			$sqls[] = $sql_insert."\n";
+			
+			$sql_insert = "insert into basic_group_2_user(user_code,group_code) values ('".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('C'.$i)->getValue()."')";
+			$sqls[] = $sql_insert."\n";
+			//$res = tools::query($sql_insert,$conn);
+		}		
 		
 		$currentSheet = $phpexcel->getSheetByName("data_basic_group");		
 		$row = $currentSheet->getHighestRow();
 		for($i=2;$i<=$row;$i++){
-			$sql_insert = "insert into basic_group(id,name,code,type,status) values ('".$i."','".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('B'.$i)->getValue()."','".$currentSheet->getCell('C'.$i)->getValue()."','".$currentSheet->getCell('D'.$i)->getValue()."');";
-			$sqls[] = $sql_insert."\n";
-			$res = mysql_query($sql_insert,$conn);
-			if($res==FALSE){
-				$t_return['msg'] = $sql_insert;
-				return $t_return;
+			$type = $currentSheet->getCell('C'.$i)->getValue();
+			if($type!='99'){
+				$sql_insert = "insert into basic_group(id,name,code,type,status) values ('".$i."','".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('B'.$i)->getValue()."','".$currentSheet->getCell('C'.$i)->getValue()."','".$currentSheet->getCell('D'.$i)->getValue()."');";
+			}else{
+				$sql_insert = "insert into basic_node(name,code,tablename) values ('".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('B'.$i)->getValue()."','basic_group');";
 			}
+			$sqls[] = $sql_insert."\n";
+			//$res = tools::query($sql_insert,$conn);
 		}
 		
 		$currentSheet = $phpexcel->getSheetByName("data_basic_permission");
 		$row = $currentSheet->getHighestRow();
+		
 		for($i=2;$i<=$row;$i++){
 			$sql_insert = "insert into basic_permission(name,code,type,icon,path) values ('".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('C'.$i)->getValue()."','".$currentSheet->getCell('B'.$i)->getValue()."','".$currentSheet->getCell('D'.$i)->getCalculatedValue()."','".$currentSheet->getCell('E'.$i)->getValue()."');";
+			//echo $sql_insert;
 			$sqls[] = $sql_insert."\n";
-			$res = mysql_query($sql_insert,$conn);
-			if($res==FALSE){
-				$t_return['msg'] = $sql_insert;
-				return $t_return;
-			}
+			//$res = tools::query($sql_insert,$conn);
 		}
 		
 		$currentSheet = $phpexcel->getSheetByName("data_basic_group_2_permission");
@@ -299,29 +359,68 @@ class install{
 					$group = $currentSheet->getCellByColumnAndRow($columnindex-1,2)->getValue();
 					$cellvalue = "insert into basic_group_2_permission (permission_code,group_code) values('".$permission."','".$group."');";
 					$sqls[] = $cellvalue."\n";
-					mysql_query($cellvalue,$conn);
+					//tools::query($cellvalue,$conn);
 				}
 			}
 		}
-		tools::initMemory();
-		//mysql_query("COMMIT;",$conn);
+		
+		/*
+		$currentSheet = $phpexcel->getSheetByName("other");
+		$row = $currentSheet->getHighestRow();
+		for($i=2;$i<=$row;$i++){
+			$code_read = $currentSheet->getCell('B'.$i)->getValue();
+			if($code_read==null)continue;
+			$code_read = str_replace("'", "", $code_read);
+			$sql_insert = "insert into basic_parameter(value,code,reference) values ('".trim($currentSheet->getCell('A'.$i)->getValue())."','".$code_read."','".$currentSheet->getCell('C'.$i)->getValue()."');";
+			$sqls[] = $sql_insert."\n";
+			//$res = tools::query($sql_insert,$conn);
+		}	
+		*/	
+		
 		$s = implode(" ", $sqls);
 		file_put_contents("../sql/data.sql", $s);
-		$t_return = array("status"=>"1","msg"=>count($sqls)." sql executed ","sqls"=>$sqls);
+		$t_return = array("status"=>"1","msg"=>count($sqls)." sql to execute ","sqls"=>$sqls);
+		exit(json_encode($t_return));
 		return $t_return;
 	}	
+	
+	public static function step4_2(){
+		$t_return = array("status"=>"2","msg"=>"");
+		$sqls = json_decode2($_REQUEST['sqls'],TRUE);
+		if(count($sqls)==0){
+			return array(
+				'status'=>'2'
+				,'msg'=>'wrong request:'.$_REQUEST['sqls']
+			);
+		}
+		$conn = tools::getConn();
+		tools::transaction($conn);
+		if(tools::$dbtype=="mssql"){
+			$str = implode(";",$sqls);
+			tools::query($str,$conn);
+		}else{
+			for($i=0;$i<count($sqls);$i++){
+				$sqls[$i] = strtolower($sqls[$i]);
+				$res = tools::query($sqls[$i],$conn);
+			}
+		}
+		tools::commit($conn);
+		$t_return = array("status"=>"1","msg"=>count($sqls)." sql executed ");
+		return $t_return;
+	}	
+	
 }
 
 $functionName = $_REQUEST['function'];
-$data = array();
+$data = null;
 if($functionName=="step1"){
 	$data = install::step1();
 }
 else if($functionName=="step2"){
 	$data = install::step2();
 }
-else if($functionName=="step3"){
-	$data = install::step3();
+else if($functionName=="step3"){	
+	install::step3();	
 }	
 else if($functionName=="step3_2"){
 	$data = install::step3_2();
@@ -329,6 +428,12 @@ else if($functionName=="step3_2"){
 else if($functionName=="step4"){
 	$data = install::step4();
 }
+else if($functionName=="step4_2"){
+	$data = install::step4_2();
+}
+else if($functionName=="step5"){
+	tools::initMemory();
+}
 
 echo json_encode($data);
-if(tools::$conn!=null)mysql_close(tools::$conn);
+if(tools::$conn!=null)tools::closeConn();

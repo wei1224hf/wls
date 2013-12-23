@@ -59,6 +59,17 @@ class basic_parameter {
 				$t_return['action'] = $action;
 			}
 		}
+		else if($function =="data"){
+			//$action = "120223";
+			//if(basic_user::checkPermission($executor, $action, $session)){
+				$t_return = basic_parameter::data(
+						$_REQUEST['code']
+						,$executor
+				);
+			//}else{
+			//	$t_return['action'] = $action;
+			//}
+		}		
 		
 		else if($function =="loadConfig"){
 			$t_return = basic_parameter::loadConfig();
@@ -82,20 +93,23 @@ class basic_parameter {
     	$conn = tools::getConn();
     
     	$sql_where = basic_parameter::search($search, $executor);
-    	$sql_order = " order by basic_parameter.".$sortname." ".$sortorder." ";
+    	
+    	$sql = tools::getSQL("basic_parameter__grid");
+    	$sql = str_replace("__sortname__", $sortname, $sql);
+    	$sql = str_replace("__sortorder__", $sortorder, $sql);
+    	$sql = str_replace("__where__", $sql_where, $sql);
+    	$sql = str_replace("__offset__", (($page-1)*$pagesize), $sql);
+    	$sql = str_replace("__limit__", $pagesize, $sql);    	
     
-    	$sql = "select * from basic_parameter";
-    	$sql .= $sql_where." ".$sql_order." limit ".(($page-1)*$pagesize).", ".$pagesize;
-    
-    	$res = mysql_query($sql,$conn);
+    	$res = tools::query($sql,$conn);
     	$data = array();
-    	while($temp = mysql_fetch_assoc($res)){
+    	while($temp = tools::fetch_assoc($res)){
     		$data[] = $temp;
     	}
     
     	$sql_total = "select count(*) as total FROM basic_parameter ".$sql_where;
-    	$res = mysql_query($sql_total,$conn);
-    	$total = mysql_fetch_assoc($res);
+    	$res = tools::query($sql_total,$conn);
+    	$total = tools::fetch_assoc($res);
     
     	$returnData = array(
     			'Rows'=>$data,
@@ -124,7 +138,7 @@ class basic_parameter {
 		$ids = explode(",", $ids);
 		for($i=0;$i<count($ids);$i++){
 		    $sql = "delete from basic_parameter where id = '".$ids[$i]."' ;";
-		    mysql_query($sql,$conn);		    
+		    tools::query($sql,$conn);		    
 		}
 		
 		return  array(
@@ -147,7 +161,7 @@ class basic_parameter {
 		$sql = substr($sql, 0,strlen($sql)-1);
 		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
 		$sql = $sql.$sql_;			
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		if($res==false){
             return array(
                 'status'=>"2"
@@ -165,7 +179,7 @@ class basic_parameter {
     public static function resetMemory(){
 	    $conn = tools::getConn();
 	    $sql = "delete from basic_memory";
-	    mysql_query($sql,$conn);
+	    tools::query($sql,$conn);
 	    tools::initMemory();
 	    
 	    return array(
@@ -173,4 +187,20 @@ class basic_parameter {
 	        ,'msg'=>'ok'
 	    );	    
     }
+    
+    public static function data($code,$executor){
+    	$conn = tools::getConn();
+    	$sql = "select code , value from basic_parameter where code like '".$code."__'  ";
+        $res = tools::query($sql,$conn);
+    	$data = array();
+    	while($temp = tools::fetch_assoc($res)){
+    		$data[] = $temp;
+    	}
+    	 
+    	return array(
+    		'status'=>'1'
+    		,'msg'=>'ok'
+    		,'data'=>$data
+    	);
+    }    
 }

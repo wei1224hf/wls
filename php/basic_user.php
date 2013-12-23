@@ -37,6 +37,30 @@ class basic_user {
 				$t_return['action'] = $action;
 			}
 		}
+		if($function == "grid_more"){
+			$action = "120201";
+			if(basic_user::checkPermission($executor, $action, $session)){
+				$sortname = "id";
+				$sortorder = "asc";
+				if(isset($_REQUEST['sortname'])){
+					$sortname = $_REQUEST['sortname'];
+				}
+				if(isset($_REQUEST['sortorder'])){
+					$sortorder = $_REQUEST['sortorder'];
+				}
+		
+				$t_return = basic_user::grid_more(
+					 $_REQUEST['search']
+					,$_REQUEST['pagesize']
+					,$_REQUEST['page']
+					,$executor
+					,$sortname
+					,$sortorder
+				);
+			}else{
+				$t_return['action'] = $action;
+			}
+		}		
 		else if($function =="add"){
 			$action = "120221";
 			if(basic_user::checkPermission($executor, $action, $session)){
@@ -158,20 +182,23 @@ class basic_user {
         $conn = tools::getConn();       
 
         $sql_where = basic_user::search($search, $executor);
-		$sql_order = " order by basic_user.".$sortname." ".$sortorder." ";
 		  
 		$sql = tools::getSQL("basic_user__grid");
-		$sql .= $sql_where." ".$sql_order." limit ".(($page-1)*$pagesize).", ".$pagesize;
+    	$sql = str_replace("__sortname__", $sortname, $sql);
+    	$sql = str_replace("__sortorder__", $sortorder, $sql);
+    	$sql = str_replace("__where__", $sql_where, $sql);
+    	$sql = str_replace("__offset__", (($page-1)*$pagesize), $sql);
+    	$sql = str_replace("__limit__", $pagesize, $sql); 
 		
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		
 		$sql_total = "select count(*) as total FROM basic_user ".$sql_where;		
-		$res = mysql_query($sql_total,$conn);
-		$total = mysql_fetch_assoc($res);
+		$res = tools::query($sql_total,$conn);
+		$total = tools::fetch_assoc($res);
         
         $returnData = array(
             'Rows'=>$data,
@@ -181,8 +208,48 @@ class basic_user {
         return $returnData;
     }
     
+    public static function grid_more(
+    		$search
+    		,$pagesize
+    		,$page
+    		,$executor
+    		,$sortname
+    		,$sortorder){
+    
+    	$conn = tools::getConn();
+    
+    	$sql_where = basic_user::search($search, $executor)." and basic_user.group_code not in ('10','99')";
+    	$sql_where = str_replace("where 1=1", "", $sql_where);
+    	$sql_order = " order by basic_user.".$sortname." ".$sortorder." ";
+    
+    	$sql = tools::getSQL("basic_user__grid_more");
+    	$sql .= $sql_where." ".$sql_order." limit ".(($page-1)*$pagesize).", ".$pagesize;
+		//echo $sql;exit();
+    	$res = tools::query($sql,$conn);
+    	$data = array();
+    	while($temp = tools::fetch_assoc($res)){
+    		$data[] = $temp;
+    	}
+    
+    	$sql_total = "select count(*) as total FROM
+	    basic_user
+		, oa_person 
+		WHERE
+		 basic_user.id_person = oa_person.id
+	 	".$sql_where;
+    	$res = tools::query($sql_total,$conn);
+    	$total = tools::fetch_assoc($res);
+    
+    	$returnData = array(
+    	    'Rows'=>$data,
+    		'Total'=>$total['total']
+    	);
+    
+    	return $returnData;
+    }    
+    
     private static function search($search,$executor){
-    	$sql_where = " where 1=1 ";
+    	$sql_where = " where type<>10 ";
     	
     	$search=json_decode2($search,true);
     	$search_keys = array_keys($search);
@@ -210,9 +277,9 @@ class basic_user {
 		$usernames = explode(",", $usernames);
 		for($i=0;$i<count($usernames);$i++){
 		    $sql = "delete from basic_user where username = '".$usernames[$i]."' ;";
-		    mysql_query($sql,$conn);
+		    tools::query($sql,$conn);
 		    $sql = "delete from basic_group_2_user where user_code = '".$usernames[$i]."' ;";
-		    mysql_query($sql,$conn);
+		    tools::query($sql,$conn);
 		}
 		
 		return  array(
@@ -224,12 +291,12 @@ class basic_user {
 	public static function getPermission($username){
 		$s_return = "";
 		$sql = tools::getSQL("basic_user__getPermission");
-		$sql = str_replace( "__username__", "'".$username."'",$sql);
+		$sql = str_replace( "__username__", $username,$sql);
 		
 		$conn = tools::getConn();
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		
-        while($temp = mysql_fetch_assoc($res)){
+        while($temp = tools::fetch_assoc($res)){
             $s_return .= $temp['code'].",";
         }		
         $s_return = substr($s_return,0,strlen($s_return)-1);
@@ -244,53 +311,38 @@ class basic_user {
 		$sql = str_replace( "__username__", $username,$sql);
 		
 		$conn = tools::getConn();
-		$res = mysql_query($sql,$conn);
-
-        while($temp = mysql_fetch_assoc($res)){
-            $a_return[] = $temp;
+		$res = tools::query($sql,$conn);
+		$arr = array();
+		$desktopicon_extr = array();
+		
+        while($temp = tools::fetch_assoc($res)){
+        	if($temp['status']=='1'){
+        		$desktopicon_extr[] = $temp;
+        	}
+            $arr[] = $temp;
         }
-		$a_return = tools::list2Tree($a_return);	
-
+		$a_return = tools::list2Tree($arr);	
+		$a_return = array_merge($a_return,$desktopicon_extr);
 		return $a_return;
     }
     
 	public static function checkUsernameUsed($username){
 		$sql = "select id from basic_user where username = '".$username."' ";
-		$res = mysql_query($sql,tools::getConn());
-	    if($temp = mysql_fetch_assoc($res)){
+		$res = tools::query($sql,tools::getConn());
+	    if($temp = tools::fetch_assoc($res)){
             return true;
         }
 		return false;
-	}
-    
-	public static function getMySession($executor, $session){
-        $conn = tools::getConn();
-		$sql = tools::getSQL("basic_user__getMySession");
-		$sql = str_replace("__user_code__", "'".$executor."'",$sql);
-		$sql = str_replace("__session__", "'".$session."'",$sql);
-		$sql = str_replace("\n", " ",$sql);
-
-		$res = mysql_query($sql,$conn);
-		$temp = mysql_fetch_assoc($res);
-		if($temp){		    
-			return array(
-				 "status"=>"1"
-				,"data"=>$temp
-			);
-		}else{            
-		    //basic_user::$permissions = $sql;
-		    exit("error");
-		}
 	}
 	
 	public static function getSession($executor){
 		$conn = tools::getConn();
 		$sql = tools::getSQL("basic_user__getSession");
-		$sql = str_replace("__user_code__", "'".$executor."'",$sql);
+		$sql = str_replace("__user_code__", $executor,$sql);
 		$sql = str_replace("\n", " ",$sql);
 	
-		$res = mysql_query($sql,$conn);
-		$temp = mysql_fetch_assoc($res);
+		$res = tools::query($sql,$conn);
+		$temp = tools::fetch_assoc($res);
 		if($temp){
 			return array(
 					"status"=>"1"
@@ -298,16 +350,23 @@ class basic_user {
 			);
 		}else{
 			//basic_user::$permissions = $sql;
-			exit("error");
+			exit($sql);
 		}
 	}	
 	
 	public static function checkPermission($executor, $action, $session){
-		if($executor=='guest'){
-			$s = basic_user::getSession($executor);
-		}else{
-			$s = basic_user::getMySession($executor, $session);
-		}		
+
+		$s = basic_user::getSession($executor);
+		if($executor!='guest'){
+			$seeion_ = $s['data']['session'];
+			if( ($session!= md5( $seeion_.date("G"))) && $session!= (md5( $seeion_.date("G",strtotime('-1 hour')))) ){
+				echo md5( $seeion_.date("G"))
+						." ".md5( $seeion_.date("G",strtotime('-1 hour')))
+								." ".$session." ".date("G");
+				return false;
+			}
+		}
+			
 		$p = $s['data']['permissions'];
 	    $arr = explode(",", $p );
 	    for($i=0;$i<count($arr);$i++){
@@ -315,6 +374,7 @@ class basic_user {
 	            return true; 
 	        }
 	    }
+	    echo $action;
 	    return false;
 	}
 	
@@ -341,8 +401,8 @@ class basic_user {
 			and ".$pfx."user_usergroup_map.user_id = ".$pfx."session.userid and client_id = 0
 		";
 		
-        $res = mysql_query($sql,$conn);
-		$temp = mysql_fetch_assoc($res);
+        $res = tools::query($sql,$conn);
+		$temp = tools::fetch_assoc($res);
 		if($temp==false){
 		    return array(
 		        'status'=>2
@@ -351,8 +411,8 @@ class basic_user {
 		}
 		
 		$sql2 = "select * from basic_user where username = '".$temp['username']."' ";
-		$res2 = mysql_query($sql2,$conn);
-		$temp2 = mysql_fetch_assoc($res2);			
+		$res2 = tools::query($sql2,$conn);
+		$temp2 = tools::fetch_assoc($res2);			
 		
         if($temp2==false){      
         	$sutdent_default = tools::getConfigItem("dzx_defaultStudentGroup");
@@ -382,10 +442,10 @@ class basic_user {
     		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
     		$sql = $sql.$sql_;		
  	  
-    		mysql_query($sql,$conn);	
+    		tools::query($sql,$conn);	
 
     		$sql = "insert into basic_group_2_user (user_code,group_code) values ('".$temp['username']."','".$group."');";
-    		mysql_query($sql,$conn);	    		
+    		tools::query($sql,$conn);	    		
         }		
 		
 		$t_return = basic_user::_login($temp['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
@@ -423,8 +483,8 @@ class basic_user {
 			 and ".$pfx."common_session.sid = '".$sessionid."';
 		";
 
-		$res = mysql_query($sql_dzx,$conn);
-		$data_dzx = mysql_fetch_assoc($res);
+		$res = tools::query($sql_dzx,$conn);
+		$data_dzx = tools::fetch_assoc($res);
 		if($data_dzx==false){
 		    return array(
 		        'status'=>2
@@ -433,8 +493,8 @@ class basic_user {
 		}
 		
 		$sql2 = "select * from basic_user where username = '".$data_dzx['username']."' ";
-		$res2 = mysql_query($sql2,$conn);
-		$temp2 = mysql_fetch_assoc($res2);			
+		$res2 = tools::query($sql2,$conn);
+		$temp2 = tools::fetch_assoc($res2);			
 		
         if($temp2==false){      
         	$sutdent_default = tools::getConfigItem("dzx_defaultStudentGroup");
@@ -470,10 +530,10 @@ class basic_user {
     		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
     		$sql = $sql.$sql_;		
  	  
-    		mysql_query($sql,$conn);	
+    		tools::query($sql,$conn);	
 
     		$sql2 = "insert into basic_group_2_user (user_code,group_code) values ('".$data_dzx['username']."','".$group."');";
-    		mysql_query($sql2,$conn);	    		
+    		tools::query($sql2,$conn);	    		
         }		
 		
 		$t_return = basic_user::_login($data_dzx['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
@@ -502,8 +562,8 @@ class basic_user {
         FROM
         dede_member where mid = ".$sessionid;
 		
-		$res = mysql_query($sql,$conn);
-		$temp = mysql_fetch_assoc($res);
+		$res = tools::query($sql,$conn);
+		$temp = tools::fetch_assoc($res);
 		if($temp==false){
 		    return array(
 		        'status'=>2
@@ -512,8 +572,8 @@ class basic_user {
 		}
 		
 		$sql2 = "select * from basic_user where username = '".$temp['username']."' ";
-		$res2 = mysql_query($sql2,$conn);
-		$temp2 = mysql_fetch_assoc($res2);			
+		$res2 = tools::query($sql2,$conn);
+		$temp2 = tools::fetch_assoc($res2);			
 		
         if($temp2==false){      
         	$sutdent_default = tools::getConfigItem("dzx_defaultStudentGroup");
@@ -541,10 +601,10 @@ class basic_user {
     		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
     		$sql = $sql.$sql_;		
  	  
-    		mysql_query($sql,$conn);
+    		tools::query($sql,$conn);
 
     		$sql2 = "insert into basic_group_2_user (user_code,group_code) values ('".$temp['username']."',".$group.");";
-    		mysql_query($sql2,$conn);	    		
+    		tools::query($sql2,$conn);	    		
         }		
 		
 		$t_return = basic_user::_login($temp['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
@@ -604,34 +664,30 @@ class basic_user {
 		$conn = tools::getConn();
 		$sql = "";
 		
-		$sql = "select count(*) as total from basic_memory ";
-		$res = mysql_query($sql,$conn);
-		$temp = mysql_fetch_assoc($res);
-		if($temp['total']=='0'){
-		    tools::initMemory();
-		}	
-		
-		if($username=="guest"){
-		    $md5PasswordTime = "md5(concat(password, hour(now()) ))";
-		}
-		if(substr($md5PasswordTime, 0,3)!='md5'){
-			$md5PasswordTime = "'".$md5PasswordTime."'";
-		}
-		
 		$sql = tools::getSQL("basic_user__login_check");
-		$sql = str_replace("__username__", "'".$username."'",$sql);
-		$sql = str_replace("__password__",$md5PasswordTime,$sql);
+		$sql = str_replace("__username__", $username,$sql);
+
 		$sql = str_replace("\n"," ",$sql);
 		$sql = str_replace("\t"," ",$sql);
 
-		$res = mysql_query($sql,$conn);
-		if(!$temp = mysql_fetch_assoc($res)){
+		$res = tools::query($sql,$conn);
+		$temp = tools::fetch_assoc($res);
+		if(!$temp){
 		    return array(
 		        'status'=>'2'
-		        ,'msg'=>'Wrong password or username or group was closed'
+		        ,'msg'=>'wrong username '
 		        ,'sql'=>$sql
 		    );
 		}else{
+			$password = $temp["password"];
+			if( md5($password.date("G"))!= $md5PasswordTime && md5($password.date("G",strtotime('-1 hour')))!= $md5PasswordTime ){
+				return array(
+						'status'=>'2'
+						,'msg'=>'wrong password '
+						,'sql'=>$sql
+				);
+			}
+			unset($temp["password"]);
 		    $session = md5(rand(10000, 99999));
 		    $temp['session'] = md5($session.date("G"));
 		    
@@ -641,25 +697,26 @@ class basic_user {
 		        ,'status'=>"1"
 		        ,'msg'=>'OK'
 		        ,'permissions'=>basic_user::getPermissionTree($username)
-		        ,'il8n'=>tools::readIl8n()	
 		        ,'H'=>date("G")	       
 		    );
 		    
             $sql_logout = tools::getSQL("basic_user__login_logout");
-            $sql_logout = str_replace( '__user_code__', "'".$username."'",$sql_logout);
-			mysql_query($sql_logout,$conn);
+            $sql_logout = str_replace( '__user_code__',$username,$sql_logout);
+			tools::query($sql_logout,$conn);
 						
 			//更新SESSION表
 			$permissions = basic_user::getPermission($username);
 			$sql = tools::getSQL("basic_user__login_session");
-			$sql = str_replace( '__username__', "'".$username."'" ,$sql);
-			$sql = str_replace( '__permissions__', "'".$permissions."'",$sql);
-			$sql = str_replace( '__session__', "'".$session."'",$sql);
-			$sql = str_replace( '__ip__', "'".$ip."'",$sql);
-			$sql = str_replace( '__client__', "'".$client."'",$sql);
-			$sql = str_replace( '__gis_lat__', "'".$gis_lat."'",$sql);
-			$sql = str_replace( '__gis_lot__', "'".$gis_lot."'",$sql);
-			mysql_query($sql,$conn);
+			$sql = str_replace( '__username__', $username ,$sql);
+			$sql = str_replace( '__permissions__', $permissions,$sql);
+			$sql = str_replace( '__session__', $session,$sql);
+			$sql = str_replace( '__ip__', $ip,$sql);
+			$sql = str_replace( '__client__', $client,$sql);
+			$sql = str_replace( '__gis_lat__', $gis_lat,$sql);
+			$sql = str_replace( '__gis_lot__', $gis_lot,$sql);
+			$res = tools::query($sql,$conn);
+				
+			
 		}
 		
 		return $t_return;
@@ -673,7 +730,7 @@ class basic_user {
 		$sql = tools::getSQL("basic_user__logout");
 		$sql = str_replace("__user_code__", "'".$username."'", $sql) ;
 		$sql = str_replace("__session__", "'".$session."'", $sql) ;
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		
 		return array(
 		    'status'=>'1'
@@ -687,7 +744,7 @@ class basic_user {
 	    $t_data = json_decode2($data,true);
 	    $username = $t_data['username'];
 	    unset($t_data['username']);
-		$str_keys = ",username,group_code,status,type,password,money";		
+		$str_keys = ",username,group_code,status,type,password,money,credits,";		
 		$sql = "";
 
 		$keys = array_keys($t_data);
@@ -699,12 +756,15 @@ class basic_user {
 		        );
 		    }
 		    if ($keys[$i]=='group_code') {
-		        mysql_query("delete from basic_group_2_user where user_code = '".$username."' ;",tools::getConn());
-		        mysql_query("insert into basic_group_2_user (user_code,group_code) values ('".$username."','".$t_data[$keys[$i]]."'); ;",tools::getConn());
+		        tools::query("delete from basic_group_2_user where user_code = '".$username."' ;",tools::getConn());
+		        tools::query("insert into basic_group_2_user (user_code,group_code) values ('".$username."','".$t_data[$keys[$i]]."'); ;",tools::getConn());
+		    }
+		    else if($keys[$i]=='password'){
+		    	$t_data[$keys[$i]] = md5($t_data[$keys[$i]]);
 		    }
 		    $t_data[$keys[$i]] = "'".$t_data[$keys[$i]]."'";
 		}
-		$t_data['time_lastupdated'] = "now()";
+		$t_data['time_lastupdated'] = "'".date("Y-m-d h:i:s")."'";
 		$t_data['count_updated'] = "count_updated+1";
 		
 		$sql = "update basic_user set ";
@@ -715,86 +775,13 @@ class basic_user {
 		$sql = substr($sql, 0,strlen($sql)-1);
 		$sql .= " where username = '".$username."' ";
 		
-		mysql_query($sql,$conn);		
+		tools::query($sql,$conn);		
 		
 		return array(
             'status'=>'1'
             ,'msg'=>'ok'
         );
 	}		
-	
-	public static function modify_myself($data=NULL,$executor=NULL){	    
-	    $conn = tools::getConn();
-	    
-	    $t_data = json_decode2($data,true);
-		$str_keys = ",password,email,photo,";		
-		$sql = "";
-		$password_old = $t_data["password_old"];
-		unset($t_data["password_old"]);
-		$keys = array_keys($t_data);
-		for($i=0;$i<count($keys);$i++){
-		    if(!strpos($str_keys, $keys[$i])){
-		        echo strpos($str_keys, $keys[$i]);
-		        return array(
-		            'status'=>'2'
-		            ,'msg'=>'data wrong'.$keys[$i]
-		        );
-		    }
-		    $t_data[$keys[$i]] = "'".$t_data[$keys[$i]]."'";
-		}
-		$t_data['time_lastupdated'] = "now()";
-		$t_data['count_updated'] = "count_updated+1";
-		
-		$sql = "update basic_user set ";
-		$keys = array_keys($t_data);
-		for($i=0;$i<count($keys);$i++){
-		    $sql .= $keys[$i]." = ".$t_data[$keys[$i]].",";
-		}
-		$sql = substr($sql, 0,strlen($sql)-1);
-		$sql .= " where username = '".$executor."' and password = '".$password_old."'";
-		
-		mysql_query($sql,$conn);		
-		
-		return array(
-            'status'=>'1'
-            ,'msg'=>'ok'
-        );
-	}	
-	
-    public static function loadConfig() {
-        $conn = tools::getConn();
-        $config = array();
-        
-        $sql = "select code,value from basic_parameter where reference = 'basic_user__type'  order by code";
-        $res = mysql_query($sql,$conn);
-		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
-			$data[] = $temp;
-		}
-		$config['basic_user__type'] = $data;
-		
-		$sql = "select code,value from basic_parameter where reference = 'basic_user__status' order by code";
-        $res = mysql_query($sql,$conn);
-		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
-			$data[] = $temp;
-		}
-		$config['basic_user__status'] = $data;
-		
-		$sql = "select code,name as value from basic_group order by code";
-        $res = mysql_query($sql,$conn);
-		$data = array();
-		while($temp = mysql_fetch_assoc($res)){			
-			$len = strlen($temp['code']);
-			for($i=2;$i<$len;$i+=2){
-				$temp['value'] = "-".$temp['value'];
-			}
-			$data[] = $temp;
-		}
-		$config['group'] = $data;
-
-	    return $config;		
-	}  
     
 	public static function add($data=NULL,$executor=NULL){
 	    
@@ -828,16 +815,16 @@ class basic_user {
 		$sql = substr($sql, 0,strlen($sql)-1);
 		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
 		$sql = $sql.$sql_;			
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		
 		$user_code = $t_data["username"];
 		$group_code = $t_data["group_code"];
 		
 		$sql = "insert into basic_group_2_user (user_code,group_code) values (".$user_code.",".$group_code.");";
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		
 		$sql = "update basic_group set count_users = (select count(*) from basic_user where basic_user.group_code = basic_group.code )";
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		
         return array(
             'status'=>"1"
@@ -860,8 +847,8 @@ class basic_user {
 	    );
 	    
 	    $sql = "select * from basic_user where username = ".$data['username']."";	
-	    $res = mysql_query($sql,$conn);
-	    $temp = mysql_fetch_assoc($res);
+	    $res = tools::query($sql,$conn);
+	    $temp = tools::fetch_assoc($res);
 	    if($temp!=false){
 	        return array(
                 'status'=>"2"
@@ -879,10 +866,10 @@ class basic_user {
 		$sql = substr($sql, 0,strlen($sql)-1);
 		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
 		$sql = $sql.$sql_;		    		
-		mysql_query($sql,$conn);	
+		tools::query($sql,$conn);	
 
 		$sql = "insert into basic_group_2_user (user_code,group_code) values (".$data['username'].",".$data['group_code'].");";
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		
         return array(
             'status'=>"1"
@@ -896,8 +883,13 @@ class basic_user {
         
         $sql = tools::getSQL("basic_user__view");
         $sql = str_replace("__id__", $id, $sql);
-        $res = mysql_query($sql, $conn );
-        $data= mysql_fetch_assoc($res);
+        $res = tools::query($sql, $conn );
+        $data= tools::fetch_assoc($res);
+        $kyes = array_keys($data);
+        for($i=0;$i<count($data);$i++){
+        	$value = $data[$kyes[$i]];
+        	if($value==NULL)$data[$kyes[$i]] = "-";
+        }
         
         return array(
             'status'=>"1"
@@ -916,7 +908,7 @@ class basic_user {
 		$sql = str_replace("__r_session__", "'".$r_session."'", $sql);
 		$sql = str_replace("__session__", "'".$session."'", $sql);
         $conn = tools::getConn();
-        mysql_query($sql, $conn );
+        tools::query($sql, $conn );
         		
 		$r_session = md5($r_session.date("G"));
 		return array(
@@ -929,11 +921,11 @@ class basic_user {
 		$conn = tools::getConn();
 		
 		$sql = tools::getSQL("basic_user__group_get");
-		$sql = str_replace("__username__", "'".$username."'", $sql);
+		$sql = str_replace("__username__", $username, $sql);
 		
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
         $data = array();
-        while($temp = mysql_fetch_assoc($res)){
+        while($temp = tools::fetch_assoc($res)){
             if ($temp['user_code']!=NULL) {
                 $temp['ischecked'] = 1;
             }
@@ -941,6 +933,7 @@ class basic_user {
             $temp['code'] =  str_replace("-", "", $temp['code']);
             $data[] = $temp;
         }
+
         $data = tools::list2Tree($data);
 
         return array("status"=>"1","groups"=>$data);
@@ -950,16 +943,16 @@ class basic_user {
 		$conn = tools::getConn();
 		
 		$sql = "delete from basic_group_2_user where user_code = '".$username."' ";
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		
 		$group_codes = explode(",", $group_codes);
 		for($i=0;$i<count($group_codes);$i++){
 		    $sql = "insert into basic_group_2_user (user_code,group_code) values ( '".$username."','".$group_codes[$i]."' ); ";
-		    mysql_query($sql,$conn);
+		    tools::query($sql,$conn);
 		}
 		
 		$sql = "update basic_user set group_all = '".implode($group_codes,",")."' where username = '".$username."'";
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		if($res){
 			return array(
 					'status'=>"1"

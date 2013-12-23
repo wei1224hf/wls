@@ -1,45 +1,21 @@
 var exam_paper_log = {
-	
-	 config: null
-	,loadConfig: function(afterAjax){
-		$.ajax({
-			url: config_path__exam_paper_log__loadConfig
-			,dataType: 'json'
-	        ,type: "POST"
-	        ,data: {
-                 executor: top.basic_user.loginData.username
-                ,session: top.basic_user.loginData.session
-	        } 			
-			,success : function(response) {
-				exam_paper_log.config = response;
-				if ( typeof(afterAjax) == "string" ){
-					eval(afterAjax);
-				}else if( typeof(afterAjax) == "function"){
-					afterAjax();
-				}
-			}
-			,error : function(){				
-				alert(top.il8n.disConnect);
-			}
-		});	
-	}	
-
-	,search: function(){
+		
+	search: function(){
 		var formD;
 		if($.ligerui.get("formD")){
 			formD = $.ligerui.get("formD");
 			formD.show();
 		}else{
-			var form = $("<form id='form'></form>");
+			$(document.body).append("<form id='form' ></form>");
 			$(form).ligerForm({
 				inputWidth: 170
 				,labelWidth: 90
 				,space: 40
 				,fields: [
 					 { display: top.getIl8n('exam_paper_log','title'), name: "examp_paper__search_title", newline: false, type: "text" }
-					,{ display: top.getIl8n('status'), name: "examp_paper__search_status", newline: true, type: "select", options :{data : exam_paper_log.config.exam_paper_log__status, valueField : "code" , textField: "value" } }
-					,{ display: top.getIl8n('type'), name: "examp_paper__search_type", newline: true, type: "select", options :{data : exam_paper_log.config.exam_paper_log__type, valueField : "code" , textField: "value" } }
-					,{ display: top.getIl8n('exam_paper','subject'), name: "examp_paper__search_subject", newline: true, type: "select", options :{data : exam_paper_log.config.exam_subject__code, valueField : "code" , textField: "value" } }
+					,{ display: top.getIl8n('status'), name: "examp_paper__search_status", newline: true, type: "select", options :{data : basic_parameter_data.exam_paper_log__status, valueField : "code" , textField: "value" } }
+					,{ display: top.getIl8n('type'), name: "examp_paper__search_type", newline: true, type: "select", options :{data : basic_parameter_data.exam_paper_log__type, valueField : "code" , textField: "value" } }
+					,{ display: top.getIl8n('exam_paper','subject'), name: "examp_paper__search_subject", newline: true, type: "select", options :{data : basic_parameter_data.exam_subject__code, valueField : "code" , textField: "value" } }
 				]
 			}); 
 			$.ligerDialog.open({

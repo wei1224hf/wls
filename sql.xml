@@ -250,6 +250,7 @@ AND basic_group.`code` like '%-%-%-%-%'
 			insert into basic_memory (code,type,extend1) values ('basic_group','2',0);
 			update basic_memory set extend1 = (select max(id) from basic_group) where code = 'basic_group' and type = 2;			
 			insert into basic_memory (code,type,extend1) values ('exam_subject','2',0);
+			
 			update basic_memory set extend1 = (select max(id) from exam_subject) where code = 'exam_subject' and type = 2 and (select max(id) from exam_subject ) > 0;			
 			insert into basic_memory (code,type,extend1) values ('exam_paper','2',0);
 			update basic_memory set extend1 = (select max(id) from exam_paper) where code = 'exam_paper' and type = 2 and (select max(id) from exam_paper) > 0;
@@ -266,6 +267,7 @@ AND basic_group.`code` like '%-%-%-%-%'
 			update basic_memory set extend1 = (select max(id) from exam_question_log_wrongs) where code = 'exam_question_log_wrongs' and type = 2 and (select count(id) from exam_question_log_wrongs) > 0;
 			insert into basic_memory (code,type,extend1) values ('exam_subject_2_user_log','2',0);
 			update basic_memory set extend1 = (select max(id) from exam_subject_2_user_log) where code = 'exam_subject_2_user_log' and type = 2 and (select count(id) from exam_subject_2_user_log) > 0;
+			
 			select 1
 		</item>
 		<item ID="basic_memory__id">

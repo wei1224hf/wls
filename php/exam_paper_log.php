@@ -211,10 +211,13 @@ class exam_paper_log {
     	$conn = tools::getConn();
     	
     	$sql_where = exam_paper_log::search($search, $executor);
-    	$sql_order = " order by exam_paper_log.".$sortname." ".$sortorder." ";
     	
     	$sql = tools::getSQL("exam_paper_log__grid");
-    	$sql .= $sql_where." ".$sql_order." limit ".(($page-1)*$pagesize).", ".$pagesize;
+    	$sql = str_replace("__sortname__", $sortname, $sql);
+    	$sql = str_replace("__sortorder__", $sortorder, $sql);
+    	$sql = str_replace("__where__", $sql_where, $sql);
+    	$sql = str_replace("__offset__", (($page-1)*$pagesize), $sql);
+    	$sql = str_replace("__limit__", $pagesize, $sql);  
     	
     	$res = mysql_query($sql,$conn);
     	$data = array();

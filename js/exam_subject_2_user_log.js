@@ -1,31 +1,6 @@
 var exam_subject_2_user_log = {
 	
-	
-	 config: null
-	,loadConfig: function(afterAjax){
-		$.ajax({
-			url: config_path__exam_subject_2_user_log__loadConfig
-			,dataType: 'json'
-	        ,type: "POST"
-	        ,data: {
-                 executor: top.basic_user.loginData.username
-                ,session: top.basic_user.loginData.session
-	        } 			
-			,success : function(response) {
-				exam_subject_2_user_log.config = response;
-				if ( typeof(afterAjax) == "string" ){
-					eval(afterAjax);
-				}else if( typeof(afterAjax) == "function"){
-					afterAjax();
-				}
-			}
-			,error : function(){				
-				alert(top.getIl8n('disConnect'));
-			}
-		});	
-	}	
-
-	,search: function(){
+	search: function(){
 		var formD;
 		if($.ligerui.get("formD")){
 			formD = $.ligerui.get("formD");

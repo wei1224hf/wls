@@ -126,21 +126,26 @@ class basic_group {
     	$sql_order = " order by basic_group.".$sortname." ".$sortorder." ";
     
     	$sql = tools::getSQL("basic_group__grid");
-    	$sql .= $sql_where." ".$sql_order." limit ".(($page-1)*$pagesize).", ".$pagesize;
+    	$sql = str_replace("__sortname__", $sortname, $sql);
+    	$sql = str_replace("__sortorder__", $sortorder, $sql);    	
+    	$sql = str_replace("__where__", $sql_where, $sql);
+    	$sql = str_replace("__offset__", (($page-1)*$pagesize), $sql);
+    	$sql = str_replace("__limit__", $pagesize, $sql);
     
-    	$res = mysql_query($sql,$conn);
+    	$res = tools::query($sql,$conn);
     	$data = array();
-    	while($temp = mysql_fetch_assoc($res)){
+    	while($temp = tools::fetch_assoc($res)){
     		$data[] = $temp;
     	}
     
     	$sql_total = "select count(*) as total FROM basic_group ".$sql_where;
-    	$res = mysql_query($sql_total,$conn);
-    	$total = mysql_fetch_assoc($res);
+    	$res = tools::query($sql_total,$conn);
+    	$total = tools::fetch_assoc($res);
     
     	$returnData = array(
-    			'Rows'=>$data,
-    			'Total'=>$total['total']
+    			'Rows'=>$data
+    			,'Total'=>$total['total']
+    			,'sql'=>str_replace("\t", "", str_replace("\r", "", str_replace("\n", "", $sql)))
     	);
     
     	return $returnData;
@@ -155,6 +160,12 @@ class basic_group {
 			if($search_keys[$i]=='name' && trim($search[$search_keys[$i]])!='' ){
                 $sql_where .= " and name like '%".$search[$search_keys[$i]]."%' ";
             }
+            if($search_keys[$i]=='type' && trim($search[$search_keys[$i]])!='' ){
+            	$sql_where .= " and type = '".$search[$search_keys[$i]]."' ";
+            }
+    		if($search_keys[$i]=='code' && trim($search[$search_keys[$i]])!='' ){
+                $sql_where .= " and code like '%".$search[$search_keys[$i]]."%' ";
+            }        
     	}
     	 
     	return $sql_where;
@@ -165,16 +176,16 @@ class basic_group {
 		$codes = explode(",", $codes);
 		for($i=0;$i<count($codes);$i++){
 		    $sql = "delete from basic_group where code = '".$codes[$i]."' ;";
-		    mysql_query($sql,$conn);
+		    tools::query($sql,$conn);
 		    
 		    $sql = "delete from basic_user where group_code = '".$codes[$i]."' ;";
-		    mysql_query($sql,$conn);		
+		    tools::query($sql,$conn);		
 
 		    $sql = "delete from basic_group_2_user where group_code = '".$codes[$i]."' ;";
-		    mysql_query($sql,$conn);			 
+		    tools::query($sql,$conn);			 
 
 		    $sql = "delete from basic_group_2_permission where group_code = '".$codes[$i]."' ;";
-		    mysql_query($sql,$conn);			    
+		    tools::query($sql,$conn);			    
 		}
 		
 		return  array(
@@ -212,7 +223,7 @@ class basic_group {
 		$sql = substr($sql, 0,strlen($sql)-1);
 		$sql .= " where code = '".$code."' ";
 		
-		mysql_query($sql,$conn);		
+		tools::query($sql,$conn);		
 		
 		return array(
             'status'=>'1'
@@ -225,17 +236,17 @@ class basic_group {
         $config = array();
         
         $sql = "select code,value from basic_parameter where reference = 'basic_group__type' and code not in ('1','9')  order by code";
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		$config['basic_group__type'] = $data;
 		
 		$sql = "select code,value from basic_parameter where reference = 'basic_group__status' order by code";
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		$config['basic_group__status'] = $data;
@@ -257,8 +268,8 @@ class basic_group {
 	    
 		//编码必须没有使用过
 	    $sql = "select * from basic_group where code = '".$t_data['code']."'";
-	    $res = mysql_query($sql,$conn);
-	    $temp = mysql_fetch_assoc($res);
+	    $res = tools::query($sql,$conn);
+	    $temp = tools::fetch_assoc($res);
 	    if($temp!=false){
             return array(
                 'status'=>"2"
@@ -283,13 +294,13 @@ class basic_group {
 		$sql = substr($sql, 0,strlen($sql)-1);
 		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
 		$sql = $sql.$sql_;		
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		
 		//分配基础权限
 		$sql = "insert into basic_group_2_permission (permission_code,group_code) values ('11',".$t_data['code'].");";
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		$sql = "insert into basic_group_2_permission (permission_code,group_code) values ('1199',".$t_data['code'].");";
-		mysql_query($sql,$conn);	
+		tools::query($sql,$conn);	
 		
         return array(
             'status'=>"1"
@@ -301,13 +312,14 @@ class basic_group {
         $conn = tools::getConn();    
         
         $sql = "select * from basic_group where code = '".$code."'";
-        $res = mysql_query($sql, $conn );
-        $data= mysql_fetch_assoc($res);
+        $res = tools::query($sql, $conn );
+        $data= tools::fetch_assoc($res);
         
         return array(
             'status'=>"1"
             ,'msg'=>'ok'
             ,'data'=>$data
+        	,'sql'=>$sql
         );
     }  
     
@@ -315,16 +327,18 @@ class basic_group {
 		$conn = tools::getConn();
 
 		$sql = "delete from basic_group_2_permission where group_code = '".$group_code."' ";
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 
 		$codes = explode(",", $permission_codes) ;
 
 		$cost = explode(",", $cost_) ;
 		$credits = explode(",", $credits_) ;
+		tools::transaction($conn);
 		for($i=0;$i<count($codes);$i++){
 			$sql = "insert into basic_group_2_permission (group_code,permission_code,cost,credits) values ( '".$group_code."','".$codes[$i]."','".$cost[$i]."','".$credits[$i]."' ); ";
-			mysql_query($sql,$conn);
+			tools::query($sql,$conn);
 		}	
+		tools::commit($conn);
         return array(
             'status'=>"1"
             ,'msg'=>'ok'
@@ -338,9 +352,9 @@ class basic_group {
 		$sql = tools::getSQL("basic_group__permission_get");
 		$sql = str_replace("__group_code__", "'".$code."'", $sql);
 
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
         $data = array();
-        while($temp = mysql_fetch_assoc($res)){
+        while($temp = tools::fetch_assoc($res)){
             if ($temp['cost']!=NULL) {
                 $temp['ischecked'] = 1;
             }
