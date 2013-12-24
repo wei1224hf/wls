@@ -45,10 +45,14 @@ var exam_subject = {
 				theFunction = function(){
 					top.$.ligerDialog.open({ 
 						url: 'exam_subject__add.html?random='+Math.random()
-						,height: 200
+						,height: 250
 						,width: 300
 						,title: top.getIl8n('add')
-						,isHidden: false
+                        ,isHidden: false
+						,showMax: true
+						,showToggle: true
+						,showMin: true	
+						,modal: false
 					});					
 				}
 			}else if(permission[i].code=='600523'){
@@ -63,20 +67,16 @@ var exam_subject = {
 					}
 					top.$.ligerDialog.open({ 
 						url: 'exam_subject__group_get.html?code='+selected.code+'&random='+Math.random()
-						,height: 500
-						,width: 400
+						,height: 250
+						,width: 300
 						,title: top.getIl8n('modify')
 						,id: "exam_subject__group_get__"+selected.code
-						,isHidden: false
-					});
-					
-			        top.$.ligerui.get("exam_subject__group_get__"+selected.code).close = function(){
-			            var g = this;
-			            top.$.ligerui.win.removeTask(this);
-			            g.unmask();
-			            g._removeDialog();
-			            top.$.ligerui.remove(top.$.ligerui.get("exam_subject__group_get__"+selected.code));
-			        };	
+                        ,isHidden: false
+						,showMax: true
+						,showToggle: true
+						,showMin: true	
+						,modal: false
+					});	
 				}
 			}
 			config.toolbar.items.push({line: true });
@@ -112,7 +112,7 @@ var exam_subject = {
 			fields: [
 				 { display: top.getIl8n('name'), name: "exam_subject__name", type: "text",  validate: { required:true} }
 				,{ display: top.getIl8n('exam_subject','weight'), name: "exam_subject__weight", type: "text",  validate: { required:true} }
-				,{ display: top.getIl8n('type'), name: "exam_subject__type", type: "select" , options :{data: exam_subject.config.type, valueField : "code" , textField: "value", slide: false }, validate: {required:true} }
+				,{ display: top.getIl8n('type'), name: "exam_subject__type", type: "select" , options :{data: basic_parameter_data.exam_subject__type, valueField : "code" , textField: "value", slide: false }, validate: {required:true} }
 				,{ display: top.getIl8n('code'), name: "exam_subject__code", type: "text", validate: {required:true, digits:true, minlength:2, maxlength:10 } }
 			]
 		};
@@ -302,4 +302,186 @@ var exam_subject = {
 		});
 	}	
 
+    ,treegrid: function(dom){
+
+        if (typeof(dom) == "undefined")dom = document.body;
+        var config = {
+            columns: [   
+                 { display: '名称', name: 'name', id:'name',width: 250 ,align: 'left' }
+                ,{ display: '编码', name: 'code_', id:'code_',width: 250 ,align: 'left' }
+                ,{ display: '权重', name: 'weight',width: 250 ,align: 'left' }
+                ,{ display: '类型', name: 'type',width: 250 ,align: 'left' }
+            ]
+        	,id: "exam_subject__grid"
+        	,width: '100%'
+        	,height: '100%'
+        	,tree: { columnId: 'name' }
+        	,usePager: false
+        	,onGroupExtend: function(rowdata){
+        		var code = rowdata.code;
+        		var children = rowdata.children;
+        		if(children.length==0){
+        	        $.ajax({
+        	             url: config_path__exam_subject__treegrid
+        	            ,data: {                    
+        	                 upcode: rowdata.code_
+        	                
+        	                ,executor: top.basic_user.loginData.username
+        	                ,session: top.basic_user.loginData.session
+        	            }
+        	            ,type: "POST"
+        	            ,dataType: 'json'       
+        	            ,success: function(response) {
+        	            	var target = $.ligerui.get("exam_subject__grid").getRow(rowdata.__index);
+        	            	for(var i=0;i<response.Rows.length;i++){
+        	            		$.ligerui.get("exam_subject__grid").add(response.Rows[i],null,true,target);
+        	            	}
+        	            }           
+        	            ,error : function(){               
+        	                alert("net error");
+        	            }
+        	        });
+        		}
+        	}
+            ,parms : {
+                executor: top.basic_user.loginData.username
+                ,session: top.basic_user.loginData.session     
+                ,upcode: "0"
+            }        	
+        	,url: config_path__exam_subject__treegrid
+        	,toolbar: { items: []}
+        	,method: "POST"         
+        };
+
+        var permission = top.basic_user.permission;
+        for(var i=0;i<permission.length;i++){
+            if(permission[i].code=='60'){
+                permission = permission[i].children;                
+            }
+        }
+        for(var i=0;i<permission.length;i++){
+            if(permission[i].code=='6005'){
+                permission = permission[i].children;                
+            }
+        } 
+        
+        for(var i=0;i<permission.length;i++){   
+            
+            var theFunction = function(){};
+            var thecode = permission[i].code;
+            var actioncode = thecode.substring(thecode.length-2,thecode.length);
+            
+            if(actioncode=='01'){
+            	continue;
+                theFunction = exam_subject.search;
+            }
+            if(actioncode=='02'){
+                theFunction = function(){
+                    var selected = exam_subject.grid_getSelectOne();
+                    if(selected==null)return;
+                    if(selected.type=='10')return;
+
+                    var id = selected.id;
+                    if(top.$.ligerui.get("exam_subject__view_"+id)){
+                        top.$.ligerui.get("exam_subject__view_"+id).show();
+                        return;
+                    }                   
+                    var win = top.$.ligerDialog.open({ 
+                        url: 'exam_subject__view.html?id='+selected.id+'&random='+Math.random()
+                        ,height: 450
+                        ,width: 700
+                        ,title: selected.name
+                        ,isHidden: false
+                        , showMax: true
+                        , showToggle: true
+                        , showMin: true                     
+                        , id: 'exam_subject__view_'+selected.id
+                        , modal: false
+                    }); 
+                    win.doMax();
+                };
+            }           
+            else if(actioncode =='11'){
+                theFunction = exam_subject.upload;
+            }
+            else if(actioncode =='12'){
+                theFunction = exam_subject.download;
+            }   
+            else if(actioncode =='23'){
+                theFunction = exam_subject.remove;
+                //config.checkbox = true;
+            }           
+            else if(actioncode=='21'){
+                theFunction = function(){           
+                        
+                    var win = top.$.ligerDialog.open({ 
+                         url: 'exam_subject__add.html'
+                        ,height: 500
+                        ,width: 400
+                        ,isHidden: false
+                        , showMax: true
+                        , showToggle: true
+                        , showMin: true 
+                        , modal: false
+                        , id: "exam_subject__add"
+                        ,title:  getIl8n("exam_subject","exam_subject") + " " + getIl8n("add")
+                    }); 
+                   win.doMax();
+                };
+            }
+            else if(actioncode=='22'){
+                theFunction = function(){
+                    var selected = exam_subject.grid_getSelectOne();
+                    if(selected==null)return;
+                    if(selected.type=='10')return;                    
+                    var win = top.$.ligerDialog.open({ 
+                         url: 'exam_subject__modify.html?random='+Math.random()+"&id="+selected.id
+                        , height: 500
+                        , width: 400
+                        , title: il8n.basic_normal.modify+" "+selected.name
+                        , isHidden: false
+                        , showMax: true
+                        , showToggle: true
+                        , showMin: true 
+                        , modal: false
+                        , id: "exam_subject__modify"
+                    });     
+                    win.doMax();
+                };          
+            }           
+            else if(actioncode=='23'){
+                theFunction = exam_subject.remove;
+            }
+            else if(actioncode=='91'){
+            	theFunction = function(){
+            		top.topdata.nogroupsheader = true;
+	                var selected = exam_subject.grid_getSelectOne();
+	                if(selected==null)return;
+	                if(selected.type=='10')return;                    
+	                var win = $.ligerDialog.open({ 
+	                     url: 'basic_group__treegrid.html?random='+Math.random()+"&id="+selected.id
+	                    , height: 600
+	                    , width: 600
+	                    , title: il8n.basic_normal.modify+" "+selected.name
+	                    , isHidden: false
+	                    , modal: false
+	                    , id: "basic_group__treegrid"
+	                    ,buttons: [
+                           { text: '确定', onclick: function (item, dialog) { 
+                        	   
+                           } },
+	                    ]
+	                });     
+	               
+            	};
+            }            
+                
+            config.toolbar.items.push({line: true });
+            config.toolbar.items.push({
+                text: permission[i].name , img:permission[i].icon , click : theFunction , id: permission[i].code
+            });             
+        }         
+        
+        $(dom).ligerGrid(config);
+    }
 };

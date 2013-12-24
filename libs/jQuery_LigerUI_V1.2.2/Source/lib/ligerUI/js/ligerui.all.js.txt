@@ -4480,6 +4480,13 @@
                     g.tmpInput = $("<input></input>");
                     g.tmpInput.attr("id", tmpId);
                     g.dialog.content.prepend(g.tmpInput);
+                    
+                    $(g.jiframe).load(function() {
+                        if(p.onLoaded!=null){
+                            p.onLoaded();// TODO WXF
+                        }                        
+                    });
+                                            
                 }
             }
             if (p.opener) g.dialog.opener = p.opener;

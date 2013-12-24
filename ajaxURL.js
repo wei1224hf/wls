@@ -25,7 +25,7 @@ var  config_path = "../php/json.php?"
     ,config_path__basic_group__permission_get =   config_path+"class=basic_group&function=permission_get"        
     ,config_path__basic_group__permission_set =   config_path+"class=basic_group&function=permission_set"        
     ,config_path__basic_group__grid =             config_path+"class=basic_group&function=grid"         
-        
+    ,config_path__basic_group__treegrid =         config_path+"class=basic_group&function=treegrid"      
         
     ,config_path__exam_paper__grid =            config_path+"class=exam_paper&function=grid"
     ,config_path__exam_paper__remove =          config_path+"class=exam_paper&function=remove"
@@ -52,6 +52,8 @@ var  config_path = "../php/json.php?"
     ,config_path__exam_subject__group_get =     config_path+"class=exam_subject&function=group_get"     
     ,config_path__exam_subject__group_set =     config_path+"class=exam_subject&function=group_set"     
     ,config_path__exam_subject__grid =          config_path+"class=exam_subject&function=grid"      
+    ,config_path__exam_subject__treegrid =      config_path+"class=exam_subject&function=treegrid"      
+    ,config_path__exam_subject__getMy =         config_path+"class=exam_subject&function=getMy"         
         
     ,config_path__exam_paper_log__grid =            config_path+"class=exam_paper_log&function=grid"
     ,config_path__exam_paper_log__remove =          config_path+"class=exam_paper_log&function=remove"  
@@ -62,7 +64,6 @@ var  config_path = "../php/json.php?"
     ,config_path__exam_question_log_wrongs__remove =            config_path+"class=exam_question_log_wrongs&function=remove"        
     ,config_path__exam_question_log_wrongs__questions =         config_path+"class=exam_question_log_wrongs&function=questions"
         
-    ,config_path__exam_subject_2_user_log__grid =               config_path+"class=exam_subject_2_user_log&function=grid"       
-    ,config_path__exam_subject_2_user_log__statistics_time =    config_path+"class=exam_subject_2_user_log&function=statistics_time"        
-    ,config_path__exam_subject_2_user_log__statistics_subject = config_path+"class=exam_subject_2_user_log&function=statistics_subject"     
+    ,config_path__exam_subject_2_user_log__grid =               config_path+"class=exam_subject_2_user_log&function=grid"             
+    ,config_path__exam_subject_2_user_log__getMySub =           config_path+"class=exam_subject_2_user_log&function=getMySub"        
     ;        

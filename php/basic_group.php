@@ -108,6 +108,10 @@ class basic_group {
 				$t_return['action'] = $action;
 			}
 		}
+		else if($function =="treegrid"){
+			$t_return = self::treegrid($_REQUEST['upcode']);
+		}
+				
 		return $t_return;
 	}
     
@@ -367,4 +371,37 @@ class basic_group {
 			,"status"=>"1"				
 		);
 	}
+	
+	public static function treegrid($upcode){
+	
+		$conn = tools::getConn();
+		if($upcode=="0"){
+			$sql = "(select code,name,99 as type,0 as id from basic_node where tablename = 'basic_group' order by code)
+					union
+					(select code,name,type,id from basic_group where code like '__')
+					";
+		}		
+		else {
+			$sql = "select code,name,type,id from basic_group where 
+					code like '".$upcode."-__'
+					or 
+					code like '".$upcode."__'";
+		}
+		$res = tools::query($sql, $conn);
+		$data = array();
+		while ($temp = tools::fetch_assoc($res)){
+			$temp['code_'] = $temp['code']; 
+			$temp['code'] = str_replace("-", "", $temp['code']);
+			if($temp['type']==99){
+				$temp['children'] = array();
+			}			
+			$data[] = $temp;
+		}
+		if($upcode=="0"){
+			$data = tools::list2Tree($data);
+		}
+		return array(
+			'Rows'=>$data
+		);
+	}	
 }

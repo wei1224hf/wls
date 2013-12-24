@@ -6,15 +6,15 @@ var exam_subject_2_user_log = {
 			formD = $.ligerui.get("formD");
 			formD.show();
 		}else{
-			var form = $("<form id='form'></form>");
+			$(document.body).append("<form id='form' ></form>");
 			var config = {
 					inputWidth: 170
 					,labelWidth: 90
 					,space: 40
 					,fields: [
-			          	 { display: top.getIl8n('time_start'), name: "examp_paper__search_time_created__start", type: "date" }
-			          	,{ display: top.getIl8n('time_stop'), name: "examp_paper__search_time_created__stop", type: "date" }
-						,{ display: top.getIl8n('exam_paper','subject'), name: "examp_paper__search_subject", newline: true, type: "select", options :{data : exam_subject_2_user_log.config.subject, valueField : "code" , textField: "value" } }
+			          	 { display: top.getIl8n('time_start'), name: "time_created__start", type: "date" }
+			          	,{ display: top.getIl8n('time_stop'), name: "search_time_created__stop", type: "date" }
+						,{ display: top.getIl8n('exam_paper','subject'), name: "subject_code", newline: true, type: "select", options :{data : [], valueField : "subject_code" , textField: "subject_name" } }
 						,{ display: top.getIl8n('time_dimension'), name: "time_dimension", newline: true, type: "select", options :{data : [{"code":"day","value":top.getIl8n('day')},{"code":"month","value":top.getIl8n('month')}], valueField : "code" , textField: "value" } }
 					]
 				};
@@ -30,33 +30,55 @@ var exam_subject_2_user_log = {
 				,content: form
 				,title: top.getIl8n('exam_paper','search')
 				,buttons : [
-				    //清空查询条件
 					{text: top.getIl8n('exam_paper','clear'), onclick:function(){
 						$.ligerui.get("exam_subject_2_user_log__grid").options.parms.search = "{}";
+						$.ligerui.get("exam_subject_2_user_log__grid").setOptions({newPage:1});
 						$.ligerui.get("exam_subject_2_user_log__grid").loadData();
 						
-						$.ligerui.get("examp_paper__search_time_created__start").setValue('');
-						$.ligerui.get("examp_paper__search_time_created__stop").setValue('');
-						$.ligerui.get("time_dimension").setValue('');
-						$.ligerui.get("examp_paper__search_subject").setValue('');
+						var doms = $("[ligeruiid]",$('#form'));
+						for(var i=0;i<doms.length;i++){
+						    var theid = $(doms[i]).attr('ligeruiid');
+						    $.ligerui.get(theid).setValue('');
+						}
 					}},
-					//提交查询条件
 				    {text: top.getIl8n('exam_paper','search'), onclick:function(){
-						var data = {};
-						var  time_created__start =		$('#examp_paper__search_time_created__start').val()
-						 	,time_created__stop = 		$('#examp_paper__search_time_created__stop').val()
-						 	,time_dimension = 		$.ligerui.get("time_dimension").getValue()
-						 	,subject_code =	$.ligerui.get("examp_paper__search_subject").getValue();
-						
-						if(time_created__start!="")data.time_created__start = time_created__start;
-						if(time_created__stop!="")data.time_created__stop = time_created__stop;
-						if(time_dimension!="")data.time_dimension = time_dimension;
-						if(subject_code!="")data.subject_code = subject_code;
+				    	var data = {};
+						var doms = $("[ligeruiid]",$('#form'));
+						for(var i=0;i<doms.length;i++){
+						    var theid = $(doms[i]).attr('ligeruiid');                                                
+					        var thevalue = "";
+					        
+					        if($.ligerui.get(theid).type=="DateEditor"){
+					        	thevalue = $('[ligeruiid='+theid+']').val();
+					        }
+					        else{
+					        	thevalue = $.ligerui.get(theid).getValue();
+					        }
+						    if(thevalue!="" && thevalue!=0 && thevalue!="0" && thevalue!=null){
+						        data[theid]=thevalue;
+						    }
+						}
 						
 						$.ligerui.get("exam_subject_2_user_log__grid").options.parms.search= $.ligerui.toJSON(data);
+						$.ligerui.get("exam_subject_2_user_log__grid").setOptions({newPage:1});
 						$.ligerui.get("exam_subject_2_user_log__grid").loadData();
 				}}]
 			});
+			
+	        $.ajax({
+	            url : config_path__exam_subject__getMy,
+	            data : {
+	                username: top.basic_user.loginData.username
+	            },
+	            type : "POST",
+	            dataType: 'json',    
+	            success : function(data) {
+	                $.ligerui.get("subject_code").setData(data);
+	            },
+	            error : function(){
+	                $.ligerDialog.error('net error');
+	            }
+	        });
 		}
 	}
 
@@ -66,13 +88,13 @@ var exam_subject_2_user_log = {
 				,height:'100%'
 				,columns: [
 				   
-				     { display: top.getIl8n("exam_paper","subject_code"), name: 'subject_code', hide:true }
+				     { display: top.getIl8n("exam_paper","subject_code"), name: 'subject_code', hide:true, width: 100 }
 				    ,{ display: top.getIl8n("exam_paper","subject_name"), name: 'subject_name', width: 100 }
 
-				    ,{ display: top.getIl8n("exam_subject_2_user_log","proportion"), name: 'proportion', isSort: true}
-				    ,{ display: top.getIl8n("exam_subject_2_user_log","count_negative"), name: 'negative', isSort: true}
-				    ,{ display: top.getIl8n("exam_subject_2_user_log","count_positive"), name: 'postive', isSort: true}
-				    ,{ display: top.getIl8n("exam_subject_2_user_log","count_log"), name: 'count_log', isSort: true}
+				    ,{ display: top.getIl8n("exam_subject_2_user_log","proportion"), name: 'proportion', isSort: true, width: 100}
+				    ,{ display: top.getIl8n("exam_subject_2_user_log","count_negative"), name: 'negative', isSort: true, width: 100}
+				    ,{ display: top.getIl8n("exam_subject_2_user_log","count_positive"), name: 'postive', isSort: true, width: 100}
+				    ,{ display: top.getIl8n("exam_subject_2_user_log","count_log"), name: 'count_log', isSort: true, width: 100}
 				    ,{ display: top.getIl8n("exam_subject_2_user_log","time_created"), name: 'time', width: 100 }
 			    
 				],  pageSize:20 ,rownumbers:true
@@ -100,42 +122,32 @@ var exam_subject_2_user_log = {
 		}
 		for(var i=0;i<permission.length;i++){
 			var theFunction = function(){};
-			if(permission[i].code=='600601'){
+			var thecode = permission[i].code;
+			var actioncode = thecode.substring(thecode.length-2,thecode.length);
+			
+			if(actioncode=='01'){
 				theFunction = exam_subject_2_user_log.search;
-			}else if(permission[i].code=='600692'){
-				theFunction = function(){
-					var selected = exam_subject_2_user_log.grid_getSelectOne();
-					if(selected==null)return;	
-					if(selected.status=='10'){
-						alert(top.getIl8n('exam_subject_2_user_log','markedAlready'));
-						return;
-					}
-					
-					var id = selected.id;
-					top.$.ligerDialog.open({ 
-						url: 'exam_subject_2_user_log__do.html?id='+id+'&random='+Math.random()
-						,height: 350
-						,width: 400
-						,title: selected.title
-	                    ,showMax: true
-	                    ,showToggle: true
-	                    ,showMin: true
-	                    ,isResize: true
-	                    ,modal: false
-	                    ,slide: false  
-	                    ,isHidden:false
-						,id: 'exam_subject_2_user_log__do_'+id
-					}).max();	
-					
-			        top.$.ligerui.get("exam_subject_2_user_log__do_"+id).close = function(){
-			            var g = this;
-			            top.$.ligerui.win.removeTask(this);
-			            g.unmask();
-			            g._removeDialog();
-			            top.$.ligerui.remove(top.$.ligerui.get("exam_subject_2_user_log__do_"+id));
-			        };
-				}
 			}
+			else if(actioncode=='92'){
+				theFunction = function(){
+					if(top.$.ligerui.get("exam_subject_2_user_log__statistics")){
+	                    top.$.ligerui.get("exam_subject_2_user_log__statistics").show();
+	                    return;
+	                }					
+					var win = top.$.ligerDialog.open({ 
+						url: 'exam_subject_2_user_log__statistics.html'
+						,height: 450
+						,width: 700
+						,isHidden: false
+						, showMax: true
+						, showToggle: true
+						, showMin: true	
+						, modal: false
+						, id: "exam_subject_2_user_log__statistics"
+					});	
+					win.doMax();
+				}
+			}			
 			
 			config.toolbar.items.push({line: true });
 			config.toolbar.items.push({text: permission[i].name , img: permission[i].icon , click: theFunction });
@@ -144,162 +156,128 @@ var exam_subject_2_user_log = {
 		$(document.body).ligerGrid(config);
 	}
 	
-	,initDom: function(){
-		$('body').append("<form id='form'></form>");
-		
-		$('body').append('<div id="container" style="width: 99%; height: 400px; margin: 0 auto"></div>');		
-		$("#form").ligerForm({
-		    inputWidth: 170, labelWidth: 90, space: 40,
-		    fields: [
-			     { display: top.getIl8n("time_start"), name: "time_start",  type: "date", validate: {required:true} }
-			    ,{ display: top.getIl8n("time_stop"), name: "time_stop",  type: "date" ,newline: false, validate: {required:true}  }
-				,{ display: top.getIl8n('exam_paper','subject'), name: "subject", newline: true, type: "select", options: {data : exam_subject_2_user_log.config.subject, valueField : "code" , textField: "value" },  validate: {required:true}  }
-				,{ display: top.getIl8n('time'), name: "gap", newline: true, type: "select", options: {data : [{'code':'day','value':top.getIl8n('day')},{'code':'month','value':top.getIl8n('month')}], valueField: "code" , textField: "value" }, newline: false, validate: {required:true}  }
-				,{ display: top.getIl8n('type'), name: "type", newline: true, type: "select", options: {data : [{'code':'line','value':top.getIl8n('exam_subject_2_user_log','lineChart')},{'code':'rader','value':top.getIl8n('exam_subject_2_user_log','raderChart')}], valueField: "code" , textField: "value" }, newline: false, validate: {required:true}  }
-		    ]
-		});			
-		
-		$('#form').append('<br/><br/><input type="submit" value="'+top.getIl8n('statistic')+'" id="basic_user__submit" class="l-button l-button-submit" />' );
-		var v = $("#form").validate({
-			debug: true,
-			errorPlacement: function (lable, element) {
-				if (element.hasClass("l-textarea")) {
-				element.addClass("l-textarea-invalid");
-				}
-				else if (element.hasClass("l-text-field")) {
-				element.parent().addClass("l-text-invalid");
-				} 
-			},
-			success: function (lable) {
-				var element = $("[ligeruiid="+$(lable).attr('for')+"]",$("form"));
-				if (element.hasClass("l-textarea")) {
-					element.removeClass("l-textarea-invalid");
-				} else if (element.hasClass("l-text-field")) {
-					element.parent().removeClass("l-text-invalid");
-				}
-			},
-			submitHandler: function () {
-				exam_subject_2_user_log.statistics();
-			}
-		});		
-	}
-	
 	,statistics: function(){
-		var type = $.ligerui.get('type').getValue();
-		if(type=='line'){		
-			$.ajax({
-			    url: config_path__exam_subject_2_user_log__statistics_time
-			    ,dataType: 'json'
-			    ,type: "POST"
-			    ,data: {
-			    	 executor: top.basic_user.loginData.username
-			        ,time_start: $('#time_start').val()
-			       	,time_stop: $('#time_stop').val()
-			       	,gap: $.ligerui.get('gap').getValue()
-			       	,subject: $.ligerui.get('subject').getValue()
-			    }           
-			    ,success : function(response) {
-			    	var categories = [];
-			    	var data = [];
-			    	for(var i=0;i<response.data.length;i++){
-			    		categories.push(response.data[i].time);
-			    		data.push(response.data[i].data*1);
-			    	}
-			    	
-			        $('#container').highcharts({
-			        	title: '',
-			            chart: {
-			                type: 'line',
-			                marginRight: 130,
-			                marginBottom: 25
-			            },
-			            xAxis: {
-			                categories: categories
-			            },
-			            yAxis: {min: 30, max: 100, title: {text: '成绩'}},
-	
-			            legend: {
-			                layout: 'vertical',
-			                align: 'right',
-			                verticalAlign: 'top',
-			                x: -10,
-			                y: 100,
-			                borderWidth: 0
-			            },
-			            series: [{
-			                
-			                data: data
-			            }]
-			        });
-			        $('.highcharts-container').css('overflow','');
-	
-			    }
-			    ,error : function(){                
-			        alert(top.il8n.disConnect);
-			    }
-			});
-		}else{
-			$.ajax({
-			    url: config_path__exam_subject_2_user_log__statistics_subject
-			    ,dataType: 'json'
-			    ,type: "POST"
-			    ,data: {
-			    	 executor: top.basic_user.loginData.username
-			        ,time: $('#time_start').val()
-			       	,subject: $.ligerui.get('subject').getValue()
-			       	,gap: $.ligerui.get('gap').getValue()
-			    }           
-			    ,success : function(response) {
-			    	var categories = [];
-			    	var data = [];
-			    	for(var i=0;i<response.data.length;i++){
-			    		categories.push(response.data[i].subject_name);
-			    		data.push(response.data[i].data*1);
-			    	}
-			    	
-			        $('#container').highcharts({
-			            
-			    	    chart: {
-			    	        polar: true
-			    	    },
-			    	    
-			    	    title: {
-			    	        text: ''
-			    	    },
-			    	    
-			    	    pane: {
-			    	        startAngle: 0,
-			    	        endAngle: 360
-			    	    },
-			    	
-			            xAxis: {
-			    	        tickInterval: 1,
-			    	        min: 0,
-			    	        max: data.length,
-			    	        labels: {
-			    	        	formatter: function () {
-			    	        		return categories[this.value];
-			    	        	}
-			    	        }
-			            },
-			    	        
-			    	    yAxis: {
-			    	        min: 20
-			    	    },    
-			    	    
-			    	    series: [  {
-			    	        type: 'area',
-			    	        name: $('#subject').val(),
-			    	        data: data
-			    	    }]
-			    	});
-			        $('.highcharts-container').css('overflow','');
-	
-			    }
-			    ,error : function(){                
-			        alert(top.il8n.disConnect);
-			    }
-			});
+		//$(document.body).append("<div id='timeline' style='width:50%;height:300px;' />");
+		var d = parent.$.ligerui.get("exam_subject_2_user_log__grid").data.Rows;
+		var d2 = [];
+		for(var i=0;i<d.length;i++){
+			var date = new Date(d[i].time);
+			d2.push([date.getTime(),parseInt(d[i].proportion)])
 		}
+		//console.debug(d2);return;
+		$.plot("#timeline", [d2], {
+			xaxis: { mode: "time" }
+			,grid: {
+				hoverable: true,
+				clickable: true
+			}
+			,series: {
+				lines: {
+					show: true
+				},
+				points: {
+					show: true
+				}
+			}		
+		});
+		
+		$("<div id='tooltip'></div>").css({
+			position: "absolute",
+			display: "none",
+			border: "1px solid #fdd",
+			padding: "2px",
+			"background-color": "#fee",
+			opacity: 0.80
+		}).appendTo("body");
+		
+		$("#timeline").bind("plothover", function (event, pos, item) {
+			if (item) {
+				var data = d[item.dataIndex];
+
+				$("#tooltip").html(data.time+" : "+data.proportion)
+					.css({top: item.pageY+5, left: item.pageX+5})
+					.fadeIn(200);
+			} else {
+				$("#tooltip").hide();
+			}
+
+		});
+		
+		$("#timeline").bind("plotclick", function (event, pos, item) {
+			if (item) {
+				var data = d[item.dataIndex];
+		        $.ajax({
+		            url : config_path__exam_subject_2_user_log__getMySub,
+		            data : {
+		                executor: top.basic_user.loginData.username
+		                ,session: top.basic_user.loginData.session     
+
+	                	,username: top.basic_user.loginData.username
+	                	,time: data.time
+	                	,subject: data.subject_code
+	                	,time_dimension: "day"
+
+		            },
+		            type : "POST",
+		            dataType: 'json',    
+		            success : function(data) {
+		            	
+		                var d1= [];
+		                var d2 = [];
+		                var d3 = [];
+		                var lables = [];
+		                for(var i=0;i<data.Rows.length;i++){
+		                	d1.push([i,parseInt(data.Rows[i].proportion)]);
+		                	d2.push([i,100]);
+		                	d3.push([i,60]);
+		                	lables.push({label:data.Rows[i].subject_name});
+		                }
+		                
+		            	var data = [
+		            			{ label: "mark", color:"green",data: d1, spider: {show: true, lineWidth: 12} }
+		            			,{ label: " ", color:"black",data: d2, spider: {show: true, lineWidth: 1 ,pointSize: 3} }
+		            			,{ label: " ", color:"red",data: d3, spider: {show: true, lineWidth: 2 ,pointSize: 2} }
+		            		];
+		            	var options = {
+		            			series:{
+		            				spider:{
+		            					active: true
+		            					,highlight: {mode: "area"}
+		            					,legs: { 
+		            						data:lables
+		            						,legScaleMax: 1
+		            						,legScaleMin:0.8
+		            					}
+		            					,spiderSize: 0.9
+		            					//,pointSize: 100
+		            	            }
+		            			}
+		            			,grid:{ hoverable: true,clickable: true,tickColor: "rgba(0,0,0,0.2)",mode: "radar"}
+		            		};
+		            	
+		            	p1 = $.plot($("#spider"), data , options);
+		            	$("#spider").bind("plotclick", function (event, pos, item) {
+		        			if (item) {
+		        				
+		        			}
+		            	});
+		        		$("#spider").bind("plothover", function (event, pos, item) {
+		        			if (item) {
+		        				var data = d1[item.dataIndex];
+		        				$("#tooltip").html(lables[item.dataIndex].label+" : "+data[1])
+		        					.css({top: pos.pageY+5, left: pos.pageX+5})
+		        					.fadeIn(200);
+		        			} else {
+		        				$("#tooltip").hide();
+		        			}
+
+		        		});
+		            },
+		            error : function(){
+		                alert("net error");
+		            }
+		        });
+			}
+		});
 	}
 };

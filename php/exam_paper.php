@@ -485,6 +485,7 @@ class exam_paper {
 				,'paper_log_id'=>$paper_log__id
 				,'proportion'=>($result_knowledge[$kyes[$i]]['right']/($result_knowledge[$kyes[$i]]['right']+$result_knowledge[$kyes[$i]]['wrong']))*100
 				,'type'=>$type
+				,'time_created'=>date("Y-m-d H:i:s")
 				,'status'=>$status
 			);
 			
@@ -559,6 +560,7 @@ class exam_paper {
 	    $paper_log['count_right'] = $result['right'];
 	    $paper_log['count_wrong'] = $result['wrong'];
 	    $paper_log['status'] = '10';
+	    $paper_log['time_created'] = date("Y-m-d");
 	    $paper_log['creater_code'] = $executor;
 	    $session = basic_user::getSession($executor);
 	    $session = $session['data'];

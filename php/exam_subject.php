@@ -103,9 +103,12 @@ class exam_subject {
 			}
 		}	
 	
-		else if($function =="loadConfig"){
-			$t_return = exam_subject::loadConfig();
+		else if($function =="getMy"){
+			$t_return = exam_subject::getMy($_REQUEST['username']);
 		}
+		else if($function =="treegrid"){
+			$t_return = exam_subject::treegrid($_REQUEST['upcode']);
+		}		
 	
 		return $t_return;
 	}
@@ -129,6 +132,53 @@ class exam_subject {
 		}	
 	
 		return $sql_where;
+	}
+	
+	public static function getMy($username){
+		$conn = tools::getConn();
+		$sql = tools::getSQL("exam_subject__getMy");
+		$sql = str_replace("__username__", $username, $sql);
+		$res = tools::query($sql, $conn);
+		$data = array();
+		while ($temp = tools::fetch_assoc($res)){
+			$data[] = $temp;
+		}
+		return $data;
+	}
+	
+	public static function treegrid($upcode){
+
+
+		
+		$conn = tools::getConn();
+		if($upcode=="0"){
+			$sql = "select code,name,10 as type from basic_node where tablename = 'exam_subject' order by code";
+		}
+		else if(strlen($upcode)==9){
+			$sql = "select code,name,weight,type,id from exam_subject where code like '".$upcode."-__'";
+		}
+		else if(strlen($upcode)==12){
+			$sql = "select code,name,weight,type,id from exam_subject where code like '".$upcode."__'";
+		}
+		else {
+			$sql = "select code,name,type,id from exam_subject where code like '".$upcode."__'";
+		}
+		$res = tools::query($sql, $conn);
+		$data = array();
+		while ($temp = tools::fetch_assoc($res)){
+			$temp['code_'] = $temp['code'];
+			$temp['code'] = str_replace("-", "", $temp['code']);
+			if(strlen($upcode)!=12){
+				$temp['children'] = array();
+			}
+			$data[] = $temp;
+		}
+		if($upcode=="0"){
+			$data = tools::list2Tree($data);
+		}
+		return array(
+				'Rows'=>$data
+		);
 	}
 	
 	public static function grid(

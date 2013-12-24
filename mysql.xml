@@ -451,6 +451,15 @@ basic_parameter.reference ASC
             t.group_code = basic_group.code
             order by code
         </item>
+        <item ID="exam_subject__getMy">
+		        SELECT
+		exam_subject_2_group.subject_code,
+		(select basic_memory.extend5 from basic_memory where basic_memory.`code` = exam_subject_2_group.subject_code and basic_memory.type = 5) as subject_name
+
+		FROM
+		exam_subject_2_group,basic_user where exam_subject_2_group.group_code = basic_user.group_code
+		and basic_user.username = '__username__'
+        </item>
     </item>
     <item ID="exam_paper_log">
         <item ID="exam_paper_log__grid">
@@ -542,7 +551,7 @@ basic_parameter.reference ASC
             <![CDATA[
             SELECT 
             exam_question.id, 
-            exam_question.`type`,
+            exam_question.type,
             exam_question.id_parent,
             exam_question.title,
             exam_question.option_length,
@@ -560,8 +569,8 @@ basic_parameter.reference ASC
             exam_question.path_listen
             FROM 
             exam_question_log_wrongs 
-            Left Join exam_question ON exam_question_log_wrongs.question_id = exam_question.id
-            WHERE 
+            ,exam_question where exam_question_log_wrongs.question_id = exam_question.id
+            and
             exam_question_log_wrongs.creater_code = __creater_code__ 
             order by exam_question.id limit 50 
             ]]>
@@ -724,31 +733,6 @@ basic_parameter.reference ASC
         
         ) temp_ 
         group by __G1-TIME__,__G2-SUBJECT__
-        </item>
-        <item ID="exam_subject_2_user_log__statistics_time">
-            select avg(exam_subject_2_user_log.proportion) as data,
-            left(exam_subject_2_user_log.time_created,__gap__) as time,count(*)
-            as count from
-            exam_subject_2_user_log
-            where
-            exam_subject_2_user_log.creater_code = __creater_code__ and exam_subject_2_user_log.subject_code =
-            __subject_code__
-            and exam_subject_2_user_log.time_created __bigger__ __time_start__
-            and exam_subject_2_user_log.time_created __smaller__ __time_stop__
-            group by left(exam_subject_2_user_log.time_created,__gap__)
-        </item>
-        <item ID="exam_subject_2_user_log__statistics_subject">
-            select
-            avg(exam_subject_2_user_log.proportion) as data
-            ,exam_subject_2_user_log.subject_code as subject
-            ,(select name from exam_subject where code =
-            exam_subject_2_user_log.subject_code ) as subject_name
-            from exam_subject_2_user_log where
-            left(exam_subject_2_user_log.time_created ,__gap__) =
-            left(__date__,__gap__)
-            and exam_subject_2_user_log.creater_code = __creater_code__
-            and exam_subject_2_user_log.subject_code like __subject_code__
-            group by exam_subject_2_user_log.subject_code
         </item>
     </item>
 </root>

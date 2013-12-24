@@ -206,27 +206,27 @@ var exam_paper = {
 			
 			for(var i=0;i<permission.length;i++){
 				if(permission[i].code=='60010104'){
-					config.fields.push({ display: top.getIl8n('creater_group_code'), name: "search__creater_group_code", type: "text" });
+					config.fields.push({ display: top.getIl8n('creater_group_code'), name: "creater_group_code", type: "text" });
 				}
 				else if(permission[i].code=='60010105'){
-					config.fields.push({ display: top.getIl8n('creater_code'), name: "search__creater_code", type: "text" });
+					config.fields.push({ display: top.getIl8n('creater_code'), name: "creater_code", type: "text" });
 				}
 				else if(permission[i].code=='60010106'){
-					config.fields.push({ display: top.getIl8n('time_created')+"-"+top.getIl8n('big'), name: "search__time_created__big", type: "date" });
-					config.fields.push({ display: top.getIl8n('time_created')+"-"+top.getIl8n('small'), name: "search__time_created__small", type: "date" });
+					config.fields.push({ display: top.getIl8n('time_created')+"-"+top.getIl8n('big'), name: "time_created__big", type: "date" });
+					config.fields.push({ display: top.getIl8n('time_created')+"-"+top.getIl8n('small'), name: "time_created__small", type: "date" });
 				}	
 				else if(permission[i].code=='60010108'){
-					config.fields.push({ display: top.getIl8n('status'), name: "search__status", type: "select", options :{data : basic_parameter_data.exam_paper__status , valueField : "code" , textField: "value" } });
+					config.fields.push({ display: top.getIl8n('status'), name: "status", type: "select", options :{data : basic_parameter_data.exam_paper__status , valueField : "code" , textField: "value" } });
 				}
 				else if(permission[i].code=='60010150'){
-					config.fields.push({ display: top.getIl8n('exam_paper','cost')+"-"+top.getIl8n('big'), name: "search__cost__big", type: "text" });
-					config.fields.push({ display: top.getIl8n('exam_paper','cost')+"-"+top.getIl8n('small'), name: "search__cost__small", type: "text" });
+					config.fields.push({ display: top.getIl8n('exam_paper','cost')+"-"+top.getIl8n('big'), name: "cost__big", type: "text" });
+					config.fields.push({ display: top.getIl8n('exam_paper','cost')+"-"+top.getIl8n('small'), name: "cost__small", type: "text" });
 				}	
 				else if(permission[i].code=='60010151'){
 					config.fields.push({ display: top.getIl8n('exam_paper','count_used'), name: "search__count_used", type: "text" });
 				}	
 				else if(permission[i].code=='60010152'){
-					config.fields.push({ display: top.getIl8n('exam_paper','subject_code'), name: "search__subject_code", type: "select", options :{data : [] , valueField : "code" , textField: "value" } });
+					config.fields.push({ display: top.getIl8n('exam_paper','subject_code'), name: "subject_code", type: "select", options :{data : [] , valueField : "subject_code" , textField: "subject_name" } });
 				}				
 			}
 			
@@ -240,33 +240,53 @@ var exam_paper = {
 				,buttons : [
 					{text: top.getIl8n('exam_paper','clear'), onclick:function(){
 						$.ligerui.get("exam_paper__grid").options.parms.search = "{}";
+						$.ligerui.get("exam_paper__grid").setOptions({newPage:1});
 						$.ligerui.get("exam_paper__grid").loadData();
 						
-						var doms = $("input[type='text']",$('#form'));
+						var doms = $("[ligeruiid]",$('#form'));
 						for(var i=0;i<doms.length;i++){
-							var theid = $(doms[i]).attr('id');
+							var theid = $(doms[i]).attr('ligeruiid');
 							$.ligerui.get(theid).setValue('');
 						}
 					}}
 				    ,{text: top.getIl8n('exam_paper','search'), onclick:function(){
-						var data = {};
-						var doms = $("input[type='text']",$('#form'));
+				    	var data = {};
+						var doms = $("[ligeruiid]",$('#form'));
 						for(var i=0;i<doms.length;i++){
-							var theid = $(doms[i]).attr('id');
-							var thekey = theid.replace("search__","");
-							var thetype = $(doms[i]).attr('ltype');							
-						
-							var thevalue = $.ligerui.get(theid).getValue();
-							if(thetype=='date')thevalue = $('#'+theid).val();
-							if(thevalue!="" && thevalue!=0 && thevalue!="0" && thevalue!=null){
-								eval("data."+thekey+"='"+thevalue+"'");
-							}
+						    var theid = $(doms[i]).attr('ligeruiid');                                                
+					        var thevalue = "";
+					        
+					        if($.ligerui.get(theid).type=="DateEditor"){
+					        	thevalue = $('[ligeruiid='+theid+']').val();
+					        }
+					        else{
+					        	thevalue = $.ligerui.get(theid).getValue();
+					        }
+						    if(thevalue!="" && thevalue!=0 && thevalue!="0" && thevalue!=null){
+						        data[theid]=thevalue;
+						    }
 						}
 						
 						$.ligerui.get("exam_paper__grid").options.parms.search= $.ligerui.toJSON(data);
+						$.ligerui.get("exam_paper__grid").setOptions({newPage:1});
 						$.ligerui.get("exam_paper__grid").loadData();
 				}}]
 			});
+			
+	        $.ajax({
+	            url : config_path__exam_subject__getMy,
+	            data : {
+	                username: top.basic_user.loginData.username
+	            },
+	            type : "POST",
+	            dataType: 'json',    
+	            success : function(data) {
+	                $.ligerui.get("subject_code").setData(data);
+	            },
+	            error : function(){
+	                $.ligerDialog.error('net error');
+	            }
+	        });
 		}
 	}	
 	

@@ -174,10 +174,119 @@ class simulate{
 		tools::query($sql,$conn);		
 		$sql = "delete from basic_node where tablename= 'basic_group'";
 		tools::query($sql,$conn);
-		$code = "80";
-	
+
 		$total_ = 0;
 		tools::transaction($conn);
+		
+		$t_data = array(
+				'name'=>"浙江省"
+				,'code'=> 33
+				,'tablename'=>'basic_group'
+		);
+		$sql = "insert into basic_node (";
+		$sql_ = ") values (";
+		$keys = array_keys($t_data);
+		for($j2=0;$j2<count($keys);$j2++){
+			$sql .= $keys[$j2].",";
+			$sql_ .= "'".$t_data[$keys[$j2]]."',";
+		}
+		$sql = substr($sql, 0,strlen($sql)-1);
+		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+		$sql = $sql.$sql_;			
+		tools::query($sql,$conn);
+		$total_++;
+		
+		$t_data = array(
+				'name'=>"浙江宁波"
+				,'code'=> 3302
+				,'tablename'=>'basic_group'
+		);	
+		$sql = "insert into basic_node (";
+		$sql_ = ") values (";
+		$keys = array_keys($t_data);
+		for($j2=0;$j2<count($keys);$j2++){
+			$sql .= $keys[$j2].",";
+			$sql_ .= "'".$t_data[$keys[$j2]]."',";
+		}
+		$sql = substr($sql, 0,strlen($sql)-1);
+		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+		$sql = $sql.$sql_;
+		tools::query($sql,$conn);
+		$total_++;
+		
+		$t_data = array(
+				'name'=>"浙江宁波余姚"
+				,'code'=> 330281
+				,'tablename'=>'basic_group'
+		);	
+		$sql = "insert into basic_node (";
+		$sql_ = ") values (";
+		$keys = array_keys($t_data);
+		for($j2=0;$j2<count($keys);$j2++){
+			$sql .= $keys[$j2].",";
+			$sql_ .= "'".$t_data[$keys[$j2]]."',";
+		}
+		$sql = substr($sql, 0,strlen($sql)-1);
+		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+		$sql = $sql.$sql_;
+		tools::query($sql,$conn);
+		$total_++;
+		
+		$t_data = array(
+				'name'=>"浙江宁波余姚教育行业"
+				,'code'=> "330281-84"
+				,'tablename'=>'basic_group'
+		);	
+		$sql = "insert into basic_node (";
+		$sql_ = ") values (";
+		$keys = array_keys($t_data);
+		for($j2=0;$j2<count($keys);$j2++){
+			$sql .= $keys[$j2].",";
+			$sql_ .= "'".$t_data[$keys[$j2]]."',";
+		}
+		$sql = substr($sql, 0,strlen($sql)-1);
+		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+		$sql = $sql.$sql_;
+		tools::query($sql,$conn);
+		$total_++;
+		
+		$t_data = array(
+				'name'=>"浙江宁波余姚高中教育行业"
+				,'code'=> "330281-8432"
+				,'tablename'=>'basic_group'
+		);		
+		$sql = "insert into basic_node (";
+		$sql_ = ") values (";
+		$keys = array_keys($t_data);
+		for($j2=0;$j2<count($keys);$j2++){
+			$sql .= $keys[$j2].",";
+			$sql_ .= "'".$t_data[$keys[$j2]]."',";
+		}
+		$sql = substr($sql, 0,strlen($sql)-1);
+		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+		$sql = $sql.$sql_;
+		tools::query($sql,$conn);
+		$total_++;
+				
+		$t_data = array(
+				'name'=>"余姚四中"
+				,'code'=> "330281-8432-40"
+				,'tablename'=>'basic_group'
+		);	
+		$sql = "insert into basic_node (";
+		$sql_ = ") values (";
+		$keys = array_keys($t_data);
+		for($j2=0;$j2<count($keys);$j2++){
+			$sql .= $keys[$j2].",";
+			$sql_ .= "'".$t_data[$keys[$j2]]."',";
+		}
+		$sql = substr($sql, 0,strlen($sql)-1);
+		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+		$sql = $sql.$sql_;
+		tools::query($sql,$conn);
+		$total_++;					
+			
+		$code = "330281-8432-40";
 		//一个高中,三个年级 2013届,2014届,2015届
 		//每个年纪 4 到6个班级
 		$basic_group__id = tools::getTableId("basic_group",false);
@@ -211,7 +320,7 @@ class simulate{
 			
 				$t_data = array(
 					 'id'=>$basic_group__id
-					,'name'=>"班级".$i
+					,'name'=>"班级".$i.$i2
 					,'code'=>$code."-".$i."-0".$i2
 					,'type'=>40
 					,'status'=>10
@@ -512,7 +621,7 @@ class simulate{
 		$conn2 = tools::getConn(true);
 		$total_ = 0;
 		$firstTime = "2013-02-01";
-	
+		
 		$exam_subject_2_user_log__id = tools::getTableId("exam_subject_2_user_log",false);
 		$exam_paper_log__id = tools::getTableId("exam_paper_log",false);
 	
@@ -524,6 +633,8 @@ class simulate{
 		while($temp=tools::fetch_assoc($res)){
 			$exam_paper_log__id ++;
 			$timeDiff=strtotime($temp['time_created'])-strtotime($firstTime);
+			$time_created = $temp['time_created'];
+			if(rand(1,100)>70)$time_created = date("Y-m")."-".rand(1,27);
 				
 			$rate = ($timeDiff/11318400);
 			if($rate>=1)$rate = rand(90,100)/100;
@@ -541,7 +652,7 @@ class simulate{
 				,'creater_group_code'=>$_REQUEST['group_code']
 				,'type'=>'10'
 				,'status'=>'10'
-				,'time_created'=>$temp['time_created']
+				,'time_created'=>$time_created
 				,'remark'=>'exam_paper_log'
 			);
 			$keys = array_keys($data__exam_paper_log);
@@ -567,7 +678,7 @@ class simulate{
 						,'creater_group_code'=>$_REQUEST['group_code']
 						,'type'=>'10'
 						,'status'=>'10'
-						,'time_created'=>$temp['time_created']
+						,'time_created'=>$time_created
 						,'remark'=>'exam_paper_log'
 				);
 	

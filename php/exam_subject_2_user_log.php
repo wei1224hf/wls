@@ -16,13 +16,10 @@ class exam_subject_2_user_log {
 		if(trim($function) ==""){
 			//
 		}
-		else if($function =="loadConfig"){
-			$t_return = exam_subject_2_user_log::loadConfig($executor);
-		}
 		else if($function == "grid"){
 			$action = "600601";
 			if(basic_user::checkPermission($executor, $action, $session)){
-				$sortname = "id";
+				$sortname = "time_created";
 				$sortorder = "asc";
 				if(isset($_REQUEST['sortname'])){
 					$sortname = $_REQUEST['sortname'];
@@ -43,35 +40,16 @@ class exam_subject_2_user_log {
 				$t_return['action'] = $action;
 			}
 		}
+		else if($function == "getMySub"){
+			$t_return = exam_subject_2_user_log::getMySub(
+				 $_REQUEST['username']
+				,$_REQUEST['time']
+				,$_REQUEST['subject']
+				,$_REQUEST['time_dimension']
+			);
+		}
 	
 		return $t_return;
-	}
-    
-	public static function loadConfig($executor) {
-		$conn = tools::getConn();
-		$config = array();
-	
-		$session = basic_user::getSession($executor);
-		$session = $session['data'];
-		if($session['user_type']=='10'||$session['user_type']=='30'){
-			$sql = "select code,name as value from exam_subject where code like '____-____' or code like '____-____-__' order by code";
-		}
-		if($session['user_type']=='20'){
-			$sql = "select code,name as value from exam_subject where code in (select subject_code from exam_subject_2_group where group_code = '".$session['group_code']."'); ";
-		}
-	
-		$res = mysql_query($sql,$conn);
-		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
-			$len = strlen(str_replace("-", "", $temp['code']));
-			for($i=1;$i<$len/2;$i++){
-				$temp['value'] = "-".$temp['value'];
-			}
-			$data[] = $temp;
-		}
-		$config['subject'] = $data;
-	
-		return $config;
 	}
 
 	private static function search($search,$executor){
@@ -79,15 +57,14 @@ class exam_subject_2_user_log {
 	
 		$search=json_decode2($search,true);
 		$search_keys = array_keys($search);
-		$subject = "LEFT(subject_code,9)";
+		$subject = "LEFT(subject_code,7)";
 		$time = "LEFT(time_created,10)";
 		$time_start= date("Y-m-01");
 		$time_stop = date("Y-m-29");
 		for($i=0;$i<count($search);$i++){
             if($search_keys[$i]=='subject_code' && trim($search[$search_keys[$i]])!='' ){
             	$len = strlen( trim($search[$search_keys[$i]]) );
-            	if($len==9)$subject="LEFT(subject_code,12)";
-            	if($len==12)$subject="subject_code";
+            	if($len==9)$subject="LEFT(subject_code,9)";
                 $sql_where .= " and subject_code like '".$search[$search_keys[$i]]."%' ";
             }    
             if($search_keys[$i]=='time_dimension' && trim($search[$search_keys[$i]])!='' ){
@@ -153,6 +130,9 @@ class exam_subject_2_user_log {
     	$res = mysql_query($sql,$conn);
     	$data = array();
     	while($temp = mysql_fetch_assoc($res)){
+    		if($temp['subject_name']==NULL){
+    			$temp['subject_name'] = "all";
+    		}
     		$data[] = $temp;
     	}    	
     	$returnData = array(
@@ -163,78 +143,51 @@ class exam_subject_2_user_log {
     	
     	return $returnData;
     }  
-
-    public static function statistics_time($time_start=NULL,$time_stop=NULL,$gap=NULL,$subject=NULL,$user_code=NULL){
-	    if (!basic_user::checkPermission("44")){
-	        return array(
-	             'msg'=>'access denied'
-	            ,'status'=>'2'
-	        );
-	    }	
-        if($time_start==NULL)$time_start = $_REQUEST['time_start'];
-        if($time_stop==NULL)$time_stop = $_REQUEST['time_stop'];
-        if($gap==NULL)$gap = $_REQUEST['gap'];
-        if($subject==NULL)$subject = $_REQUEST['subject'];
-        if($user_code==NULL)$user_code = $_REQUEST['executor'];
-
-        $conn = tools::getConn();
-        $sql = tools::getConfigItem("exam_subject_2_user_log__statistics_time");
-        $sql = str_replace("__bigger__", ">", $sql);
-        $sql = str_replace("__smaller__", "<", $sql);
-        $sql = str_replace("__creater_code__", "'".$user_code."'", $sql);
-        $sql = str_replace("__subject_code__", "'".$subject."'", $sql);
-        $sql = str_replace("__time_start__", "'".$time_start."'", $sql);
-        $sql = str_replace("__time_stop__", "'".$time_stop."'", $sql);
-        
-        if($gap=='day'){
-            $sql = str_replace("__gap__", "10", $sql);
-        }
-        if($gap=='month'){
-            $sql = str_replace("__gap__", "7", $sql);
-        }
-        
-        $res = mysql_query($sql,$conn);
-        $data = array();
-        while($temp = mysql_fetch_assoc($res)){
-            $data[] = $temp;
-        }
-        
-        return array(
-             'status'=>'1'
-            ,'data'=>$data
-            ,'sql'=>$sql
-        );
-    }
     
-    public static function statistics_subject($time=NULL,$subject=NULL,$user_code=NULL,$gap=NULL){
-        if($time==NULL)$time = $_REQUEST['time'];
-        if($subject==NULL)$subject = $_REQUEST['subject'];
-        if($user_code==NULL)$user_code = $_REQUEST['executor'];
-        if($gap==NULL)$gap = $_REQUEST['gap'];
-        $conn = tools::getConn();
-        
-        $sql = tools::getConfigItem("exam_subject_2_user_log__statistics_subject");
-        $sql = str_replace("__subject_code__", "'".$subject."__'", $sql);
-        $sql = str_replace("__date__", "'".$time."'", $sql);
-        $sql = str_replace("__creater_code__", "'".$user_code."'", $sql); 
-
-        if($gap=='day'){
-            $sql = str_replace("__gap__", "10", $sql);
-        }
-        if($gap=='month'){
-            $sql = str_replace("__gap__", "7", $sql);
-        }        
-        
-        $res = mysql_query($sql,$conn);
-        $data = array();
-        while($temp = mysql_fetch_assoc($res)){
-            $data[] = $temp;
-        }
-        
-        return array(
-             'status'=>'1'
-            ,'data'=>$data
-            ,'sql'=>$sql
-        );
-    }    
+    public static function getMySub($username,$time,$subject,$time_dimension){
+    	$conn = tools::getConn();
+    	$subject_like = "";
+    	$subject_group= "";
+    	if(strlen($subject)==7){
+    		$subject_like = $subject."__%";
+    		$subject_group = "left(subject_code,9)";
+    	}
+    	else if(strlen($subject)==9){
+    		$subject_like = $subject."-__%";
+    		$subject_group = "left(subject_code,12)";
+    	}
+    	else if(strlen($subject)==12){
+    		$subject_like = $subject."__%";
+    		$subject_group = "left(subject_code,14)";
+    	}    	
+    	
+    	$time_group = "LEFT(time_created,10)";
+    	$time_stop = $time." 23:56:56";
+    	if($time_dimension=="month"){
+    		$time_group = "LEFT(time_created,7)";
+    		$time_stop = explode("-", $time_stop);
+    		$time_stop = $time_stop[0]."-".$time_stop[1]."-28";
+    	}
+    	
+    	$sql = tools::getSQL("exam_subject_2_user_log__grid");
+    	$sql_where = " where exam_subject_2_user_log.creater_code = '".$username."' 
+    			and time_created >='".$time."' 
+    			and time_created <='".$time_stop."' 
+    			and subject_code like '".$subject_like."' ";
+    					
+    	$sql = str_replace("__WHERE__", $sql_where, $sql);
+    	$sql = str_replace("__G1-TIME__", $time_group, $sql);
+    	$sql = str_replace("__G2-SUBJECT__", $subject_group, $sql);    					
+    	//echo $sql;
+    	$res = mysql_query($sql,$conn);
+    	$data = array();
+    	while($temp = mysql_fetch_assoc($res)){
+    		$data[] = $temp;
+    	}
+    	$returnData = array(
+    			'Rows'=>$data
+    	);
+    	 
+    	return $returnData;
+    }
 }

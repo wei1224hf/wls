@@ -441,4 +441,202 @@ var basic_group = {
 			}
 		});
 	}	
+	
+	,treegrid: function(dom){
+
+        if (typeof(dom) == "undefined")dom = document.body;
+        var config = {
+            columns: [   
+                 { display: '名称', name: 'name', id:'name',width: 250 ,align: 'left' }
+                ,{ display: '编码', name: 'code_', id:'code_',width: 150 ,align: 'left' }
+                ,{ display: '类型', name: 'type',width: 80 ,align: 'left' }
+            ]
+        	,id: "basic_group__grid"
+        	,width: '100%'
+        	,height: '100%'
+        	,tree: { columnId: 'name' }
+        	,usePager: false
+        	,onGroupExtend: function(rowdata){
+        		var code = rowdata.code;
+        		var children = rowdata.children;
+        		if(children.length==0){
+        	        $.ajax({
+        	             url: config_path__basic_group__treegrid
+        	            ,data: {                    
+        	                 upcode: rowdata.code_
+        	                
+        	                ,executor: top.basic_user.loginData.username
+        	                ,session: top.basic_user.loginData.session
+        	            }
+        	            ,type: "POST"
+        	            ,dataType: 'json'       
+        	            ,success: function(response) {
+        	            	var target = $.ligerui.get("basic_group__grid").getRow(rowdata.__index);
+        	            	for(var i=0;i<response.Rows.length;i++){
+        	            		$.ligerui.get("basic_group__grid").add(response.Rows[i],null,true,target);
+        	            	}
+        	            }           
+        	            ,error : function(){               
+        	                alert("net error");
+        	            }
+        	        });
+        		}
+        	}
+            ,parms : {
+                executor: top.basic_user.loginData.username
+                ,session: top.basic_user.loginData.session     
+                ,upcode: "0"
+            }        	
+        	,url: config_path__basic_group__treegrid
+        	,toolbar: { items: []}
+        	,method: "POST"         
+        };
+
+        var permission = top.basic_user.permission;
+        for(var i=0;i<permission.length;i++){
+            if(permission[i].code=='12'){
+                permission = permission[i].children;                
+            }
+        }
+        for(var i=0;i<permission.length;i++){
+            if(permission[i].code=='1201'){
+                permission = permission[i].children;                
+            }
+        } 
+        
+        for(var i=0;i<permission.length;i++){   
+            
+            var theFunction = function(){};
+            var thecode = permission[i].code;
+            var actioncode = thecode.substring(thecode.length-2,thecode.length);
+            
+            if(actioncode=='01'){
+            	continue;
+                theFunction = basic_group.search;
+            }
+            if(actioncode=='02'){
+                theFunction = function(){
+                    var selected = basic_group.grid_getSelectOne();
+                    if(selected==null)return;
+                    if(selected.type=='10')return;
+
+                    var id = selected.id;
+                    if(top.$.ligerui.get("basic_group__view_"+id)){
+                        top.$.ligerui.get("basic_group__view_"+id).show();
+                        return;
+                    }                   
+                    var win = top.$.ligerDialog.open({ 
+                        url: 'basic_group__view.html?id='+selected.id+'&random='+Math.random()
+                        ,height: 450
+                        ,width: 700
+                        ,title: selected.name
+                        ,isHidden: false
+                        , showMax: true
+                        , showToggle: true
+                        , showMin: true                     
+                        , id: 'basic_group__view_'+selected.id
+                        , modal: false
+                    }); 
+                    win.doMax();
+                };
+            }           
+            else if(actioncode =='11'){
+                theFunction = basic_group.upload;
+            }
+            else if(actioncode =='12'){
+                theFunction = basic_group.download;
+            }   
+            else if(actioncode =='23'){
+                theFunction = basic_group.remove;
+                config.checkbox = true;
+            }           
+            else if(actioncode=='21'){
+                theFunction = function(){           
+                        
+                    var win = top.$.ligerDialog.open({ 
+                         url: 'basic_group__add.html'
+                        ,height: 500
+                        ,width: 400
+                        ,isHidden: false
+                        , showMax: true
+                        , showToggle: true
+                        , showMin: true 
+                        , modal: false
+                        , id: "basic_group__add"
+                        ,title:  getIl8n("basic_group","basic_group") + " " + getIl8n("add")
+                    }); 
+                   win.doMax();
+                };
+            }
+            else if(actioncode=='22'){
+                theFunction = function(){
+                    var selected = basic_group.grid_getSelectOne();
+                    if(selected==null)return;
+                    if(selected.type=='10')return;                    
+                    var win = top.$.ligerDialog.open({ 
+                         url: 'basic_group__modify.html?random='+Math.random()+"&id="+selected.id
+                        , height: 500
+                        , width: 400
+                        , title: il8n.basic_normal.modify+" "+selected.name
+                        , isHidden: false
+                        , showMax: true
+                        , showToggle: true
+                        , showMin: true 
+                        , modal: false
+                        , id: "basic_group__modify"
+                    });     
+                    win.doMax();
+                };          
+            }           
+            else if(actioncode=='23'){
+                theFunction = basic_group.remove;
+            }
+            else if(actioncode=='40'){
+				theFunction = function(){
+					var selected = basic_group.grid_getSelectOne();
+					if(!selected)return;
+					if(top.$.ligerui.get("basic_group__permission_get__"+selected.code))return;
+					
+					top.$.ligerDialog.open({ 
+						url: 'basic_group__permission_get.html?code='+selected.code_+'&random='+Math.random()
+						,height: 500
+						,width: 400
+						,title: top.getIl8n('modify')
+						,id: "basic_group__permission_get__"+selected.code
+						,isHidden: false
+					});						
+				};
+            }
+                
+            config.toolbar.items.push({line: true });
+            config.toolbar.items.push({
+                text: permission[i].name , img:permission[i].icon , click : theFunction , id: permission[i].code
+            });             
+        }       
+        
+        config.onAfterShowData = function(){
+            var doms = $(".l-grid-tree-link");
+
+            for(var i=0;i<doms.length;i++){
+            	var thedom = $(doms[i]).parent().parent();
+            	var theid = $(thedom).attr("id");
+            	var arr = theid.split("|");
+            	var thedata = arr[2];
+            	var thedata = thedata.substring(1,thedata.length);
+            	var thedata = parseInt(thedata)-1001;
+            	var doms2 = $(".l-grid-row-cell-btn-checkbox");
+            	$(doms2[thedata]).parent().parent().removeClass("l-grid-row-cell-checkbox");
+            	//$(doms2[thedata]).hide()
+            	console.debug(doms2[thedata]);
+            }
+        }
+        config.onCheckRow = function(){
+        	top.topdata.groups =  $.ligerui.get("basic_group__grid").getSelecteds();
+        }
+        if(top.topdata.nogroupsheader){
+        	delete config.toolbar;
+        }
+        $(dom).ligerGrid(config);
+
+    }
 };

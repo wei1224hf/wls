@@ -322,3 +322,5 @@ function getIl8n(module,key){
 	}
 	return value;
 }
+
+var topdata = {};
