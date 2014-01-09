@@ -108,7 +108,10 @@ class exam_subject {
 		}
 		else if($function =="treegrid"){
 			$t_return = exam_subject::treegrid($_REQUEST['upcode']);
-		}		
+		}	
+		else if($function =="view"){
+			$t_return = exam_subject::view($_REQUEST['id']);
+		}			
 	
 		return $t_return;
 	}
@@ -251,17 +254,30 @@ class exam_subject {
 	public static function add($data=NULL,$executor=NULL){
 		$conn = tools::getConn();			
 		$t_data = json_decode2($data,true);
-		$keys = array_keys($t_data);
-		for($i=0;$i<count($keys);$i++){
-		    $t_data[$keys[$i]] = "'".$t_data[$keys[$i]]."'";
+		
+		$sql = "";
+		if($t_data['type']=='99'){
+			$t_data = array(
+				'code' => $t_data['code']
+				,'name' => $t_data['name']
+				,'tablename' => 'exam_subject'
+			);
+			
+			$sql = "insert into basic_node (";
+		}
+		else{
+			$sql = "insert into exam_subject (";
+			$id = tools::getTableId("exam_subject");
+			$id ++;
+			$t_data["id"] = $id;			
 		}
 		
-		$sql = "insert into exam_subject (";
+		$keys = array_keys($t_data);
 		$sql_ = ") values (";
 		$keys = array_keys($t_data);
 		for($i=0;$i<count($keys);$i++){
     		$sql .= $keys[$i].",";
-		    $sql_ .= $t_data[$keys[$i]].",";
+		    $sql_ .= "'".$t_data[$keys[$i]]."',";
 		}
 		$sql = substr($sql, 0,strlen($sql)-1);
 		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
@@ -314,5 +330,28 @@ class exam_subject {
 	}
 	
 
+	public static function view($id){
+		$conn = tools::getConn();
+	
+		$sql = tools::getSQL("exam_subject__view");
+		$sql = str_replace("__id__", $id, $sql);
+		$res = tools::query($sql, $conn );
+		$data = tools::fetch_assoc($res);
+	
+		if( (!$res) || (!$data) ){
+			return array(
+					'status'=>2
+					,'msg'=>mysql_error($conn)
+					,'sql'=>str_replace("\t", "", str_replace("\r", "", str_replace("\n", "", $sql)))
+			);
+		}
+	
+		return array(
+				'status'=>"1"
+				,'msg'=>'ok'
+				,'data'=>$data
+		);
+	}
+	
 
 }

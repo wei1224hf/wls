@@ -261,50 +261,44 @@ class basic_group {
 	public static function add($data=NULL,$executor=NULL){
 	    $t_data = json_decode2($data,true);
 	    
-	    //编码长度必须为偶数
-	    if(strlen($t_data['code'])%2!=0){
-            return array(
-                'status'=>"2"
-                ,'msg'=>"The code's length must be an even"
-            );
-	    }
 		$conn = tools::getConn();
 	    
-		//编码必须没有使用过
-	    $sql = "select * from basic_group where code = '".$t_data['code']."'";
-	    $res = tools::query($sql,$conn);
-	    $temp = tools::fetch_assoc($res);
-	    if($temp!=false){
-            return array(
-                'status'=>"2"
-                ,'msg'=>"Code already used"
-            );
-	    }
-	    
-	    $t_data['status'] = '10';		
-		$keys = array_keys($t_data);
-		for($i=0;$i<count($keys);$i++){
-		    $t_data[$keys[$i]] = "'".$t_data[$keys[$i]]."'";
+		$sql = "";
+		if($t_data['type']=='99'){
+			$t_data = array(
+				'code' => $t_data['code']
+				,'name' => $t_data['name']
+				,'tablename' => 'exam_subject'
+			);
+			
+			$sql = "insert into basic_node (";
+		}
+		else{
+			$sql = "insert into basic_group (";
+			$id = tools::getTableId("basic_group");
+			$id ++;
+			$t_data["id"] = $id;
 		}
 		
-		//数据库插入用户组
-		$sql = "insert into basic_group (";
+		$keys = array_keys($t_data);
 		$sql_ = ") values (";
 		$keys = array_keys($t_data);
 		for($i=0;$i<count($keys);$i++){
     		$sql .= $keys[$i].",";
-		    $sql_ .= $t_data[$keys[$i]].",";
+		    $sql_ .= "'".$t_data[$keys[$i]]."',";
 		}
 		$sql = substr($sql, 0,strlen($sql)-1);
 		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
 		$sql = $sql.$sql_;		
-		tools::query($sql,$conn);
+	
+		mysql_query($sql,$conn);
 		
-		//分配基础权限
-		$sql = "insert into basic_group_2_permission (permission_code,group_code) values ('11',".$t_data['code'].");";
-		tools::query($sql,$conn);
-		$sql = "insert into basic_group_2_permission (permission_code,group_code) values ('1199',".$t_data['code'].");";
-		tools::query($sql,$conn);	
+        return array(
+            'status'=>"1"
+            ,'msg'=>'ok'
+        );
+		
+
 		
         return array(
             'status'=>"1"
@@ -378,7 +372,7 @@ class basic_group {
 		if($upcode=="0"){
 			$sql = "(select code,name,99 as type,0 as id from basic_node where tablename = 'basic_group' order by code)
 					union
-					(select code,name,type,id from basic_group where code like '__')
+					(select code,name,type,id from basic_group where code like '__' and type != '50')
 					";
 		}		
 		else {

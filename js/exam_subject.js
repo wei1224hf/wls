@@ -183,13 +183,9 @@ var exam_subject = {
 	,ajaxState: false 	
 	
 	,remove: function(){
-		//判断 ligerGrid 中,被勾选了的数据
 		selected = $.ligerui.get('exam_subject__grid').getSelecteds();
-		//如果一行都没有选中,就报错并退出函数
 		if(selected.length==0){alert(top.getIl8n("noSelect"));return;}
-		//弹框让用户最后确认一下,是否真的需要删除.一旦删除,数据将不可恢复
 		var codes = "";
-		//遍历每一行元素,获得 id 
 		for(var i=0; i<selected.length; i++){
 			codes += selected[i].code+",";
 		}
@@ -200,7 +196,6 @@ var exam_subject = {
 				,data: {
 					codes: codes 
 					
-					//服务端权限验证所需
 					,executor: top.basic_user.loginData.username
 					,session: top.basic_user.loginData.session
 				}
@@ -212,92 +207,37 @@ var exam_subject = {
 					}
 				}
 				,error : function(){
-					//网络通信失败,则删除按钮再也不能点了
-					alert(top.getIl8n('disConnect'));
+					alert("net error");
 				}
 			});				
 		}	
 	}
 	
-	,group_get: function(){
-		$(document.body).append('<ul id="tree"></ul>');
-		$('#tree').ligerTree({
-			 id: 'exam_subject__group_get'
-			,autoCheckboxEven : false
-			//先随便填充一个tree结构,tree的内容需要等tree初始化后异步填充
-			,data: [
-	                { name: "" , code: '1' },
-	                { name: "" , code: '2' },
-	                { name: "" , code: '3' },
-	                { name: "" , code: '4' }
-	            ]
-			,textFieldName : 'name'
-			,slide : true
-			,nodeWidth : 140
-
-		});
-		
-		//清掉树形结构中的节点,然后异步读取服务端数据,再填充树形节点
-		$.ligerui.get('exam_subject__group_get').clear();
-		$.ligerui.get('exam_subject__group_get').loadData(null
-				,config_path__exam_subject__group_get
-				,{
-					 code: getParameter("code", window.location.toString() )
-					,executor: top.basic_user.loginData.username
-					,session: top.basic_user.loginData.session
-				}
-		);
-		
-		$(document.body).append('<input value="'+top.getIl8n('submit')+'" type="button" onclick="exam_subject.group_set()" id="button" class="l-button l-button-submit" style="position:absolute;top:5px;left:200px;"  />' );
-	}
-	
-	,group_set: function(){
-		//如果正在与服务端的通信
+	,group_set: function(codes,code){
 		if(exam_subject.ajaxState)return;							
-		
-		var arr = $.ligerui.get('exam_subject__group_get').getChecked();
-		var codes = "";
-		if(arr.length != 0){
-			for(var i=0;i<arr.length;i++){
-				codes += arr[i].data.code_+",";
-			}
-			codes = codes.substring(0,codes.length-1);
-		
-			//修改AJAX的通信状态
-			$('#button').attr("value",top.getIl8n('waitting'));
-			exam_subject.ajaxState = true;
-		}else{
-			alert(top.getIl8n('selectOne'));
-			return;
-		}
+		exam_subject.ajaxState = true;
 		
 		$.ajax({
 			url: config_path__exam_subject__group_set,
 			data: {
-				 codes: codes 
-				,code: getParameter("code", window.location.toString() )
+				 codes: codes.join(",")
+				,code: code
 				
-				//服务端权限验证所需
 				,executor: top.basic_user.loginData.username
 				,session: top.basic_user.loginData.session
 			},
 			type: "POST",
 			dataType: 'json',
 			success: function(response) {
-				//修改成功,就不能再继续执行修改操作了,必须先关闭窗口,再打开
-				$('#button').remove();
 				exam_subject.ajaxState = false;
 				if(response.status!="1"){					
-					//如果服务端操作失败,弹框显示服务端提示信息
 					alert(response.msg);
 				}else{
-					//服务端操作成功
 					alert(top.getIl8n('done'));
 				}
 			},
 			error : function(){
-				//网络通信失败,按钮将不可按,只能关闭窗口
-				alert(top.getIl8n('disConnect'));
+				alert("net error");
 			}
 		});
 	}	
@@ -457,18 +397,32 @@ var exam_subject = {
             		top.topdata.nogroupsheader = true;
 	                var selected = exam_subject.grid_getSelectOne();
 	                if(selected==null)return;
-	                if(selected.type=='10')return;                    
+	                if(selected.type!='20'){
+	                	alert("type must be 20");
+	                	return;                    
+	                }
 	                var win = $.ligerDialog.open({ 
 	                     url: 'basic_group__treegrid.html?random='+Math.random()+"&id="+selected.id
-	                    , height: 600
+	                    , height: 550
 	                    , width: 600
 	                    , title: il8n.basic_normal.modify+" "+selected.name
 	                    , isHidden: false
 	                    , modal: false
 	                    , id: "basic_group__treegrid"
 	                    ,buttons: [
-                           { text: '确定', onclick: function (item, dialog) { 
+                           { text: il8n.basic_normal.submit, onclick: function (item, dialog) { 
+                        	   var groups = top.topdata.groups;
+                        	   console.debug(top.topdata);
+                        	   var codes = [];
+                        	   var code = selected.code_;
+                        	   for(var i=0;i<groups.length;i++){
+                        		   var item = groups[i];
+                        		   if(item.type != '99'){
+                        			   codes.push(item.code_);
+                        		   }              
+                        	   }
                         	   
+                        	   exam_subject.group_set(codes,code);
                            } },
 	                    ]
 	                });     
@@ -484,4 +438,140 @@ var exam_subject = {
         
         $(dom).ligerGrid(config);
     }
+    
+	,viewData: {}
+	,view: function(){
+		var id = getParameter("id", window.location.toString() );
+    	$(document.body).html("<div id='menu'  ></div><div id='content' style='width:"+($(window).width()-170)+"px;margin-top:5px;'></div>");
+    	var htmls = "";
+    	$.ajax({
+            url: config_path__exam_subject__view
+            ,data: {
+                 id: id 
+                ,executor: top.basic_user.loginData.username
+                ,session: top.basic_user.loginData.session
+            },
+            type: "POST",
+            dataType: 'json',
+            success: function(response) {
+            	if(response.status!="1")return;
+            	var data = response.data;
+            	exam_subject.viewData = response.data;
+            	if(typeof(data.photo)=="undefined") data.photo = '../file/tavatar.gif';
+            	
+            	var tablename = "exam_subject";
+            	for(var j in data){               		
+            		if(j=='sql'||j=='type'||j=='status'||j=='used'||j=='structure'||j=='x')continue;
+            		if(j=='photo'){
+        				htmls += '<div style="position:absolute;right:5px;top:25px;background-color: rgb(220,250,245);width:166px;height:176px;"><img style="margin:2px;" src="'+data[j]+'" width="160" height="170" /></div>'
+        				continue;
+            		}
+            		
+            		if(j=="address"||j=="directions"||j=="remark"){
+            			var key = il8n[tablename][j];
+            			htmls+="<div style='width:100%;float:left;display:block;margin-top:5px;'/>";
+            			htmls += "<span class='view_lable' style='width:95%'>"+key+"</span><span style='width:95%' class='view_data'>"+data[j]+"</span>";
+            			continue;
+            		}     
+            		
+            		if(j=="level_net"||j=="floor"||j=="height_bottom"||j=="owner"){
+            			htmls+="<div style='width:100%;float:left;display:block;margin-top:5px;'/>";
+            		}
+       		
+            		if(j=='id'){
+            			tablename = "basic_normal";
+            			htmls+="<div style='width:100%;float:left;display:block;margin-top:5px;'/>";
+            		}           		
+
+            		var key = il8n[tablename][j];
+            		htmls += "<span class='view_lable'>"+key+"</span><span class='view_data'>"+data[j]+"</span>";
+            	}; 
+            	
+            	$("#content").html(htmls);
+            	            	
+                var items = [];        
+                var permission = [];
+                var thepermissions = ","+top.basic_user.loginData.permissions+",";
+                if(thepermissions.indexOf(",520422,")!=-1){
+                    permission.push( {code:'22',icon:"../file/icon16X16/22.png","name": il8n.basic_normal.modify});  
+                }
+                if(thepermissions.indexOf(",520401,")!=-1){
+                    permission.push( {code:'01',icon:"../file/icon16X16/01.png","name": il8n.basic_normal.search});  
+                }               
+                
+                for(var i=0;i<permission.length;i++){        
+                    var theFunction = function(){};
+                    if(permission[i].code=='22'){
+                        theFunction = function(){
+                            var win = top.$.ligerDialog.open({ 
+                                 url: 'company__modify.html?id='+data.id
+                                , height: 500
+                                , width: 700
+                                , isHidden: false
+                                , showMax: true
+                                , showToggle: true
+                                , showMin: true 
+                                , title: data.name
+                                , id: "company__modify"+data.code
+                                , modal: false
+                            }); 
+                            win.doMax();
+                        };
+                    }  
+                    else if(permission[i].code=='01'){
+                        theFunction = function(){
+                            if(top.$.ligerui.get("company__grid")){
+                                top.$.ligerui.get("company__grid").active();
+                                return;
+                            }
+                            var win = top.$.ligerDialog.open({ 
+                                 url: 'company__grid.html'
+                                , height: 500
+                                , width: 700
+                                , isHidden: false
+                                , showMax: true
+                                , showToggle: true
+                                , showMin: true 
+                                , title: il8n.company.company
+                                , id: "company__grid"
+                                , modal: false
+                            }); 
+                            win.doMax();
+                        };
+                    }                                        
+                    else{
+                        continue;
+                    }
+                    
+                    items.push({line: true });	
+					items.push({text: permission[i].name , img:permission[i].icon , click : theFunction});
+                }                
+
+                if(items.length>0){
+	            	$("#menu").ligerToolBar({
+	            		items:items
+	            	});
+                }else{
+                	$('#menu').remove();
+                }
+                
+                var resized = false;
+                $(window).resize(function(){
+                    if(resized==true)return;
+                    var arr = $("[ligeruiid]");
+                    for(var i=0;i<arr.length;i++){
+                        var id = $(arr[i]).attr("ligeruiid");                        
+                        $.ligerui.remove($.ligerui.get(id));
+                    }
+                    $(document.body).empty();
+                    company.view();
+                    resized = true;
+                });
+
+            },
+            error : function(){               
+                alert(il8n.basic_normal.disConnect);
+            }
+        });
+	}
 };

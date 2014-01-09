@@ -279,11 +279,12 @@ class install{
 			}
 			//exit($sqls[$i]);
 		}
-		$t_return = array("status"=>"1","msg"=>count($sqls)." sql executed ");
+		$t_return = array("status"=>"1","msg"=>count($sqls)." sql to execute ");
 		return $t_return;
 	}
 	
 	public static function step4(){
+		echo 111;exit();
 		$t_return = array("status"=>"2","msg"=>"");
 		$path_xls = "../sql/data_".tools::getConfigItem("IL8N").".xls";
 		$PHPReader = PHPExcel_IOFactory::createReader('Excel5');
@@ -362,7 +363,7 @@ class install{
 					//tools::query($cellvalue,$conn);
 				}
 			}
-		}
+		}		
 		
 		/*
 		$currentSheet = $phpexcel->getSheetByName("other");
@@ -375,7 +376,7 @@ class install{
 			$sqls[] = $sql_insert."\n";
 			//$res = tools::query($sql_insert,$conn);
 		}	
-		*/	
+		*/
 		
 		$s = implode(" ", $sqls);
 		file_put_contents("../sql/data.sql", $s);

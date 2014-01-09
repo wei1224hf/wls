@@ -460,6 +460,22 @@ basic_parameter.reference ASC
 		exam_subject_2_group,basic_user where exam_subject_2_group.group_code = basic_user.group_code
 		and basic_user.username = '__username__'
         </item>
+        <item ID="exam_subject__view">
+        SELECT
+		exam_subject.`code`,
+		exam_subject.`name`,
+		exam_subject.directions,
+		exam_subject.weight,
+		exam_subject.id,
+		exam_subject.type,
+		exam_subject.`status`,
+		exam_subject.remark
+		FROM
+		exam_subject
+		
+		where id = __id__
+        
+        </item>
     </item>
     <item ID="exam_paper_log">
         <item ID="exam_paper_log__grid">

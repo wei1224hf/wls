@@ -626,8 +626,6 @@ var basic_group = {
             	var thedata = parseInt(thedata)-1001;
             	var doms2 = $(".l-grid-row-cell-btn-checkbox");
             	$(doms2[thedata]).parent().parent().removeClass("l-grid-row-cell-checkbox");
-            	//$(doms2[thedata]).hide()
-            	console.debug(doms2[thedata]);
             }
         }
         config.onCheckRow = function(){

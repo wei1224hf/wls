@@ -4481,9 +4481,9 @@
                     g.tmpInput.attr("id", tmpId);
                     g.dialog.content.prepend(g.tmpInput);
                     
-                    $(g.jiframe).load(function() {
+                    $(g.jiframe).load(function() {// TODO WXF
                         if(p.onLoaded!=null){
-                            p.onLoaded();// TODO WXF
+                            p.onLoaded();
                         }                        
                     });
                                             

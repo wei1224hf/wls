@@ -162,8 +162,8 @@
 			left(basic_user.time_created,10) as time_created,
 			left(basic_user.time_lastupdated,10) as time_lastupdated,
 			basic_user.count_updated,
-			basic_user.`type`,
-			basic_user.`status`,
+			basic_user.type,
+			basic_user.status,
 			(select extend4 from basic_memory where code = basic_user.type and extend5 =
 			'basic_user__type') as type_,
 			(select extend4 from basic_memory where code = basic_user.status and extend5
@@ -230,14 +230,14 @@
 		<item ID="basic_group__simulate_permission">
 insert into basic_group_2_permission (permission_code,group_code)
 SELECT
-basic_permission.`code` as permission_code
-,basic_group.`code` as group_code
+basic_permission.code as permission_code
+,basic_group.code as group_code
 FROM
 basic_permission ,
 basic_group 
 WHERE 
-((basic_permission.`code` >= '60'  AND basic_permission.`code` not like '%1_' and basic_permission.`code` not like '%2_' and basic_permission.`code` not like '6005%' ) or  basic_permission.code like '11%' )
-AND basic_group.`code` like '%-%-%-%-%' 
+((basic_permission.code >= '60'  AND basic_permission.code not like '%1_' and basic_permission.code not like '%2_' and basic_permission.code not like '6005%' ) or  basic_permission.code like '11%' )
+AND basic_group.code like '%-%-%-%-%' 
 		</item>
 	</item>
 	<item ID="basic_memory">
@@ -306,8 +306,8 @@ AND basic_group.`code` like '%-%-%-%-%'
 			exam_paper.time_created,
 			exam_paper.time_lastupdated,
 			exam_paper.count_updated,
-			exam_paper.`type`,
-			exam_paper.`status`,
+			exam_paper.type,
+			exam_paper.status,
 			(select extend4 from basic_memory where code = exam_paper.type and extend5 =
 			'exam_paper__type') as type_,
 			(select extend4 from basic_memory where code = exam_paper.status and extend5
@@ -321,7 +321,7 @@ AND basic_group.`code` like '%-%-%-%-%'
 			exam_question.id,
 			exam_question.id_parent,
 			exam_question.cent,
-			exam_question.`type`,
+			exam_question.type,
 			exam_question.title,
 			exam_question.option_length,
 			exam_question.option_1,
@@ -363,8 +363,8 @@ AND basic_group.`code` like '%-%-%-%-%'
 			left(exam_paper.time_created,10) as time_created,
 			exam_paper.time_lastupdated,
 			exam_paper.count_updated,
-			exam_paper.`type`,
-			exam_paper.`status`,
+			exam_paper.type,
+			exam_paper.status,
 			(select extend4 from basic_memory where code = exam_paper.type and extend5 = 'exam_paper__type') as type_,
 			(select extend4 from basic_memory where code = exam_paper.status and extend5 = 'exam_paper__status') as status_,
 			exam_paper.remark
@@ -414,7 +414,7 @@ AND basic_group.`code` like '%-%-%-%-%'
 			exam_paper_log.creater_code,
 			exam_paper_log.creater_group_code,
 			exam_paper_log.type,
-			exam_paper_log.`status`,
+			exam_paper_log.status,
 			exam_paper.subject_code,
 			exam_paper.title,
 			exam_paper.cent,
@@ -441,7 +441,7 @@ AND basic_group.`code` like '%-%-%-%-%'
 			exam_question_log.myanswer,
 			exam_question_log.img,
 			exam_question.id_parent,
-			exam_question.`type`,
+			exam_question.type,
 			exam_question.cent,
 			exam_question.title,
 			exam_question.option_length,
@@ -480,7 +480,7 @@ AND basic_group.`code` like '%-%-%-%-%'
 			exam_question.title,
 			exam_question.difficulty,
 			(select extend4 from basic_memory where code = exam_question.type and extend5 = 'exam_question__type') as type_,
-			exam_question.`type`,
+			exam_question.type,
 			'what' 
 			FROM 
 			exam_question_log_wrongs 
@@ -493,7 +493,7 @@ AND basic_group.`code` like '%-%-%-%-%'
 			<![CDATA[
 			SELECT 
 			exam_question.id, 
-			exam_question.`type`,
+			exam_question.type,
 			exam_question.id_parent,
 			exam_question.title,
 			exam_question.option_length,
@@ -569,7 +569,7 @@ AND basic_group.`code` like '%-%-%-%-%'
 			exam_paper_multionline.time_stop,
 			exam_paper_multionline.count_total,
 			exam_paper_log.type,
-			exam_paper_log.`status`,
+			exam_paper_log.status,
 			exam_paper_multionline.count_giveup,
 			exam_paper_multionline.count_passed,
 			exam_paper_multionline.count_failed,
@@ -616,8 +616,8 @@ AND basic_group.`code` like '%-%-%-%-%'
 			exam_paper.time_created,
 			exam_paper.time_lastupdated,
 			exam_paper.count_updated,
-			exam_paper.`status`,
-			exam_paper.`type`,
+			exam_paper.status,
+			exam_paper.type,
 
 			exam_paper_multionline.time_start,
 			exam_paper_multionline.time_stop,
