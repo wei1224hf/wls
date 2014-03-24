@@ -284,7 +284,7 @@ class install{
 	}
 	
 	public static function step4(){
-		echo 111;exit();
+
 		$t_return = array("status"=>"2","msg"=>"");
 		$path_xls = "../sql/data_".tools::getConfigItem("IL8N").".xls";
 		$PHPReader = PHPExcel_IOFactory::createReader('Excel5');

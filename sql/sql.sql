@@ -1,6 +1,6 @@
 create table basic_parameter (
-  code varchar(200) not null
- ,value varchar(200) 
+  code varchar(20) not null
+ ,value varchar(60) 
  ,reference varchar(200) not null
  ,extend1 int 
  ,extend2 int 
@@ -87,6 +87,7 @@ create table basic_parameter (
  ,chief_id int 
  );
  
+ insert into basic_parameter (code,value,reference,extend4) values ('99','节点','basic_group__type','99');
  insert into basic_parameter (code,value,reference,extend4) values ('10','系统','basic_group__type','10');
  insert into basic_parameter (code,value,reference,extend4) values ('30','单位','basic_group__type','30');
  insert into basic_parameter (code,value,reference,extend4) values ('40','部门','basic_group__type','40');
@@ -139,7 +140,7 @@ create table basic_parameter (
  ,remark varchar(200) 
  );
  
- insert into basic_parameter (code,value,reference,extend4) values ('10','节点','exam_subject__type','10');
+ insert into basic_parameter (code,value,reference,extend4) values ('99','节点','exam_subject__type','99');
  insert into basic_parameter (code,value,reference,extend4) values ('20','科目','exam_subject__type','20');
  insert into basic_parameter (code,value,reference,extend4) values ('30','知识点','exam_subject__type','30');
  insert into basic_parameter (code,value,reference,extend4) values ('10','正常','exam_subject__status','10');

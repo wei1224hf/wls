@@ -732,6 +732,9 @@ class basic_user {
 		$sql = str_replace("__session__", "'".$session."'", $sql) ;
 		tools::query($sql,$conn);
 		
+		setcookie('test','',time()-3600);
+		
+		
 		return array(
 		    'status'=>'1'
 		    ,'msg'=>'ok'

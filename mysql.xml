@@ -513,7 +513,6 @@ basic_parameter.reference ASC
             SELECT
             exam_question.id,
             exam_question_log.myanswer,
-            exam_question_log.img,
             exam_question.id_parent,
             exam_question.`type`,
             exam_question.cent,

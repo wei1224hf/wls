@@ -296,14 +296,7 @@ class basic_group {
         return array(
             'status'=>"1"
             ,'msg'=>'ok'
-        );
-		
-
-		
-        return array(
-            'status'=>"1"
-            ,'msg'=>'ok'
-        );
+        );		
 	}
     
     public static function view($code){

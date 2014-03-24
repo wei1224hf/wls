@@ -324,7 +324,7 @@ class exam_subject {
             $data[] = $temp;
         }
 
-		$data = tools::list2Tree($data);
+		//$data = tools::list2Tree($data);
 		
 		return $data;
 	}

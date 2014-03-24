@@ -239,22 +239,31 @@ class exam_paper_log {
     }
 	
 	public static function questions($id=NULL,$executor=NULL){
+		/*
 	    if (!basic_user::checkPermission("4290")){
 	        return array(
 	             'msg'=>'access denied'
 	            ,'status'=>'2'
 	        );
-	    }		    
+	    }		
+	    */    
 	    if($id==NULL) $id = $_REQUEST['id'];
 	    if($executor==NULL) $executor = $_REQUEST['executor'];
         $conn = tools::getConn();
 
-        $sql = tools::getConfigItem("exam_paper_log__questions");            
+        $sql = tools::getSQL("exam_paper_log__questions");            
         $sql = str_replace("__id__", $id, $sql);
         
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql, $conn);
+        if($res==FALSE){
+        	return array(
+        			'sql'=>str_replace("\t", " ", str_replace("\n", " ", $sql))
+        			,'msg'=>'ok'
+        			,'status'=>'2'
+        	);
+        }
         $data = array();
-        while($temp = mysql_fetch_assoc($res)){
+        while($temp = tools::fetch_assoc($res)){
             $data[] = $temp;
         }
 
@@ -266,12 +275,14 @@ class exam_paper_log {
 	}	
 	
 	public static function submit($paper_id=NULL,$data=NULL,$executor=NULL){
+		/*
 	    if (!basic_user::checkPermission("4290")){
 	        return array(
 	             'msg'=>'access denied'
 	            ,'status'=>'2'
 	        );
-	    }		    
+	    }
+	    */		    
 	    if($data==NULL) $data = $_REQUEST['data'];
 	    if($executor==NULL) $executor = $_REQUEST['executor'];
 	    $conn = tools::getConn();
