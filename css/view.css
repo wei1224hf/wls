@@ -1,0 +1,9 @@
+@CHARSET "UTF-8";
+.view_lable{
+    display:block;float:left;width:19%;background-color: rgb(210,240,235);
+    margin-left: 3px; margin-bottom: 2px;
+}
+.view_data{
+    display:block;float:left;width:29%;
+    margin-left: 3px; margin-bottom: 2px;background-color: rgb(220,250,245);    
+}

@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv=content-type content="text/html; charset=UTF-8">
+    <script src="../libs/jquery-1.3.2.min.js" type="text/javascript"></script>
+    <script src="../libs/jQuery_LigerUI_V1.2.2/Source/lib/ligerUI/js/ligerui.all.js.txt" type="text/javascript"></script> 
+    <script src="../js/install_simulate_config.js" type="text/javascript"></script>
+	<script src="../js/install.js" type="text/javascript"></script>
+	<style type="text/css">
+		.log {
+		        background-color: #999999
+		}		
+		.log_done {
+		        background-color: #EEEEEE
+		}		
+		.f_close{
+		        display: block
+		}		
+		.f_step{
+		        display: block
+		}
+	</style>    
+</head>
+<body>
+<fieldset class='f_step'>
+    <legend>
+		<button onclick="step0()" class='btn_step'>Set Language</button>
+	</legend>
+	
+    <select name='language'>
+    	<option value='en'>Enghlish</option>
+	    <option value='zh-CN'>Simplified Chinese</option>	    
+    </select><br />
+    <div class="directions_step"></div>
+    <div class='log'></div>
+</fieldset>
+
+<fieldset class='f_close'>
+    <legend>
+		<button onclick="step1()" class='btn_step'>step</button>
+	</legend>
+<div class="directions_step"></div>
+<div id='log_environment' class='log'></div>
+</fieldset>
+
+<fieldset class='f_close'>
+	<legend>
+		<button onclick="step2()" class='btn_step'>step</button>
+	</legend>
+<div class="directions_step"></div><br/>
+<span id='mode'></span>:
+	<select name='mode' onchange='on_mode_changed()'>
+		<option value='independent'>independent</option>
+		<option value="DZX">Discuzx 3.x/2.x/1.5</option>
+		<option value="JOOMLA">Joomla 3.0</option>
+		<option value="DEDE">DeDeCMS 5.7</option>
+		<option value="BaiduCloud">BaiduCloud</option>
+	</select><br />
+    <span id='host'></span>:<input name='host' value='localhost'><br />
+    <span id='username'></span>:<input name='username' value='root'><br /> 
+    <span id='password_'></span>:<input name='password_' value=''><br /> 
+    <span id='port'></span>:<input name='port' value='3306'><br /> 
+    <span id='name'></span>:<input name='name' value='myapp'><br /> 
+    <span id='type'></span>:
+    <select name='type'>
+		<option value='mysql'>MySql-Server-Community-5.1 or higher </option>
+		<option value='mssql'>SqlServer 2000 or higher </option>
+		<!-- 
+		<option value='postgresql'>PostGreSql-9.1 or higher </option>
+    	<option value='sqlite'>SQLite 3.8 or higher </option>
+    	<option value='excel'>Excel 97-2003</option>	
+    	-->	
+    </select><br />                
+<div id='log_db' class='log'></div>
+</fieldset>
+
+<fieldset class='f_close'>
+	<legend>
+		<button onclick="step3()" class='btn_step'>step</button>
+	</legend>
+    <div class="directions_step"></div>
+    <div class='log'></div>
+</fieldset>
+
+<fieldset class='f_close'>
+	<legend>
+		<button onclick="step4()" class='btn_step'>step</button>
+	</legend>
+    <div class="directions_step"></div>
+    <div class='log'></div>
+</fieldset>
+
+</body>
+</html>
