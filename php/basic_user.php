@@ -567,7 +567,7 @@ class basic_user {
 		if($temp==false){
 		    return array(
 		        'status'=>2
-		        ,'msg'=>'Please login the Discuzx first'
+		        ,'msg'=>'Please login the DEDE first'
 		    );
 		}
 		

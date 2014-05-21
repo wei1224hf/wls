@@ -14,4 +14,8 @@
 <item ID="ZONE" Explanation="see GB2260 , China-Standard">330281</item>
 <item ID="GROUP_REG">50</item>
 <item ID="reLoad">donothing</item>
+
+<item ID="dzx_defaultStudentGroup">50</item>
+<item ID="dzx_defaultTeacherGroup">10</item>
+
 </root>
