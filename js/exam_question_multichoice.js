@@ -28,6 +28,7 @@ var question_multichoice = function(){
 			var str = "<table width='90%'><tr>";
 			
 			for (var i = 0; i < parseInt(this.option_length); i++) {
+				if(this.options[i]==null)this.options[i]="";
 				var optionStr = "<td width='"+parseInt(100/this.option_length)+"%' onclick='question_done("+this.id+");'>" 
 									+ String.fromCharCode(i + 65) // A B C D ...
 									+ ":&nbsp;<input type='checkbox' name='w_qs_"
@@ -49,6 +50,7 @@ var question_multichoice = function(){
 			$("#w_qs_" + this.id).append("<span class='w_qw_options'></span>");
 			
 			for (var i = 0; i < parseInt(this.option_length); i++) {
+				if(this.options[i]==null)this.options[i]="";
 				var str = "<div  onclick=\"$('input:eq(0)',$(this)).attr('checked',(-1)*($('input:eq(0)',$(this)).attr('checked')-1));question_done("+this.id+"); \" >" + String.fromCharCode(i + 65) // A B C D
 						+ ":&nbsp;<input type='checkbox' name='w_qs_"
 				+ this.id + "_" + i + "' value='"
@@ -82,7 +84,7 @@ var question_multichoice = function(){
 			this.myAnswer = 'I_DONT_KNOW';
 			return 'I_DONT_KNOW';
 		} else {
-			answer = valueList.join(',');
+			answer = valueList.join('');
 			this.myAnswer = answer;
 			return answer;
 		}
@@ -106,7 +108,10 @@ var question_multichoice = function(){
 			$(".w_q_d",$('#w_qs_' + this.id)).prepend("<span style='color:red;font-size:30px;'>  √  </span>");
 			return 'RIGHT';
 		}else if (this.myAnswer == 'I_DONT_KNOW') {
-			var answerList = this.answer.split(',');
+			var answerList = [];
+			for(var i=0;i<this.answer.length;i++){
+				answerList.push(this.answer.substring(i, i+1));
+			}
 			for (var i = 0; i < answerList.length; i++) {
 				$(":checkbox[value='" + answerList[i] + "']",
 						$("#w_qs_" + this.id)).parent()
@@ -118,7 +123,10 @@ var question_multichoice = function(){
 					'放弃,分值:' + (this.cent));
 		}else{
 			//做错了,将正确答案高亮显示
-			var answerList = this.answer.split(',');
+			var answerList = [];
+			for(var i=0;i<this.answer.length;i++){
+				answerList.push(this.answer.substring(i, i+1));
+			}
 			for (var i = 0; i < answerList.length; i++) {
 				$(":checkbox[value='" + answerList[i] + "']",
 						$("#w_qs_" + this.id)).parent()
@@ -138,7 +146,11 @@ var question_multichoice = function(){
 	this.setMyAnswer = function() {
 		var myAnswer = this.myAnswer;
 		if (myAnswer != 'I_DONT_KNOW') {
-			var answerList = this.myAnswer.split(',');
+			var answerList = [];
+			for(var i=0;i<this.myAnswer.length;i++){
+				answerList.push(this.myAnswer.substring(i, i+1));
+			}
+
 			for (var i = 0; i < answerList.length; i++) {
 				$(":checkbox[value='" + answerList[i] + "']",
 						$("#w_qs_" + this.id)).attr('checked',

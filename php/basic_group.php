@@ -105,6 +105,14 @@ class basic_group {
 			//	$t_return['action'] = $action;
 			//}
 		}
+		else if($function =="register"){
+			//$action = "120140";
+			//if(basic_user::checkPermission($executor, $action, $session)){
+			$t_return = basic_group::register();
+			//}else{
+			//	$t_return['action'] = $action;
+			//}
+		}
 				
 		return $t_return;
 	}
@@ -380,5 +388,23 @@ class basic_group {
 			"permissions"=>$data
 			,"status"=>"1"				
 		);
+	}
+	
+	public static function register(){
+		$conn = tools::getConn();
+		$sql = "select code,name from basic_group where status = 11 ";
+		$res = tools::query($sql,$conn);
+		if($res==FALSE){
+			return array(
+					'status'=>2
+					,'msg'=>$sql
+			);
+		}
+		$data = array();
+		while($temp = tools::fetch_assoc($res)){
+			$data[] = $temp;
+		}
+		
+		return $data;
 	}
 }

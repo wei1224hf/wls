@@ -1,25 +1,34 @@
 var exam_paper = {
-	grid: function(){
+	
+	mode: ""
+		
+	,grid_search_default: {}
+	,grid_can_check: false
+		
+	,grid: function(){
+		var toolbar = exam_paper.grid_toolbar();
 		var config = {
 			id: 'exam_paper__grid'
 			,height:'100%'
 			,columns: [
-			     { display: getIl8n("exam_paper","title"), name: 'title', width: 150, align: 'left' }
+			     { display: getIl8n("exam_paper","title"), name: 'title', width: 200, align: 'left' }
 			    ,{ display: getIl8n("exam_paper","subject_name"), name: 'subject_name', width: 100 }				    
 			    ,{ display: getIl8n("exam_paper","cent"), name: 'cent', width: 50 }
 			    ,{ display: getIl8n("exam_paper","time_created"), name: 'time_created', width: 100 }
 			    ,{ display: getIl8n("exam_paper","count_question"), name: 'count_question', width: 100 }   
-			    ,{ display: getIl8n("exam_paper","cent_top"), name: 'cent_top', isSort: false, width: 100 }
-			    ,{ display: getIl8n("exam_paper","count_used"), name: 'count_used', isSort: false, width: 100 }
+			    ,{ display: getIl8n("exam_paper","cent_top"), name: 'cent_top', isSort: false, width: 100,hide: true }
+			    ,{ display: getIl8n("exam_paper","count_used"), name: 'count_used', isSort: false, width: 100,hide: true  }
 			],  pageSize:20 ,rownumbers:true
 			,parms : {
                 executor: top.basic_user.loginData.username
                 ,session: top.basic_user.loginData.session     
                 ,search: "{}"
-			},
-			url: config_path__exam_paper__grid,
+			}
+            ,checkbox: exam_paper.grid_can_check
+            ,selectRowButtonOnly: exam_paper.grid_can_check			
+			,url: config_path__exam_paper__grid,
 			method: "POST",				
-			toolbar: { items: []}
+			toolbar: { items: toolbar }
 		};
 		
 		if(top.basic_user.loginData.type=='20'){
@@ -43,6 +52,13 @@ var exam_paper = {
 			}			
 		}		
 		
+		var search = exam_paper.grid_search_default;
+		config.parms.search = $.ligerui.toJSON(search);
+		
+		$(document.body).ligerGrid(config);
+	}
+	
+	,grid_toolbar: function(){
 		//配置列表表头的按钮,根据当前用户的权限来初始化
 		var permission = [];
 		for(var i=0;i<top.basic_user.permission.length;i++){
@@ -56,6 +72,7 @@ var exam_paper = {
 			}
 		}
 		
+		var items = [];
 		for(var i=0;i<permission.length;i++){
 			var theFunction = function(){alert(1)};
 			if(permission[i].code=='600101'){
@@ -64,7 +81,7 @@ var exam_paper = {
 				theFunction = function(){					
 					var selected = exam_paper.grid_getSelectOne();
 					var win = top.$.ligerDialog.open({ 
-						 url: 'exam_paper__view.html?id='+selected.id+'&random='+Math.random()
+						 url: '../html/exam_paper__view.html?id='+selected.id+'&random='+Math.random()
 						,height: 560
 						,width: 550
 						,title: top.getIl8n("view")
@@ -90,28 +107,20 @@ var exam_paper = {
 			}else if(permission[i].code=='600112'){
 				theFunction = exam_paper.download;		
 			}else if(permission[i].code=='600123'){
-				config.checkbox = true;
+				exam_paper.grid_can_check = true;
 				theFunction = exam_paper.remove;		
 			}else if(permission[i].code=='600122'){
 				theFunction = function(){
 					
 					var selected = exam_paper.grid_getSelectOne();
 					top.$.ligerDialog.open({ 
-						url: 'exam_paper__modify.html?id='+selected.id+'&random='+Math.random()
+						url: '../html/exam_paper__modify.html?id='+selected.id+'&random='+Math.random()
 						,height: 240
 						,width: 400
 						,isHidden: false
 						,title: top.getIl8n("modify")
 						,id: 'exam_paper__modify_'+selected.id
 					});	
-					
-			        top.$.ligerui.get("exam_paper__modify_"+selected.id).close = function(){
-			            var g = this;
-			            top.$.ligerui.win.removeTask(this);
-			            g.unmask();
-			            g._removeDialog();
-			            top.$.ligerui.remove(top.$.ligerui.get("exam_paper__modify_"+selected.id));
-			        };
 					
 				}
 			}else if(permission[i].code=='600190'){
@@ -121,7 +130,7 @@ var exam_paper = {
 					
 					var id = selected.id;
 					top.$.ligerDialog.open({ 
-						url: 'exam_paper__do.html?id='+id+'&random='+Math.random()
+						url: '../html/exam_paper__do.html?id='+id+'&random='+Math.random()
 						,height: 350
 						,width: 400
 						,title: selected.title
@@ -134,22 +143,14 @@ var exam_paper = {
                         ,isHidden:false
 						,id: 'exam_paper__do_'+id
 					}).max();	
-					
-			        top.$.ligerui.get("exam_paper__do_"+id).close = function(){
-			            var g = this;
-			            top.$.ligerui.win.removeTask(this);
-			            g.unmask();
-			            g._removeDialog();
-			            top.$.ligerui.remove(top.$.ligerui.get("exam_paper__do_"+id));
-			        };
 				}
 			}
 			
-			config.toolbar.items.push({line: true });
-			config.toolbar.items.push({text: permission[i].name , img: permission[i].icon , click: theFunction });
+			items.push({line: true });
+			items.push({text: permission[i].name , img: permission[i].icon , click: theFunction });
+			
 		}
-		
-		$(document.body).ligerGrid(config);
+		return items;
 	}
 	
 	,grid_getSelectOne: function(){
@@ -226,6 +227,7 @@ var exam_paper = {
 					config.fields.push({ display: top.getIl8n('exam_paper','count_used'), name: "search__count_used", type: "text" });
 				}	
 				else if(permission[i].code=='60010152'){
+					if( typeof( exam_paper.grid_search_default['subject_code'] )!= 'undefined' ) continue;
 					config.fields.push({ display: top.getIl8n('exam_paper','subject_code'), name: "subject_code", type: "select", options :{data : [] , valueField : "subject_code" , textField: "subject_name" } });
 				}				
 			}
@@ -239,15 +241,19 @@ var exam_paper = {
 				,title: top.getIl8n('exam_paper','search')
 				,buttons : [
 					{text: top.getIl8n('exam_paper','clear'), onclick:function(){
-						$.ligerui.get("exam_paper__grid").options.parms.search = "{}";
-						$.ligerui.get("exam_paper__grid").setOptions({newPage:1});
-						$.ligerui.get("exam_paper__grid").loadData();
 						
-						var doms = $("[ligeruiid]",$('#form'));
-						for(var i=0;i<doms.length;i++){
-							var theid = $(doms[i]).attr('ligeruiid');
-							$.ligerui.get(theid).setValue('');
-						}
+                        eval("var data ="+ $.ligerui.get("exam_paper__grid").options.parms.search );
+                        var doms = $("input[ligeruiid]",$('#form'));
+                        for(var i=0;i<doms.length;i++){
+                            var theid = $(doms[i]).attr('ligeruiid');                            
+                            if(data[theid])delete data[theid];                         
+
+                            $.ligerui.get(theid).setValue('');                            
+                        } 
+                        
+                        $.ligerui.get("exam_paper__grid").options.parms.search= $.ligerui.toJSON(data);
+                        $.ligerui.get("exam_paper__grid").setOptions({newPage:1});
+                        $.ligerui.get("exam_paper__grid").loadData();  
 					}}
 				    ,{text: top.getIl8n('exam_paper','search'), onclick:function(){
 				    	var data = {};
@@ -276,7 +282,8 @@ var exam_paper = {
 	        $.ajax({
 	            url : config_path__exam_subject__getMy,
 	            data : {
-	                username: top.basic_user.loginData.username
+	                executor: top.basic_user.loginData.username
+					,session: ''
 	            },
 	            type : "POST",
 	            dataType: 'json',    
@@ -661,7 +668,7 @@ var paper = {
             }else{
                 continue;
             }
-            //console.debug(index+"     "+quesData[i].type);
+
             question.type = quesData[i].type;
             question.path_listen = quesData[i].path_listen;
             question.path_img = quesData[i].path_img;

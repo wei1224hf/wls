@@ -30,7 +30,7 @@ var step0 = function(){
 		$(btn_doms[i]).html(language.step+" "+i);
 		$($(".directions_step")[i]).html(language.steps[i]);
 	}
-	 $($("fieldset")[1]).addClass("f_step");
+	$("fieldset").addClass("f_step")
 	$('#mode').html(language.database.mode);
     $('#host').html(language.database.host);
     $('#username').html(language.database.username);

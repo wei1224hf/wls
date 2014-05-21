@@ -12,7 +12,7 @@ var basic_user = {
             ,labelWidth: 90
             ,space: 40
             ,fields: [
-                 { display: il8n.basic_user.username, name: "username",  type: "text",  validate : {required:true,minlength:3,maxlength:40} }
+                 { display: '用户名', name: "username",  type: "text",  validate : {required:true,minlength:3,maxlength:40} }
                 ,{ display: il8n.basic_user.password, name: "password",  type: "password", validate : {required:true,minlength:3,maxlength:40} }
             ]
         });
@@ -32,7 +32,7 @@ var basic_user = {
             submitHandler: function () {
             	$("#bt_login").hide();
             	if( top === self){
-            		basic_user.login($('[ligeruiid=username]').val(), MD5( MD5( $('[ligeruiid=password]').val() ) +((new Date()).getHours())) ,"console.debug(basic_user);");
+            		basic_user.login($('[ligeruiid=username]').val(), MD5( MD5( $('[ligeruiid=password]').val() ) +((new Date()).getHours())) ,"");
             	}
             	else{
             		parent.basic_user.login($('[ligeruiid=username]').val(), MD5( MD5( $('[ligeruiid=password]').val() ) +((new Date()).getHours())) ,"layout.loadIcons();$.ligerui.get('win_10').close();");
@@ -44,7 +44,6 @@ var basic_user = {
     ,login: function(username,password,afterAjax){ 
         if(this.ajaxState==true)return;
         this.ajaxState = true;
-        //console.debug(username+" "+password);
         $.ajax({
             url : config_path__basic_user__login,
             data : {
@@ -67,7 +66,6 @@ var basic_user = {
                     SetCookie("myApp_username",username,0.5);
                     SetCookie("myApp_password",password,0.5); 
                     
-                    //console.debug(afterAjax);
                     if ( typeof(afterAjax) == "string" ){
                         eval(afterAjax);
                     }else if( typeof(afterAjax) == "function"){
@@ -107,14 +105,34 @@ var basic_user = {
         var config = {
                 id: 'basic_user__add',
                 fields: [
-                     { display: il8n.basic_user.username, name: "basic_user__username", type: "text",  validate: { required:true, minlength:3, maxlength:10} }
+                     { display: '用户名', name: "basic_user__username", type: "text",  validate: { required:true, minlength:3, maxlength:10} }
                     ,{ display: il8n.basic_user.password, name: "basic_user__password", type: "password", validate: { required:true } }
+                    ,{ display: "岗位与级别", name: "basic_user__group_code", type: "select", options:{
+                    	url: config_path__basic_group__register ,valueField: 'code' , textField: 'name', slide: false 
+                    }, validate: { required:true } }
+                    ,{ display: '单位', name: "basic_user__govern_zone", type: "select", options:{
+                    	data: [
+                    	        {code: '4401',name: '市监控指挥中心'}
+                    	       ,{code: '440111',name: '白云区'}
+                    	       ,{code: '440106',name: '天河区'}
+                    	       ,{code: '440104',name: '越秀区'}
+                    	       ,{code: '440105',name: '海珠区'}
+                    	       ,{code: '440112',name: '黄埔区'}
+                    	       ,{code: '440103',name: '荔湾区'}
+                    	       ,{code: '440113',name: '番禺区'}
+                    	       ,{code: '440114',name: '花都区'}
+                    	       ,{code: '440115',name: '南沙区'}
+                    	       ,{code: '440183',name: '增城区'}
+                    	       ,{code: '440184',name: '从化区'}
+
+                    	       ] ,valueField: 'code' , textField: 'name', slide: false 
+                    }, validate: { required:true } }
                 ]
             };
             
         $(document.body).append("<form id='form'></form>");
         $('#form').ligerForm(config);            
-        $('#form').append('<br/><br/><br/><br/><input type="submit" value="'+il8n.basic_normal.submit+'" id="basic_user__submit" class="l-button l-button-submit" />' );
+        $('#form').append('<br/><br/><br/><br/><input type="submit" value="'+'提交'+'" id="basic_user__submit" class="l-button l-button-submit" />' );
         
         var v = $('#form').validate({
 			debug: true,
@@ -134,8 +152,10 @@ var basic_user = {
                     url: config_path__basic_user__add_register,
                     data: {                        
                         data:$.ligerui.toJSON({
-                             executor: $.ligerui.get('basic_user__username').getValue()
+                        	 username: $.ligerui.get('basic_user__username').getValue()
                             ,password: $.ligerui.get('basic_user__password').getValue()
+                            ,group_code: $.ligerui.get('basic_user__group_code').getValue()
+                            ,govern_zone: $.ligerui.get('basic_user__govern_zone').getValue()
                         })
                     },
                     type: "POST",
@@ -164,14 +184,14 @@ var basic_user = {
                 ,height:'100%'
                 ,columns: [
                      { display: il8n.basic_normal.id, name: 'id', isSort: true, hide:true }
-                    ,{ display: il8n.basic_user.username, name: 'username', width:120 }
+                    ,{ display: '用户名', name: 'username', width:120 }
                     ,{ display: il8n.basic_user.money, name: 'money' }
                     ,{ display: il8n.basic_user.credits, name: 'credits', hide:true }
                     ,{ display: il8n.basic_user.time_created, name: 'time_created', hide:true }
                     ,{ display: il8n.basic_user.type, name: 'type_', isSort: false }
-                    ,{ display: il8n.basic_normal.status, name: 'status_', isSort: false }                    
+                    ,{ display: '状态', name: 'status_', isSort: false }                    
                     ,{ display: il8n.basic_user.group_name, name: 'group_name', isSort: false, width:120 }
-                    ,{ display: il8n.basic_user.group_code, name: 'group_code', width:80 } 
+                    ,{ display: '用户组', name: 'group_code', width:80 } 
                     //,{ display: "行政区划编码", name: 'govern_zone', width:80 } 
                 ]
         		,pageSize:20 
@@ -431,14 +451,31 @@ var basic_user = {
     }
     
     ,add_fields: [
-                  { display: il8n.basic_user.username, name: "username", type: "text",  validate: { required:true, minlength:3, maxlength:10} }
+                  { display: '用户名', name: "username", type: "text",  validate: { required:true, minlength:3, maxlength:10} }
                   ,{ display: il8n.basic_user.password, name: "password", type: "password", validate: { required:true } }
                   ,{ display: il8n.basic_user.group, name: "group_code", type: "text", validate: {required:true} }                
                   ,{ display: il8n.basic_user.money, name: "money", type: "text", validate: {required:true} }                
                   ,{ display: il8n.basic_user.credits, name: "credits", type: "text", validate: {required:true} }                
-                  ,{ display: il8n.basic_normal.type, name: "type", type: "select", options: { data: basic_parameter_data.basic_user__type, valueField: "code", textField: "value", slide: false }, validate: { required: true } }
-                  ,{ display: il8n.basic_normal.status, name: "status", type: "select", options: { data: basic_parameter_data.basic_user__status, valueField: "code", textField: "value", slide: false }, validate: { required: true } }
+                  ,{ display: '类型', name: "type", type: "select", options: { data: basic_parameter_data.basic_user__type, valueField: "code", textField: "value", slide: false }, validate: { required: true } }
+                  ,{ display: '状态', name: "status", type: "select", options: { data: basic_parameter_data.basic_user__status, valueField: "code", textField: "value", slide: false }, validate: { required: true } }
                   //,{ display: "行政区划", name: "govern_zone", type: "text" }
+                  ,{ display: '单位', name: "govern_zone", type: "select", options:{
+                  	data: [
+                  	        {code: '4401',name: '市监控指挥中心'}
+                  	       ,{code: '440111',name: '白云区'}
+                  	       ,{code: '440106',name: '天河区'}
+                  	       ,{code: '440104',name: '越秀区'}
+                  	       ,{code: '440105',name: '海珠区'}
+                  	       ,{code: '440112',name: '黄埔区'}
+                  	       ,{code: '440103',name: '荔湾区'}
+                  	       ,{code: '440113',name: '番禺区'}
+                  	       ,{code: '440114',name: '花都区'}
+                  	       ,{code: '440115',name: '南沙区'}
+                  	       ,{code: '440183',name: '增城区'}
+                  	       ,{code: '440184',name: '从化区'}
+
+                  	       ] ,valueField: 'code' , textField: 'name', slide: false 
+                  }, validate: { required:true } }                  
                   
               ]
     ,add: function(){
@@ -450,14 +487,9 @@ var basic_user = {
         $(document.body).append("<form id='form'></form>");
         $('#form').ligerForm(config); 
         $("[ligeruiid=group_code]").parent().parent().next().append("&nbsp;<a href='#' onclick='tools.setGroup(\"nothing\",\"[ligeruiid=group_code]\",\"nothing\")' >"+ il8n.basic_normal.set +"</a>");
-        if($("#form [ligeruiid=govern_zone]").length>0){
-        	$("[ligeruiid=govern_zone]").parent().parent().next()
-    		.append("&nbsp;<a href='#' onclick='basic_user.zone_code()' >"
-    				+ il8n.basic_normal.set +"</a>");
-        }
-		$('[ligeruiid=group_code],[ligeruiid=govern_zone]').attr("disabled","disabled")
+		$('[ligeruiid=group_code]').attr("disabled","disabled")
 		  	.css("background-color","#EEEEEE").parent().css("background-color","#EEEEEE");
-        $('#form').append('<br/><br/><br/><br/><input type="submit" value="'+il8n.basic_normal.submit+'" id="basic_user__submit" class="l-button l-button-submit" />' );
+        $('#form').append('<br/><br/><br/><br/><input type="submit" value="'+'提交'+'" id="basic_user__submit" class="l-button l-button-submit" />' );
         
         var v = $('#form').validate({
             debug: true,
@@ -472,7 +504,7 @@ var basic_user = {
             submitHandler: function () {
                 if(basic_user.ajaxState)return;
                 basic_user.ajaxState = true;
-                $("#basic_user__submit").attr("value",il8n.basic_user.waitting);
+                $("#basic_user__submit").attr("value",'等待');
                 
 				var data = {};
 				var doms = $("[ligeruiid]",$('#form'));
@@ -486,6 +518,8 @@ var basic_user = {
 				        data[theid]=thevalue;
 				    }
 				}
+				
+
                 
                 $.ajax({
                     url: config_path__basic_user__add,
@@ -501,17 +535,17 @@ var basic_user = {
                         //服务端添加成功,修改 AJAX 通信状态,修改按钮的文字信息,读取反馈信息
                         if(response.status=="1"){
                             basic_user.ajaxState = false;
-                            alert(il8n.basic_normal.done);
+                            alert('完成');
                             $("#basic_user__submit").remove();
                         //服务端添加失败
                         }else{
                             alert(response.msg);
                             basic_user.ajaxState = false;
-                            $("#basic_user__submit").attr("value", il8n.basic_normal.submit );
+                            $("#basic_user__submit").attr("value", '提交' );
                         }
                     },
                     error : function(){
-                        alert(il8n.disConnect);
+                        alert('net error');
                     }
                 });    
             }
@@ -526,6 +560,7 @@ var basic_user = {
 		$('[ligeruiid=username]').attr("disabled","disabled");
 		$('[ligeruiid=username]').css("background-color","#EEEEEE");
 		$('[ligeruiid=username]').parent().css("background-color","#EEEEEE");
+		 
 		$.ajax({
 			url: config_path__basic_user__view,
 			data: {
@@ -562,6 +597,7 @@ var basic_user = {
 		$('[ligeruiid=group_code],[ligeruiid=money],[ligeruiid=credits],[ligeruiid=type],[ligeruiid=status]').parent().css("background-color","#EEEEEE");
 		
 		$(".l-trigger,.l-trigger-icon",$('[ligeruiid=type],[ligeruiid=status]').parent()).hide();
+		$("[ligeruiid=group_code]").parent().parent().next().html("");
     }
     
     ,searchOptions: {}    
@@ -577,10 +613,10 @@ var basic_user = {
                 ,labelWidth: 90
                 ,space: 40
                 ,fields: [
-                     { display: il8n.basic_user.username, name: "username", newline: false, type: "text" }
-                    ,{ display: il8n.basic_normal.type, name: "type", newline: true, type: "select", options :{data : basic_parameter_data.basic_user__type, valueField : "code" , textField: "value" } }
-                    ,{ display: il8n.basic_normal.status, name: "status", newline: true, type: "select", options :{data : basic_parameter_data.basic_user__status, valueField : "code" , textField: "value" } }
-                    ,{ display: il8n.basic_user.group_code, name: "group_code", newline: true, type: "text" }
+                     { display: '用户名', name: "username", newline: false, type: "text" }
+                    ,{ display: '类型', name: "type", newline: true, type: "select", options :{data : basic_parameter_data.basic_user__type, valueField : "code" , textField: "value" } }
+                    ,{ display: '状态', name: "status", newline: true, type: "select", options :{data : basic_parameter_data.basic_user__status, valueField : "code" , textField: "value" } }
+                    ,{ display: '用户组', name: "group_code", newline: true, type: "text" }
                 ]
             }); 
             $.ligerDialog.open({

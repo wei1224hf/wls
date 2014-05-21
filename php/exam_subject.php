@@ -104,7 +104,7 @@ class exam_subject {
 		}	
 	
 		else if($function =="getMy"){
-			$t_return = exam_subject::getMy($_REQUEST['username']);
+			$t_return = exam_subject::getMy($executor);
 		}
 		else if($function =="treegrid"){
 			$t_return = exam_subject::treegrid($_REQUEST['upcode']);
@@ -267,9 +267,9 @@ class exam_subject {
 		}
 		else{
 			$sql = "insert into exam_subject (";
-			$id = tools::getTableId("exam_subject");
-			$id ++;
-			$t_data["id"] = $id;			
+			//$id = tools::getTableId("exam_subject");
+			//$id ++;
+			//$t_data["id"] = $id;			
 		}
 		
 		$keys = array_keys($t_data);
@@ -283,12 +283,23 @@ class exam_subject {
 		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
 		$sql = $sql.$sql_;		
 	
-		mysql_query($sql,$conn);
+		$res = mysql_query($sql,$conn);
 		
-        return array(
-            'status'=>"1"
-            ,'msg'=>'ok'
-        );
+		if($res==TRUE){
+			return array(
+					'status'=>"1"
+					,'msg'=>'ok'
+			);
+		}
+		else{
+			return array(
+					'status'=>"2"
+					,'msg'=>mysql_error($conn)
+					,'sql'=>$sql
+			);
+		}
+		
+
 	}
     
     public static function group_set($codes=NULL,$code=NULL){

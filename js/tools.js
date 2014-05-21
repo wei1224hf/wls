@@ -341,13 +341,13 @@ var mainWindow = function(){
 	var count = 0;
 	do{		
 		if(theCurrentWindow.sys_top_window == true){
-			//console.debug(theCurrentWindow);
+
 			return theCurrentWindow;
 		}
 		else{
 			count ++;
 			theCurrentWindow = theCurrentWindow.parent;
-			//console.debug(theCurrentWindow);
+
 		}
 	}while(theCurrentWindow.sys_top_window==false);
 	return theCurrentWindow;
@@ -811,3 +811,40 @@ function dateToYMD(date) {
     var y = date.getFullYear();
     return '' + y + '-' + (m<=9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d);
 }
+
+/* 
+* @param {Object} target 目标对象。 
+* @param {Object} source 源对象。 
+* @param {boolean} deep 是否复制(继承)对象中的对象。 
+* @returns {Object} 返回继承了source对象属性的新对象。 
+*/ 
+Object.extend = function(target, source, deep) { 
+	target = target || {}; 
+	var sType = typeof source, i = 1, options; 
+	if( sType === 'undefined' || sType === 'boolean' ) { 
+		deep = sType === 'boolean' ? source : false; 
+		source = target; 
+		target = this; 
+	} 
+	else if( typeof source !== 'object' 
+		&& Object.prototype.toString.call(source) !== '[object Function]' ) 
+		source = {}; 
+		while(i <= 2) { 
+			
+		options = i === 1 ? target : source; 
+		if( options != null ) { 
+			for( var name in options ) { 
+				var src = target[name], copy = options[name]; 
+				if(target === copy) 
+					continue; 
+				if(deep && copy && typeof copy === 'object' && !copy.nodeType) 
+					target[name] = this.extend(src || 
+							(copy.length != null ? [] : {}), copy, deep); 
+				else if(copy !== undefined) 
+					target[name] = copy; 
+			} 
+		} 
+		i++; 
+	} 
+	return target; 
+}; 

@@ -17,7 +17,7 @@
 			)
 		</item>
 		<item ID="basic_user__getSession">
-			select user_id,user_type,group_code,permissions,groups,session from basic_user_session where
+			select user_id,user_type,user_code,group_code,permissions,groups,session from basic_user_session where
 			user_code = '__user_code__'
 		</item>
 		<item ID="basic_user__logout">
@@ -56,6 +56,7 @@
 			);
 		</item>
 		<item ID="basic_user__login_check">
+		<![CDATA[
 			select
 
 			basic_user.username,
@@ -64,6 +65,8 @@
 			basic_user.credits,
 			basic_user.group_code,
 			basic_user.group_all,
+			basic_user.govern_zone,
+			(select value from basic_parameter where code = basic_user.govern_zone and reference='zone') as zone_name,
 			basic_user.id,
 			basic_user.type,
 			basic_user.status,
@@ -77,9 +80,9 @@
 
 			from basic_user left join basic_user_session on basic_user.username = basic_user_session.user_code  where basic_user.username = '__username__' and
 			
-			EXISTS (select basic_group.code from basic_group where basic_group.code =
-			basic_user.group_code and basic_group.status = '10')
-
+            EXISTS (select basic_group.code from basic_group where basic_group.code =
+            basic_user.group_code and basic_group.status >= 10 and basic_group.status <= 20 )
+]]>
 		</item>
 		<item ID="basic_user__login_logout">
 			delete from basic_user_session where user_code = '__user_code__'
@@ -317,8 +320,8 @@ basic_parameter.reference ASC
             exam_paper.`type`,
             exam_paper.`status`,
             
-            (select value from basic_parameter where extend4 = exam_paper.type and reference = 'exam_paper__type') as type_,
-            (select value from basic_parameter where extend4 = exam_paper.status and reference = 'exam_paper__status') as status_,
+            (select value from basic_parameter where code = exam_paper.type and reference = 'exam_paper__type') as type_,
+            (select value from basic_parameter where code = exam_paper.status and reference = 'exam_paper__status') as status_,
             
             exam_paper.remark,
             
@@ -379,8 +382,8 @@ basic_parameter.reference ASC
             exam_paper.count_updated,
             exam_paper.`type`,
             exam_paper.`status`,
-          (select value from basic_parameter where extend4 = exam_paper.type and reference = 'exam_paper__type') as type_,
-            (select value from basic_parameter where extend4 = exam_paper.status and reference = 'exam_paper__status') as status_,
+          (select value from basic_parameter where code = exam_paper.type and reference = 'exam_paper__type') as type_,
+            (select value from basic_parameter where code = exam_paper.status and reference = 'exam_paper__status') as status_,
             
             exam_paper.remark,
             'nothing' as nothing
@@ -406,7 +409,7 @@ basic_parameter.reference ASC
 <item ID="exam_subject">
         <item ID="exam_subject__grid">
             select code,name,type,
-            (select value from basic_parameter where extend4 = exam_subject.type and reference = 'exam_subject__type') as type_
+            (select value from basic_parameter where code = exam_subject.type and reference = 'exam_subject__type') as type_
             
             from exam_subject
                        
@@ -422,12 +425,12 @@ basic_parameter.reference ASC
             order by code
         </item>
         <item ID="exam_subject__getMy">
-		        SELECT
-		exam_subject_2_group.subject_code,
-		(select name from exam_subject where exam_subject.code = exam_paper.subject_code ) as subject_name,
+                SELECT
+        exam_subject_2_group.subject_code,
+        (select name from exam_subject where exam_subject.code = exam_subject_2_group.subject_code ) as subject_name
 
-		FROM
-		exam_subject_2_group,basic_user where exam_subject_2_group.group_code = basic_user.group_code
+        FROM
+        exam_subject_2_group,basic_user where exam_subject_2_group.group_code = basic_user.group_code
 		and basic_user.username = '__username__'
         </item>
         <item ID="exam_subject__view">
@@ -467,8 +470,8 @@ basic_parameter.reference ASC
             exam_paper_log.time_created,
             exam_paper.count_question,
             
-            (select value from basic_parameter where extend4 = exam_paper_log.type and reference = 'exam_paper_log__type') as type_,
-            (select value from basic_parameter where extend4 = exam_paper_log.status and reference = 'exam_paper_log__status') as status_,
+            (select value from basic_parameter where code = exam_paper_log.type and reference = 'exam_paper_log__type') as type_,
+            (select value from basic_parameter where code = exam_paper_log.status and reference = 'exam_paper_log__status') as status_,
             
             
     
@@ -582,8 +585,8 @@ basic_parameter.reference ASC
             exam_paper_multionline.type,
             exam_paper_multionline.status,
             
-            (select value from basic_parameter where extend4 = exam_paper_multionline.type and reference = 'exam_paper_multionline__type') as type_,
-            (select value from basic_parameter where extend4 = exam_paper_multionline.status and reference = 'exam_paper_multionline__status') as status_,
+            (select value from basic_parameter where code = exam_paper_multionline.type and reference = 'exam_paper_multionline__type') as type_,
+            (select value from basic_parameter where code = exam_paper_multionline.status and reference = 'exam_paper_multionline__status') as status_,
             (select name from exam_subject where exam_subject.code = exam_paper.subject_code ) as subject_name,
             
             exam_paper.id as pid,
@@ -627,11 +630,11 @@ basic_parameter.reference ASC
             exam_paper.subject_code,
             exam_paper_multionline.creater_code as teacher_code,
             
-            (select value from basic_parameter where extend4 = exam_paper_log.type and reference = 'exam_paper_log__type') as type_,
-            (select value from basic_parameter where extend4 = exam_paper_log.status and reference = 'exam_paper_log__status') as status_,
+            (select value from basic_parameter where code = exam_paper_log.type and reference = 'exam_paper_log__type') as type_,
+            (select value from basic_parameter where code = exam_paper_log.status and reference = 'exam_paper_log__status') as status_,
           
             exam_paper_multionline.status as status2,
-            (select value from basic_parameter where extend4 = exam_paper_multionline.status and reference = 'exam_paper_multionline__status') as status2_,
+            (select value from basic_parameter where code = exam_paper_multionline.status and reference = 'exam_paper_multionline__status') as status2_,
             
 
             (select name from exam_subject where exam_subject.code = exam_paper.subject_code ) as subject_name,

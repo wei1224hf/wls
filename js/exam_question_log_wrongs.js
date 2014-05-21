@@ -33,7 +33,7 @@ var exam_question_log_wrongs = {
 				     { display: getIl8n("exam_subject","exam_subject"), name: 'subject_code', hide:true }
 				    ,{ display: getIl8n("exam_subject","exam_subject"), name: 'subject_name', width: 100 }
 				    ,{ display: getIl8n("exam_question_log_wrongs","title"), name: 'title', width: 100 ,align: 'left' }			    
-				    ,{ display: getIl8n("exam_question_log_wrongs","difficulty"), name: 'difficulty', width: 50 }
+				    //,{ display: getIl8n("exam_question_log_wrongs","difficulty"), name: 'difficulty', width: 50 }
 				    
 				    ,{ display: getIl8n("exam_question_log_wrongs","id"), name: 'id', isSort: true, hide:true }
 				    ,{ display: getIl8n("exam_question_log_wrongs","type"), name: 'type', isSort: false, hide:true  }

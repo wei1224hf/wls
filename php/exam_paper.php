@@ -112,14 +112,14 @@ class exam_paper {
 			}
 		}
 		else if($function =="upload"){
-			$action = "600111";
-			if(basic_user::checkPermission($executor, $action, $session)){
+			//$action = "600111";
+			//if(basic_user::checkPermission($executor, $action, $session)){
 				$file = "../file/upload/paper/".rand(10000, 99999)."_".$_FILES["file"]["name"];
 				move_uploaded_file($_FILES["file"]["tmp_name"],$file);
 				$t_return = exam_paper::upload($file,$executor);
-			}else{
+			//}else{
 				$t_return['action'] = $action;
-			}
+			//}
 		}
 		else if($function =="download"){
 			$action = "600112";
@@ -186,33 +186,39 @@ class exam_paper {
             if($search_keys[$i]=='title' && trim($search[$search_keys[$i]])!='' ){
                 $sql_where .= " and title like '%".$search[$search_keys[$i]]."%' ";
             }
-            if($search_keys[$i]=='subject_code' && trim($search[$search_keys[$i]])!='' ){
+            else if($search_keys[$i]=='subject_code' && trim($search[$search_keys[$i]])!='' ){
                 $sql_where .= " and subject_code = '".$search[$search_keys[$i]]."' ";
             } 
-            if($search_keys[$i]=='time_created__big' && trim($search[$search_keys[$i]])!='' ){
+            else if($search_keys[$i]=='time_created__big' && trim($search[$search_keys[$i]])!='' ){
             	$sql_where .= " and time_created <= '".$search[$search_keys[$i]]."' ";
             }
-            if($search_keys[$i]=='time_created__small' && trim($search[$search_keys[$i]])!='' ){
+            else if($search_keys[$i]=='time_created__small' && trim($search[$search_keys[$i]])!='' ){
             	$sql_where .= " and time_created >= '".$search[$search_keys[$i]]."' ";
             }                           
-            if($search_keys[$i]=='creater_code' && trim($search[$search_keys[$i]])!='' ){
+            else if($search_keys[$i]=='creater_code' && trim($search[$search_keys[$i]])!='' ){
                 $sql_where .= " and creater_code = '".$search[$search_keys[$i]]."' ";
             }  
-            if($search_keys[$i]=='creater_group_code' && trim($search[$search_keys[$i]])!='' ){
+            else if($search_keys[$i]=='creater_group_code' && trim($search[$search_keys[$i]])!='' ){
             	$sql_where .= " and creater_group_code = '".$search[$search_keys[$i]]."' ";
             }            
-            if($search_keys[$i]=='type' && trim($search[$search_keys[$i]])!='' ){
+            else if($search_keys[$i]=='type' && trim($search[$search_keys[$i]])!='' ){
             	$sql_where .= " and type = '".$search[$search_keys[$i]]."' ";
             }              
-            if($search_keys[$i]=='status' && trim($search[$search_keys[$i]])!='' ){
+            else if($search_keys[$i]=='status' && trim($search[$search_keys[$i]])!='' ){
                 $sql_where .= " and status = '".$search[$search_keys[$i]]."' ";
             } 
+            else if($search_keys[$i]=='cost__big' && trim($search[$search_keys[$i]])!='' ){
+            	$sql_where .= " and cost <= ".$search[$search_keys[$i]]." ";
+            }
+            else if($search_keys[$i]=='cost__small' && trim($search[$search_keys[$i]])!='' ){
+            	$sql_where .= " and cost >= ".$search[$search_keys[$i]]." ";
+            }
 		}
 		$session = basic_user::getSession($executor);
 		$session = $session['data'];
 		if($session['user_type']=='10'){
-			if($session['group_code']!='10'){
-				$sql_where .= " and exam_paper.cost = 0 ";
+			if($session['group_code']=='99'){//
+				$sql_where .= " and exam_paper.cost = 0 and subject_code in (select subject_code from exam_subject_2_group where group_code = '".$session['group_code']."') ";
 			}
 		}if($session['user_type']=='20'){
 			$sql_where .= " and subject_code in (select subject_code from exam_subject_2_group where group_code = '".$session['group_code']."' )";
@@ -336,6 +342,91 @@ class exam_paper {
         ); 
 	}
 	
+	public static $columns = array(
+			'subject_code',
+			'title',
+			'cost',
+			'count_used',
+			'cent_all',
+			'cent',
+			'cent_subjective',
+			'cent_objective',
+			'count_question',
+			'count_subjective',
+			'count_objective',
+			'cent_top',
+			'directions',
+			'id',
+			'creater_code',
+			'updater_code',
+			'creater_group_code',
+			'time_created',
+			'time_lastupdated',
+			'count_updated',
+			'type',
+			'status',
+			'remark'				
+	);
+	
+	public static function add($data,$executor,$return_sql=FALSE){
+		$t_return = array();
+		if(!is_array($data)){
+			$item = json_decode2($data,true);
+		}
+		else{
+			$item = $data;
+		}
+		$conn = tools::getConn();
+		$session = basic_user::getSession($executor);
+		$session = $session['data'];
+	
+		if(!isset($item['id'])){
+			tools::updateTableId("exam_paper");
+			$id_exam_paper = tools::getTableId("exam_paper",true);
+			$item["id"] = $id_exam_paper;
+		}
+		else{
+			$id_exam_paper = $item['id'];
+		}
+	
+		if(!isset($item["type"]))$item["type"] = 1;
+		$arr_merge = array(
+				 'creater_code'=>$session["user_code"]
+				,'updater_code'=>$session["user_code"]
+				,'creater_group_code'=>$session["group_code"]
+				,'time_created'=>date("Y-m-d H:i:s")
+				,'time_lastupdated'=>date("Y-m-d H:i:s")
+				,'remark'=>"add"
+		);
+		if(isset($item['remark']))unset($arr_merge['remark']);
+		$item2 = array_merge($item,$arr_merge);
+		$item = $item2;
+	
+		$sql = "insert into exam_paper (";
+		$sql_ = ") values (";
+		$keys = array_keys($item);
+		for($i=0;$i<count($keys);$i++){
+			if( !in_array($keys[$i],exam_paper::$columns) )continue;
+			$sql .= $keys[$i].",";
+			$sql_ .= "'".$item[$keys[$i]]."',";
+		}
+		$sql = substr($sql, 0,strlen($sql)-1);
+		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+		$sql = $sql.$sql_;
+		if($return_sql)return $sql;
+		$res = tools::query($sql,$conn);
+		if(!$res){
+			$t_return["status"] = 2;
+			$t_return["sql"] = $sql;
+		}
+		else{
+			$t_return["status"] = 1;
+			$t_return["msg"] = $id_exam_paper;
+		}
+	
+		return $t_return;
+	}
+	
 	public static function modify($data=NULL,$executor=NULL){
 	    $t_data = json_decode2($data,true);	    
 
@@ -358,15 +449,30 @@ class exam_paper {
 	
 	public static function submit($paper_id=NULL,$json=NULL,$executor=NULL){
 		$t_return = array();
-		
+		$conn = tools::getConn();
 		$t_return = exam_paper::checkMyAnswers(json_decode2($json,true), $paper_id);
 		$session = basic_user::getSession($executor);
 		$session = $session['data'];
 		if($session['user_type']=='20'){
 			$paperlog = exam_paper::addPaperLog($paper_id,$t_return['result'],$executor);
-			exam_paper::calculateKnowledge($t_return['answers'],$paperlog['id'],$paper_id,$executor);
+			//exam_paper::calculateKnowledge($t_return['answers'],$paperlog['id'],$paper_id,$executor);
 			exam_paper::addWrongs($t_return['answers'],$paperlog['id'], $executor);
 		}
+		
+		$sqls = tools::$sqls;
+	    if(tools::$dbtype=="mssql"){
+	    	array_unshift($sqls , 'begin transaction');
+	    	$sqls[] = "commit transaction";
+	    	$str = implode(";",$sqls);
+	    	tools::query($str,$conn);
+	    }
+	    else{
+	    	tools::transaction($conn);
+	    	for($i=0;$i<count($sqls);$i++){
+	    		tools::query($sqls[$i], $conn);
+	    	}
+	    	tools::commit($conn);
+	    }
     
 		$t_return['status']=1;
 		return $t_return;    
@@ -438,8 +544,10 @@ class exam_paper {
 		$conn = tools::getConn();
 		$result_knowledge = array();
 		for($i=0;$i<count($answers);$i++){
+			if($answers[$i]['knowledge']==null || $answers[$i]['knowledge']=="") continue;
 			if($answers[$i]['result']==1){
 				$knowledge = $answers[$i]['knowledge'];
+				
 				$a_knowledge = explode(",", $knowledge);
 				for($i2=0;$i2<count($a_knowledge);$i2++){
 					if(isset($result_knowledge[$a_knowledge[$i2]])){
@@ -452,7 +560,7 @@ class exam_paper {
 					}
 				}
 			}
-			if($answers[$i]['result']==0){
+			else if($answers[$i]['result']==0){
 				$knowledge = $answers[$i]['knowledge'];
 				$a_knowledge = explode(",", $knowledge);
 				for($i2=0;$i2<count($a_knowledge);$i2++){
@@ -467,7 +575,7 @@ class exam_paper {
 				}
 			}
 		}
-
+		if(count($result_knowledge)==0)return $t_return;
 		$id = tools::getTableId("exam_subject_2_user_log",FALSE);
 		$status = ($type=='10')?'10':'20';
 		$kyes = array_keys($result_knowledge);
@@ -510,18 +618,20 @@ class exam_paper {
 		$conn = tools::getConn();
 		//mysql_query("START TRANSACTION;",$conn);
 		tools::updateTableId("exam_question_log_wrongs");
-		$id = tools::getTableId("exam_question_log_wrongs",FALSE);
+		$id = tools::getTableId("exam_question_log_wrongs");
 		$status = ($type=='10')?'10':'20';
 		for($i=0;$i<count($answers);$i++){
 			if($answers[$i]['result']==0){				
 				$id++;
-				$sql = "insert into exam_question_log_wrongs(id,question_id,paper_log_id,creater_code,type,status) values ('".$id."','".$answers[$i]['id']."','".$paper_log__id."','".$executor."','".$type."','".$status."')";
-				mysql_query($sql,$conn);
+				$sql = "insert into exam_question_log_wrongs(id,question_id,paper_log_id,creater_code,type,status,time_created) values ('".$id."','".$answers[$i]['id']."','".$paper_log__id."','".$executor."','".$type."','".$status."','".date("Y-m-d")."')";
+				//echo $sql;
+				//mysql_query($sql,$conn);
+				tools::$sqls[] = $sql;
 			}
 		}
-		
+		//tools::updateTableId("exam_question_log_wrongs");
 		//mysql_query("COMMIT;",$conn);
-		tools::updateTableId("exam_question_log_wrongs");
+		
 		return $t_return;
 	}
 	
@@ -546,7 +656,8 @@ class exam_paper {
 			$values = array_values($data___exam_question_log);
 			$values = implode("','",$values);
 			$sql = "insert into exam_question_log (".$keys.") values ('".$values."')";
-			mysql_query($sql,$conn);
+			//mysql_query($sql,$conn);
+			tools::$sqls[] = $sql;
 		}
 
 		return $t_return;
@@ -566,7 +677,9 @@ class exam_paper {
 	    $paper_log['count_wrong'] = $result['wrong'];
 	    $paper_log['status'] = '10';
 	    $paper_log['time_created'] = date("Y-m-d");
+		$paper_log['time_lastupdated'] = date("Y-m-d");
 	    $paper_log['creater_code'] = $executor;
+		$paper_log['updater_code'] = $executor;
 	    $session = basic_user::getSession($executor);
 	    $session = $session['data'];
 	    $paper_log['creater_group_code'] = $session['group_code'];
@@ -627,6 +740,7 @@ class exam_paper {
 		$session = $session['data'];
 		tools::readIl8n();	    
 		
+		include_once '../php/exam_question.php';
 		$sqls = array();
 
         if(exam_paper::$phpexcel==NULL){
@@ -686,6 +800,7 @@ class exam_paper {
             ,'count_subjective'=>0
             ,'count_objective'=>0
             ,'creater_code'=>$executor
+			,'updater_code'=>$executor
             ,'creater_group_code'=>$session['group_code']
         	,'time_created'=>date('Y-m-d')
         );
@@ -703,7 +818,7 @@ class exam_paper {
         $questions = array();
         $index = 0;
         tools::updateTableId("exam_question");
-        $exam_question__id = tools::getTableId("exam_question",FALSE);
+        $exam_question__id = tools::getTableId("exam_question");
         for($i=2;$i<=$row;$i++){
             $index ++;
             $index_ = trim($currentSheet->getCell('A'.$i)->getValue());
@@ -715,7 +830,8 @@ class exam_paper {
             }
             
             $id_parent = trim($currentSheet->getCell('B'.$i)->getValue());
-            if($id_parent==NULL){
+			
+            if($id_parent==NULL || $id_parent=="" || $id_parent=="0" || $index==1){
             	$id_parent = 0;
             }else{
             	if($id_parent*1 > count($questions)){
@@ -724,6 +840,7 @@ class exam_paper {
             				,'status'=>'2'
             		);
             	}
+
                 $id_parent = $questions[$id_parent-$questions[0]['index']]['id'];
             }
                  
@@ -740,7 +857,7 @@ class exam_paper {
             }
             
             $type2 = trim($currentSheet->getCell('D'.$i)->getValue());
-            if($type2==NULL){
+            if($type2==NULL||$type2==0){
             	$type2 = 0;
             }else{
             	if(!in_array($type2, $arr__question_type2)){
@@ -803,18 +920,23 @@ class exam_paper {
             $description = exam_paper::formatStr($description);                      
             
             $knowledge = trim($currentSheet->getCell('R'.$i)->getValue());
-            if(in_array($type,array('1','2','3'))){
-            	$arr__knowledge = explode(",", $knowledge);
-            	for($i2=0;$i2<count($arr__knowledge);$i2++){
-            		$k = $arr__knowledge[$i2];
-            		if(!in_array($k, $arr__subject)){
-            			return array(
-            					'msg'=>tools::$LANG['basic_normal']['cellError'].": ".$i.",R"
-            					,'status'=>'2'
-            			);
-            		}
-            	}
-            }  
+            if($knowledge==NULL || $knowledge=="" ){
+            	$donothing;
+            }
+            else{ 
+	            if(in_array($type,array('1','2','3'))){
+	            	$arr__knowledge = explode(",", $knowledge);
+	            	for($i2=0;$i2<count($arr__knowledge);$i2++){
+	            		$k = $arr__knowledge[$i2];
+	            		if(!in_array($k, $arr__subject)){
+	            			return array(
+	            					'msg'=>tools::$LANG['basic_normal']['cellError'].": ".$i.",R"
+	            					,'status'=>'2'
+	            			);
+	            		}
+	            	}
+	            }  
+        	}
             
             $difficulty = trim($currentSheet->getCell('S'.$i)->getValue());
             if($difficulty==NULL){
@@ -854,8 +976,14 @@ class exam_paper {
                 ,'paper_id'=>$exam_paper__id
                 ,'index'=>trim($currentSheet->getCell('A'.$i)->getValue())
             	,'creater_code'=>$executor
+				,'updater_code'=>$executor
             	,'creater_group_code'=>$session['group_code']
             );
+            if( strlen($option_1)<15 && strlen($option_2)<15 && strlen($option_3)<15 && strlen($option_4)<15 ){
+            	$data__exam_question['layout'] = '1';
+            }
+            
+            $sqls[] = exam_question::add($data__exam_question, $executor,true);
             
             if(in_array($type,array('1','2','3'))){
                 $data__exam_paper['count_objective'] ++;
@@ -873,25 +1001,8 @@ class exam_paper {
             $questions[] = $data__exam_question;
         }   
         
-        unset($data__exam_question['index']);
-        $keys = array_keys($data__exam_question);
-        $keys = implode(",",$keys);
-
-        for($i=0;$i<count($questions);$i++){
-            unset($questions[$i]['index']);
-            $values = array_values($questions[$i]);
-            $values = implode("','",$values);    
-            $sql_q = "insert into exam_question (".$keys.") values ('".$values."')";
-            $sqls[] = $sql_q;
-        }
-        
-        $keys = array_keys($data__exam_paper);
-        $keys = implode(",",$keys);
-        $values = array_values($data__exam_paper);
-        $values = implode("','",$values);    
-        $sql = "insert into exam_paper (".$keys.") values ('".$values."')";
-        $sqls[] = $sql;
-        
+        $sqls[] = exam_paper::add($data__exam_paper, $executor,true);
+       // print_r($sqls);exit();
         if(tools::$dbtype=="mssql"){
         	array_unshift($sqls , 'begin transaction');
         	$sqls[] = "COMMIT transaction";

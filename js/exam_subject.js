@@ -3,9 +3,9 @@ var exam_subject = {
 		var config = {
 			columns: [
 			     { display: getIl8n("exam_subject","name"), name: 'name', width:130 ,align: 'left' }	
-			    ,{ display: getIl8n("exam_subject","code"), name: 'code' ,align: 'left' }
-			    ,{ display: getIl8n("exam_subject","type"), name: 'type', isSort: false, hide:true  }
-			    ,{ display: getIl8n("exam_subject","type"), name: 'type_', isSort: false }
+			    ,{ display: getIl8n("exam_subject","code"), name: 'code' ,align: 'left' , width:130}
+			    ,{ display: getIl8n("exam_subject","type"), name: 'type', isSort: false, hide:true , width:130 }
+			    ,{ display: getIl8n("exam_subject","type"), name: 'type_', isSort: false, width:130 }
 
 			]
 			,rownumbers: true
@@ -109,7 +109,7 @@ var exam_subject = {
 			id: 'exam_subject__insert',
 			fields: [
 				 { display: top.getIl8n('name'), name: "exam_subject__name", type: "text",  validate: { required:true} }
-				,{ display: top.getIl8n('exam_subject','weight'), name: "exam_subject__weight", type: "text",  validate: { required:true} }
+				//,{ display: top.getIl8n('exam_subject','weight'), name: "exam_subject__weight", type: "text",  validate: { required:true} }
 				,{ display: top.getIl8n('type'), name: "exam_subject__type", type: "select" , options :{data: basic_parameter_data.exam_subject__type, valueField : "code" , textField: "value", slide: false }, validate: {required:true} }
 				,{ display: top.getIl8n('code'), name: "exam_subject__code", type: "text", validate: {required:true, digits:true, minlength:2, maxlength:10 } }
 			]
@@ -152,7 +152,7 @@ var exam_subject = {
 						
 						,data: $.ligerui.toJSON({
 							 name: $.ligerui.get('exam_subject__name').getValue()
-							,weight: $.ligerui.get('exam_subject__weight').getValue()
+							//,weight: $.ligerui.get('exam_subject__weight').getValue()
 							,type: $.ligerui.get('exam_subject__type').getValue()
 							,code: $.ligerui.get('exam_subject__code').getValue()							
 						})

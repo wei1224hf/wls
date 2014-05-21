@@ -29,6 +29,7 @@ var question_choice = function(){
 			$("#w_qs_" + this.id).append("<span class='w_qw_options' ></span>");
 			var str = "<table width='90%'><tr>";
 			for (var i = 0; i < parseInt(this.option_length); i++) {
+				if(this.options[i]==null)this.options[i]="";
 				var optionStr = "<td width='"+parseInt(100/this.option_length)+"%' onclick=\"$('input:eq(0)',$(this)).attr('checked','checked');question_done("+this.id+"); \" >" 
 									+ String.fromCharCode(i + 65) // A B C D ...
 									+ ":&nbsp;<input type='radio' id='w_qs_" + this.id +'_'+ String.fromCharCode(i + 65) + "' "
@@ -49,6 +50,7 @@ var question_choice = function(){
 			$("#w_qs_" + this.id).append("<span class='w_qw_options'></span>");
 			
 			for (var i = 0; i < parseInt(this.option_length); i++) {
+				if(this.options[i]==null)this.options[i]="";
 				var str = "<div  onclick=\"$('input:eq(0)',$(this)).attr('checked','checked');question_done("+this.id+"); \" >" + String.fromCharCode(i + 65) // A B C D
 						+ ":&nbsp;<input type='radio' "
 						+ " onclick='question_done("+this.id+")' name='w_qs_" //选项点击之后,改变颜色,并设置 选择答案

@@ -16,12 +16,12 @@ var question_blank = function() {
 		$("[class=w_qw_tool]",$("#w_qs_"+this.id_parent)).append(this.index+"&nbsp;");			
 		var content = $("#w_qs_"+this.id_parent).html();
 		content = content.replace("[__"+this.title+"__]","<input class='w_blank' index='"+this.title+"' id='w_qs_"+this.id+"'  name='w_qs_"+this.id+"' onchange='question_done("+this.id+")' />" +
-				"&nbsp;<span onclick='question_imgUpload(\"w_qs_"+this.id+"_img\")' id='w_qs_"+this.id+"_img' class='l-button l-button-submit' style='width: 50px;display: inline;' >"+top.getIl8n('img')+"</span><img style='border: 3px solid #DDDDDD;display:none' id='w_qs_"+this.id+"_img_' />");
+				"&nbsp;<!--span onclick='question_imgUpload(\"w_qs_"+this.id+"_img\")' id='w_qs_"+this.id+"_img' class='l-button l-button-submit' style='width: 50px;display: inline;' >-</span--><img style='border: 3px solid #DDDDDD;display:none' id='w_qs_"+this.id+"_img_' />");
 		$("#w_qs_"+this.id_parent).html(content);			
 	};
 	
 	this.showMark = function(){
-		$('#w_qs_'+this.id+'_img').after("&nbsp;<span onclick='question_mark("+this.id+","+this.cent+")' id='w_qs_"+this.id+"_mark' class='l-button l-button-submit' style='width: 50px;display: inline;' >"+top.getIl8n('exam_paper_log','mark')+" &nbsp; "+this.cent+"</span>");	
+		$('#w_qs_'+this.id).after("&nbsp;<span onclick='question_mark("+this.id+","+this.cent+")' id='w_qs_"+this.id+"_mark' class='l-button l-button-submit' style='width: 50px;display: inline;' >"+top.getIl8n('exam_paper_log','mark')+" &nbsp; "+this.cent+"</span>");	
 		$('#w_qs_'+this.id+'_img').remove();	
 	}
 	

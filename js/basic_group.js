@@ -12,7 +12,7 @@ var basic_group = {
 			    ,{ display: il8n.basic_normal.name, name: 'name', width: 150 ,align: 'left' }			    
 			    ,{ display: il8n.basic_normal.type, name: 'type_', isSort: false , width: 80}
 			    ,{ display: il8n.basic_normal.status, name: 'status_', isSort: false , width: 80}				    
-			    ,{ display: il8n.basic_group.count_users, name: 'count_users', width:100 }
+			    //,{ display: il8n.basic_group.count_users, name: 'count_users', width:100 }
 			]
 			,pageSize:20 ,rownumbers:true
 			,height: '100%'

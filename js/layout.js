@@ -42,15 +42,13 @@ var layout = {
 			wid = 340;
 		}
 		else if(code=='11'){//用户中心
-			hei = 250;
-			wid = 600;
+			hei = 220;
+			wid = 740;
 		}
-		else if(code=='4001'){//地图
-			hei = top.layout.winheight - 35;
-			wid = top.layout.winwidth - 250;
-			top_ = 0;
-			left = 250;
-		}	
+		else if(code=='13'){//注册
+			hei = 300;
+			wid = 340;
+		}
 
 		var win = top.$.ligerDialog.open({ 
 			id : "win_"+code

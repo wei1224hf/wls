@@ -311,7 +311,7 @@ class basic_user {
         }
 
 		$a_return = tools::list2Tree($arr);	
-		$a_return = array_merge($a_return,$desktopicon_extr);
+		//$a_return = array_merge($a_return,$desktopicon_extr);
 		return $a_return;
     }
     
@@ -324,23 +324,30 @@ class basic_user {
 		return false;
 	}
 	
+	public static $session = NULL;
 	public static function getSession($executor){
-		$conn = tools::getConn();
-		$sql = tools::getSQL("basic_user__getSession");
-		$sql = str_replace("__user_code__", $executor,$sql);
-		$sql = str_replace("\n", " ",$sql);
-	
-		$res = tools::query($sql,$conn);
-		$temp = tools::fetch_assoc($res);
-		//print_r($temp);
-		if($temp){
-			return array(
-					"status"=>"1"
-					,"data"=>$temp
-			);
-		}else{
-			//basic_user::$permissions = $sql;
-			exit($sql);
+		if(self::$session!=NULL){
+			return self::$session;
+		}
+		else{		
+			$conn = tools::getConn();
+			$sql = tools::getSQL("basic_user__getSession");
+			$sql = str_replace("__user_code__", $executor,$sql);
+			$sql = str_replace("\n", " ",$sql);
+		
+			$res = tools::query($sql,$conn);
+			$temp = tools::fetch_assoc($res);
+			//print_r($temp);
+			if($temp){
+				self::$session = array(
+						"status"=>"1"
+						,"data"=>$temp
+				);
+				return self::$session;
+			}else{
+				//basic_user::$permissions = $sql;
+				exit($sql);
+			}
 		}
 	}	
 	
@@ -503,7 +510,7 @@ class basic_user {
             if($data_dzx['type']=='special')$group = $data_dzx['groupid'];
 			$data = array(
 			    'username'=>$data_dzx['username']
-			    ,'password'=>"DZX"
+			    ,'password'=>md5("dzx")
 			    ,'money'=>"0"
 			    ,'group_code'=>$group
 			    ,'group_all'=>$group
@@ -529,7 +536,7 @@ class basic_user {
     		tools::query($sql2,$conn);	    		
         }		
 		
-		$t_return = basic_user::_login($data_dzx['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
+		$t_return = basic_user::_login($data_dzx['username'],md5(md5('dzx').date("G")),$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
 		$t_return['logindata']['money'] = $data_dzx['money'];
 		$t_return['logindata']['credits'] = $data_dzx['credits'];
 		return $t_return;
@@ -574,7 +581,7 @@ class basic_user {
             $type =  20; $group = $sutdent_default;
 			$data = array(
 			    'username'=>$data_dzx['username']
-			    ,'password'=>"DEDE"
+			    ,'password'=>"dede"
 			    ,'money'=>"0"
 			    ,'group_code'=>$group
 			    ,'group_all'=>$group
@@ -600,7 +607,14 @@ class basic_user {
     		tools::query($sql2,$conn);	    		
         }		
 		
-		$t_return = basic_user::_login($temp['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
+		$t_return = basic_user::_login(
+				$temp['username']
+				,md5('dzx'.date("H"))
+				,$_SERVER["REMOTE_ADDR"]
+				,$_SERVER['HTTP_USER_AGENT']
+				,"0"
+				,"0"
+			);
 		$t_return['sql1'] = $sql;
 		$t_return['sql2'] = $sql2;
 		return $t_return;
@@ -650,7 +664,7 @@ class basic_user {
 		return $t_return;
 	}
 
-	private static function _login(
+	public static function _login(
 			 $username=NULL
 			,$md5PasswordTime=NULL
 			,$ip=NULL
@@ -678,7 +692,7 @@ class basic_user {
 		    );
 		}else{
 			$status = 1;
-			if($temp['session']!=null){
+			if($temp['session']!=null && $temp['ip']!=$ip && $temp['client']!= $client ){
 				$status = 3;
 			}
 			$password = $temp["password"];
@@ -687,6 +701,8 @@ class basic_user {
 						'status'=>'2'
 						,'msg'=>'wrong password '
 						,'sql'=>$sql
+						,'pwd'=>$md5PasswordTime
+						,'pwd2'=>md5($password.date("G"))
 				);
 			}
 			unset($temp["password"]);
@@ -716,22 +732,6 @@ class basic_user {
 		    
 		    $temp['session'] = md5($session.date("G"));		   
 		    
-		    //TODO
-		    $ADCD = $temp['zone'];
-		    $len_ = strlen($ADCD);
-		    $RoleId = 1;
-		    if($len_==4)$RoleId = 1;
-		    if($len_==6)$RoleId = 2;
-		    if($len_==9)$RoleId = 5;
-		    for($i3=$len_;$i3<12;$i3++){
-		    	$ADCD .= "0";
-		    }
-		    
-		    $temp = array_merge($temp,array(
-		    		 'ADCD'=>$ADCD
-		    		,'RoleId'=>$RoleId
-		    ));
-		    
 		    unset($temp['password']);
 		    $t_return = array(
 				 'foo'=>'bar'
@@ -742,12 +742,9 @@ class basic_user {
 		        ,'H'=>date("G")	   	    		
 		    );
 
-		    //TODO
 		    $t_return = array_merge($t_return,array(
 		    		 'UserID' => $temp['username']
 		    		,'UserPwd' => ''
-		    		,'ADCD'=>$ADCD
-		    		,'RoleId'=>$RoleId
 		    ));
 		    
 		
@@ -831,7 +828,7 @@ class basic_user {
 	    $item = json_decode2($data,true);
 		$conn = tools::getConn();
 		$username = $item['username'];
-		$item['password'] = md5($t_data['password']);
+		$item['password'] = md5($item['password']);
 		if(basic_user::checkUsernameUsed($username)){
 			return array(
                 'status'=>"2"
@@ -867,6 +864,7 @@ class basic_user {
         else{
         	$t_return["status"] = 1;
         	$t_return["msg"] = $id;
+        	$t_return["password"] = $item['password'];
         }
 		
 		$user_code = $item["username"];
@@ -883,18 +881,17 @@ class basic_user {
 	
 	public static function add_register(){
 	    $conn = tools::getConn();   	    
-	    $json = json_decode2($_REQUEST['data'],true);
+	    $data = json_decode2($_REQUEST['data'],true);
 
 	    tools::updateTableId("basic_user");
-	    $data = array(
-	        'username'=>$json['executor']
-	        ,'password'=>md5($json['password'])
-	        ,'money'=>'100'
-	        ,'group_code'=>tools::getConfigItem("GROUP_REG")
-	        ,'id'=>tools::getTableId("basic_user",TRUE)
+	    $data['password'] = md5($data['password']);
+	    $data = array_merge($data,array(
+	    	'money'=>'100'
+	    	,'id'=>tools::getTableId("basic_user",TRUE)
 	        ,'type'=>'20'
 	    	,'status'=>'10'
-	    );
+	    ));
+	    if(!isset($data['group_code']))$data['group_code'] = tools::getConfigItem("GROUP_REG");
 	    
 	    $sql = "select * from basic_user where username = '".$data['username']."' ";	
 	    $res = tools::query($sql,$conn);

@@ -2,6 +2,8 @@
 
 class tools{
 	
+	public static $sqls = array();
+	
 	public static function callFunction(){
 		$function = $_REQUEST['function'];
 		if($function == "readIl8n"){
@@ -28,7 +30,7 @@ class tools{
 	public static $systemType = NULL;
 	public static $dzxConfig = NULL;
 	public static $joomlaConfig = NULL;
-	public static $configfilename = "config.xml";
+	public static $configfilename = "config_guess.xml";
     
 	public static function getAllFiles($filedir) {
 		$allfiles = array(); 
@@ -594,6 +596,21 @@ class tools{
     	);
     	
     	return $returnData;
+    }
+    
+    //过滤 SQL 关键字
+    public static $sql_security_keys = array("insert","delete","drop","update","select","where");
+    public static function sql_security($data){
+		$key_words = self::$sql_security_keys;
+    	$data = array_values($data);
+    	for($i=0;$i<count($data);$i++){
+    		$str = $data[$i];
+    		for($j=0;$j<count($key_words);$j++){
+    			if(strpos($str, $key_words[$j])!==false){
+    				echo "hack me width ".$key_words[$j]." by ".$str;exit();
+    			}
+    		}
+    	}
     }
 }
 

@@ -193,7 +193,7 @@ class exam_paper_multionline {
     	$sql = str_replace("__ORDER__", $sortname." ".$sortorder , $sql);
     	$sql = str_replace("__PAGESIZE__",$pagesize, $sql);
     	$sql = str_replace("__OFFSET__", $pagesize*($page-1), $sql);
-    	
+
     	$res = mysql_query($sql,$conn);
     	$data = array();
     	while($temp = mysql_fetch_assoc($res)){
@@ -335,7 +335,8 @@ class exam_paper_multionline {
         }
         
 		$t_return = exam_paper::checkMyAnswers(json_decode2($json,true), $paper_id);
-		exam_paper::calculateKnowledge($t_return['answers'],$logid,$paper_id,$executor,'20');
+		//TODO
+		//exam_paper::calculateKnowledge($t_return['answers'],$logid,$paper_id,$executor,'20');
 		exam_paper::addWrongs($t_return['answers'],$logid,$executor,'20');    
 	    exam_paper::addQuestionLog($t_return['answers'],$logid,$executor);
 	    
@@ -357,7 +358,25 @@ class exam_paper_multionline {
 	    }
 	    $sql = substr($sql, 0,strlen($sql)-1);
 	    $sql .= " where id = ".$logid;
-	    mysql_query($sql,$conn);
+	    tools::$sqls[] = $sql;
+	    
+	    $sqls = tools::$sqls;
+	    if(tools::$dbtype=="mssql"){
+	    	array_unshift($sqls , 'begin transaction');
+	    	$sqls[] = "commit transaction";
+	    	$str = implode(";",$sqls);
+	    	tools::query($str,$conn);
+	    }
+	    else{
+	    	tools::transaction($conn);
+	    	for($i=0;$i<count($sqls);$i++){
+	    		tools::query($sqls[$i], $conn);
+	    	}
+	    	tools::commit($conn);
+	    }
+	    
+	    tools::updateTableId("exam_question_log_wrongs");
+	    tools::updateTableId("exam_question_log");
 	    
 	    $msg = tools::readIl8n('exam_paper_multionline','submitted');
 	    $msg = str_replace("__time_stop__", $data_m['time_stop'], $msg);
@@ -512,12 +531,14 @@ class exam_paper_multionline {
 	    $time_start = trim($currentSheet->getCell('A2')->getValue());
 	    if(preg_match($reg,$time_start)){
 	    	$arr = explode("-", $time_start);
+			/*
 	    	if(!checkdate($arr[1],$arr[2],$arr[0])){
 	    		return array(
 	    				'msg'=>tools::$LANG['basic_normal']['cellError'].": A2 "
 	    				,'status'=>'2'
 	    		);
 	    	}
+			*/
 	    }
 	    else{
 	    		return array(
@@ -529,12 +550,14 @@ class exam_paper_multionline {
 	    $time_stop =trim( $currentSheet->getCell('B2')->getValue());
 	    if(preg_match($reg,$time_stop)){
 	    	$arr = explode("-", $time_stop);
+			/*
 	    	if(!checkdate($arr[1],$arr[2],$arr[0])){
 	    		return array(
 	    				'msg'=>tools::$LANG['basic_normal']['cellError'].": B2 "
 	    				,'status'=>'2'
 	    		);
 	    	}
+			*/
 	    }else{
 	    	return array(
 	    			'msg'=>tools::$LANG['basic_normal']['cellError'].": B2 "
@@ -583,8 +606,12 @@ class exam_paper_multionline {
 
 	    	}
 	    }
-	    $exam_paper_log__id = tools::getTableId("exam_paper_log",FALSE);
-	    $exam_paper_multionline__id = tools::getTableId("exam_paper_multionline",FALSE);
+		tools::updateTableId("exam_paper_log");
+		tools::updateTableId("exam_paper_multionline");
+	    $exam_paper_log__id = tools::getTableId("exam_paper_log");
+		$exam_paper_log__id++;
+	    $exam_paper_multionline__id = tools::getTableId("exam_paper_multionline");
+		$exam_paper_multionline__id ++;
 	   
 	    $data = exam_paper::upload($file,$executor);
 	    if(!isset($data['status']) || $data['status']!='1'){
@@ -607,6 +634,7 @@ class exam_paper_multionline {
         	,'type'=>20
         	,'status'=>10
         	,'creater_code'=>$executor
+			,'updater_code'=>$executor
         	,'creater_group_code'=>$session['group_code']
         );
         
@@ -638,7 +666,8 @@ class exam_paper_multionline {
         			,'proportion'=>0
         			,'paper_id'=>$data['paper_id']
         			,'id'=>$exam_paper_log__id
-        			,'creater_code'=>$student
+					,'creater_code'=>$student
+					,'updater_code'=>$student
         			,'creater_group_code'=>$group_code
         			,'type'=>'20'
         			,'status'=>'30'

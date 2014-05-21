@@ -9,7 +9,7 @@ var language = {
 				 ,"配置安装模式,数据库连接参数"
 				 ,"初始化数据库表"
 				 ,"初始化 权限,用户组,管理员帐号 等基础数据"
-				 ,"<br/>已成功安装系统,直接登录系统首页: <a href='../html/layout_desktop.html' target='_blank'>首页</a> 帐号密码都是 admin,<br/><br/>如果是初次接触此系统,建议先 <a href='../html/simulate.html' target='_blank'>模拟一下业务数据 ,以体验更为全面的性能 </a> "
+				 ,"<br/>已成功安装系统,直接登录系统首页: <a href='../html/layout_desktop.html' target='_blank'>首页</a> 帐号密码都是 admin,<br/><br/>如果是初次接触此系统,建议先 <a href='../html_84/simulate.html' target='_blank'>模拟一下业务数据 ,以体验更为全面的性能 </a> "
 				 ]
 			 ,"database":{
 		          "name":"数据库名称"
@@ -33,7 +33,7 @@ var language = {
 				 ,"Set the System Mode and the Database connection information"
 				 ,"Initialize database's tables"
 				 ,"Initialize system's required data"
-				 ,"<br/>Initialize compulated, You may login the system by: <a href='../html/layout_desktop.html' target='_blank'>首页</a> 帐号密码都是 admin,<br/><br/>Or , if you are new to the system , you may t <a href='../html/simulate.html' target='_blank'>simulate a large data for the system first </a> "
+				 ,"<br/>Initialize compulated, You may login the system by: <a href='../html/layout_desktop.html' target='_blank'>首页</a> 帐号密码都是 admin,<br/><br/>Or , if you are new to the system , you may t <a href='../html_84/simulate.html' target='_blank'>simulate a large data for the system first </a> "
 				 ]
 			 ,"database":{
 		          "name":"Name"

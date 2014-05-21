@@ -178,6 +178,7 @@ paper.readQuestions = function(afterAjax){
         type : "POST",
         data : {
         	 id: getParameter("id", window.location.toString() )
+			,paper_id: getParameter("id", window.location.toString() )
         	 
             ,executor: top.basic_user.loginData.username
             ,session: top.basic_user.loginData.session
@@ -235,7 +236,7 @@ paper.initQuestions = function() {
         }else{
             continue;
         }
-        //console.debug(index+"     "+quesData[i].type);
+
         question.type = quesData[i].type;
         question.path_listen = quesData[i].path_listen;
         question.path_img = quesData[i].path_img;

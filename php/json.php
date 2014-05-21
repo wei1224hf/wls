@@ -5,7 +5,6 @@
  * 无法对后台其他的任何PHP文件直接访问
  * 因为其他的PHP文件都仅仅是一个CLASS定义,没有对内部FUNCTION的访问口
  *
- * TODO 数据过滤,过滤所有的HTML标签跟SQL标签
  * @author wei1224hf@gmail.com
  * @version 2010
  */
@@ -14,9 +13,11 @@
 if(!isset($_GET['class']))die('class missed!');
 if(!isset($_GET['function']))die('function missed!');
 $class = htmlspecialchars($_REQUEST['class'],ENT_QUOTES);
-
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE );
 //引入一个 static 的PHP类,里面定义了一些常用的小函数,这些函数与各个业务模块无关
 include_once 'tools.php';
+
+tools::sql_security($_REQUEST);
 
 //引入基础业务类
 include_once 'basic_group.php';

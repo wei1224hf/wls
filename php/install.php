@@ -32,7 +32,7 @@ class install{
 		}
 		*/
 		
-		$file = tools::$configfilename;
+		$file = "../".tools::$configfilename;
 		if(!is_writable($file)){
 			$t_return["msg"] .= "<br/>". "File ".$file." is not writable, change it's mode to 777";
 		}
@@ -116,7 +116,7 @@ class install{
 			if($port!="")$host = $host.",".$port;
 		}
 		
-		$file = tools::$configfilename;
+		$file = "../".tools::$configfilename;
 		$fp = fopen($file, 'r');
 		$arr = array();
 		$num = 1;
@@ -162,8 +162,7 @@ class install{
 		if($t_return['msg']==""){
 			$t_return["status"] = 1;
 			$t_return["msg"] = "ok";
-		}
-		
+		}		
 
 		return $t_return;
 	}
@@ -198,11 +197,7 @@ class install{
 		$s = implode(" ", $sqls);
 		file_put_contents("../sql/sql.sql", $s);
 		$t_return = array("status"=>"1","msg"=>(count(explode(";", $sqls2))-1)." sql in total. Please waite for a while.","sql"=>explode(";", $sqls2));
-		echo json_encode($t_return);
-		tools::closeConn();
-		exit();
-		//print_r(explode(";", $sqls2));exit();
-		//return $t_return;
+		return $t_return;
 	}
 	
 	public static function step3_2(){
@@ -284,7 +279,7 @@ class install{
 	}
 	
 	public static function step4(){
-
+		
 		$t_return = array("status"=>"2","msg"=>"");
 		$path_xls = "../sql/data_".tools::getConfigItem("IL8N").".xls";
 		$PHPReader = PHPExcel_IOFactory::createReader('Excel5');
@@ -296,23 +291,30 @@ class install{
 		tools::query("delete from basic_group_2_user;",$conn);
 		tools::query("delete from basic_group_2_permission;",$conn);
 		tools::query("delete from basic_permission;",$conn);
-		tools::query("delete from basic_group;",$conn);
-		tools::query("delete from basic_parameter where reference in ('zone','industry','localzone');",$conn);
+		tools::query("delete from basic_parameter;",$conn);
+		tools::query("delete from basic_group;",$conn);		
+		tools::query("delete from exam_subject;",$conn);
+		tools::query("delete from exam_subject_2_group;",$conn);
 		
 		$sqls = array();
 		
 		$currentSheet = $phpexcel->getSheetByName("data_basic_user");
 		$row = $currentSheet->getHighestRow();
 		for($i=2;$i<=$row;$i++){
-			$sql_insert = "insert into basic_user(id,username,password,group_code,type,status,money,credits) values (
+			$pwd = md5($currentSheet->getCell('B'.$i)->getValue());
+			if( tools::getConfigItem("MODE")=="DZX" ){
+				$pwd = md5("dzx");
+			}
+			$sql_insert = "insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'".$i."'
 					,'".trim($currentSheet->getCell('A'.$i)->getValue())."'
-					,'".md5($currentSheet->getCell('B'.$i)->getValue())."'
+					,'".$pwd."'
 					,'".$currentSheet->getCell('C'.$i)->getValue()."'
 					,'".$currentSheet->getCell('D'.$i)->getValue()."'
 					,'".$currentSheet->getCell('E'.$i)->getValue()."'
 					,'".$currentSheet->getCell('F'.$i)->getValue()."'
-					,'".$currentSheet->getCell('G'.$i)->getValue()."'									
+					,'".$currentSheet->getCell('G'.$i)->getValue()."'	
+					,'".$currentSheet->getCell('H'.$i)->getValue()."'									
 			);";
 			$sqls[] = $sql_insert."\n";
 			
@@ -378,18 +380,42 @@ class install{
 			//$res = tools::query($sql_insert,$conn);
 		}
 		
-		/*
-		$currentSheet = $phpexcel->getSheetByName("other");
+		$currentSheet = $phpexcel->getSheetByName("data_basic_group_2_subject");
+		$rowindex = 0;
+		foreach ($currentSheet->getRowIterator() as $row) {
+			$rowindex ++;
+			if($rowindex<=2)continue;
+			$cellIterator = $row->getCellIterator();
+			$cellIterator->setIterateOnlyExistingCells( false);
+			$columnindex = 0;
+			foreach ($cellIterator as $cell) {
+				$columnindex++;
+				if($columnindex<=2)continue;
+				if ((!is_null($cell)) && ($cell->getValue()=="1") ) {
+					$subject = $currentSheet->getCellByColumnAndRow(1,$rowindex)->getValue();
+					$group = $currentSheet->getCellByColumnAndRow($columnindex-1,2)->getValue();
+					$cellvalue = "insert into exam_subject_2_group (subject_code,group_code) values('".$subject	."','".$group."');";
+					$sqls[] = $cellvalue."\n";
+					//tools::query($cellvalue,$conn);
+				}
+			}
+		}
+		
+		$currentSheet = $phpexcel->getSheetByName("data_basic_parameter");
 		$row = $currentSheet->getHighestRow();
 		for($i=2;$i<=$row;$i++){
-			$code_read = $currentSheet->getCell('B'.$i)->getValue();
-			if($code_read==null)continue;
+			$code_read = trim($currentSheet->getCell('B'.$i)->getValue());
+			if($code_read==null || $code_read=="")continue;
 			$code_read = str_replace("'", "", $code_read);
-			$sql_insert = "insert into basic_parameter(value,code,reference) values ('".trim($currentSheet->getCell('A'.$i)->getValue())."','".$code_read."','".$currentSheet->getCell('C'.$i)->getValue()."');";
+			$sql_insert = "insert into basic_parameter(id,value,code,reference,extend1) values (
+					'".($i+50000)."'
+					,'".trim($currentSheet->getCell('A'.$i)->getValue())."'
+					,'".$code_read."'
+					,'".trim($currentSheet->getCell('C'.$i)->getValue())."'
+					,'".trim($currentSheet->getCell('D'.$i)->getValue())."'
+					);";
 			$sqls[] = $sql_insert."\n";
-			//$res = tools::query($sql_insert,$conn);
 		}	
-		*/
 		
 		$s = implode(" ", $sqls);
 		file_put_contents("../sql/data.sql", $s);
@@ -399,6 +425,7 @@ class install{
 	}	
 	
 	public static function step4_2(){
+
 		$t_return = array("status"=>"2","msg"=>"");
 		$sqls = json_decode2($_REQUEST['sqls'],TRUE);
 		if(count($sqls)==0){
@@ -420,6 +447,13 @@ class install{
 		}
 		tools::commit($conn);
 		$t_return = array("status"=>"1","msg"=>count($sqls)." sql executed ");
+		
+		if(count($sqls)<1000){
+			tools::initMemory();
+			include_once 'basic_user.php';
+			basic_user::login("admin",md5(md5("admin").date("H")),"0","system");
+		}
+		
 		return $t_return;
 	}	
 	
@@ -434,7 +468,7 @@ else if($functionName=="step2"){
 	$data = install::step2();
 }
 else if($functionName=="step3"){	
-	install::step3();	
+	$data = install::step3();	
 }	
 else if($functionName=="step3_2"){
 	$data = install::step3_2();
@@ -444,9 +478,6 @@ else if($functionName=="step4"){
 }
 else if($functionName=="step4_2"){
 	$data = install::step4_2();
-}
-else if($functionName=="step5"){
-	tools::initMemory();
 }
 
 echo json_encode($data);

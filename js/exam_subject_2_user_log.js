@@ -164,7 +164,7 @@ var exam_subject_2_user_log = {
 			var date = new Date(d[i].time);
 			d2.push([date.getTime(),parseInt(d[i].proportion)])
 		}
-		//console.debug(d2);return;
+
 		$.plot("#timeline", [d2], {
 			xaxis: { mode: "time" }
 			,grid: {

@@ -100,7 +100,7 @@ class exam_paper_log {
 			$action = "600190";
 			if(basic_user::checkPermission($executor, $action, $session)){
 				$t_return = exam_paper_log::submit(
-						 $_REQUEST['paper_id']
+						 $_REQUEST['exam_paper_log']
 						,$_REQUEST['json']
 						,$executor
 				);

@@ -59,6 +59,10 @@ var desktop = {
 			hei = 250;
 			wid = 600;
 		}
+		else if(code=='13'){//注册
+			hei = 350;
+			wid = 600;
+		}
 
 		var win = top.$.ligerDialog.open({ 
 			id : "win_"+code

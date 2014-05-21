@@ -14,7 +14,7 @@
 		        background-color: #EEEEEE
 		}		
 		.f_close{
-		        display: block
+		        display: none;
 		}		
 		.f_step{
 		        display: block
@@ -27,9 +27,9 @@
 		<button onclick="step0()" class='btn_step'>Set Language</button>
 	</legend>
 	
-    <select name='language'>
-    	<option value='en'>Enghlish</option>
-	    <option value='zh-CN'>Simplified Chinese</option>	    
+    <select name='language'>    	
+	    <option value='zh-CN'>Simplified Chinese</option>	 
+	    <option value='en'>Enghlish</option>   
     </select><br />
     <div class="directions_step"></div>
     <div class='log'></div>
@@ -54,13 +54,12 @@
 		<option value="DZX">Discuzx 3.x/2.x/1.5</option>
 		<option value="JOOMLA">Joomla 3.0</option>
 		<option value="DEDE">DeDeCMS 5.7</option>
-		<option value="BaiduCloud">BaiduCloud</option>
 	</select><br />
     <span id='host'></span>:<input name='host' value='localhost'><br />
     <span id='username'></span>:<input name='username' value='root'><br /> 
-    <span id='password_'></span>:<input name='password_' value=''><br /> 
+    <span id='password_'></span>:<input name='password_' value='root'><br /> 
     <span id='port'></span>:<input name='port' value='3306'><br /> 
-    <span id='name'></span>:<input name='name' value='myapp'><br /> 
+    <span id='name'></span>:<input name='name' value='exam'><br /> 
     <span id='type'></span>:
     <select name='type'>
 		<option value='mysql'>MySql-Server-Community-5.1 or higher </option>

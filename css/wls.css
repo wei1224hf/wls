@@ -260,3 +260,7 @@ A:link {
  A:hover {
   color: black; text-decoration: none
  }
+ 
+ table{
+    border: 1px;
+ }
