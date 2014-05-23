@@ -415,15 +415,15 @@ class basic_user {
 		$temp2 = tools::fetch_assoc($res2);			
 		
         if($temp2==false){      
-        	$sutdent_default = tools::getConfigItem("dzx_defaultStudentGroup");
-        	$teacher_default = tools::getConfigItem("dzx_defaultTeacherGroup");
+        	$sutdent_default = tools::getConfigItem("defaultStudentGroup");
+        	$teacher_default = tools::getConfigItem("defaultTeacherGroup");
             $type =  20; $group = $sutdent_default; 
             if($temp['group_id']=='5' || $temp['group_id']=='6' || $temp['group_id']=='7'){
                 $type = '30'; $group = $teacher_default; 
             }
 			$data = array(
 			    'username'=>$temp['username']
-			    ,'password'=>"JOOMLA"
+			    ,'password'=>md5("wls")
 			    ,'money'=>"0"
 			    ,'group_code'=>$group
 			    ,'group_all'=>$group
@@ -448,7 +448,7 @@ class basic_user {
     		tools::query($sql,$conn);	    		
         }		
 		
-		$t_return = basic_user::_login($temp['username'],'md5(concat(password, hour(now()) ))',$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
+		$t_return = basic_user::_login($temp['username'],md5(md5('wls').date("G")),$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
 		return $t_return;		
 	}
 	
@@ -497,8 +497,8 @@ class basic_user {
 		$temp2 = tools::fetch_assoc($res2);			
 		
         if($temp2==false){      
-        	$sutdent_default = tools::getConfigItem("dzx_defaultStudentGroup");
-        	$teacher_default = tools::getConfigItem("dzx_defaultTeacherGroup");
+        	$sutdent_default = tools::getConfigItem("defaultStudentGroup");
+        	$teacher_default = tools::getConfigItem("defaultTeacherGroup");
             $type = "20"; $group = $sutdent_default; 
             if($data_dzx['groupid']=='2' || $data_dzx['groupid']=='3'){
             	
@@ -510,7 +510,7 @@ class basic_user {
             if($data_dzx['type']=='special')$group = $data_dzx['groupid'];
 			$data = array(
 			    'username'=>$data_dzx['username']
-			    ,'password'=>md5("dzx")
+			    ,'password'=>md5("wls")
 			    ,'money'=>"0"
 			    ,'group_code'=>$group
 			    ,'group_all'=>$group
@@ -536,7 +536,7 @@ class basic_user {
     		tools::query($sql2,$conn);	    		
         }		
 		
-		$t_return = basic_user::_login($data_dzx['username'],md5(md5('dzx').date("G")),$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
+		$t_return = basic_user::_login($data_dzx['username'],md5(md5('wls').date("G")),$_SERVER["REMOTE_ADDR"],$_SERVER['HTTP_USER_AGENT'],"0","0");
 		$t_return['logindata']['money'] = $data_dzx['money'];
 		$t_return['logindata']['credits'] = $data_dzx['credits'];
 		return $t_return;
@@ -576,12 +576,12 @@ class basic_user {
 		$temp2 = tools::fetch_assoc($res2);			
 		
         if($temp2==false){      
-        	$sutdent_default = tools::getConfigItem("dzx_defaultStudentGroup");
-        	$teacher_default = tools::getConfigItem("dzx_defaultTeacherGroup");        	
+        	$sutdent_default = tools::getConfigItem("defaultStudentGroup");
+        	$teacher_default = tools::getConfigItem("defaultTeacherGroup");        	
             $type =  20; $group = $sutdent_default;
 			$data = array(
 			    'username'=>$data_dzx['username']
-			    ,'password'=>"dede"
+			    ,'password'=>md5("wls")
 			    ,'money'=>"0"
 			    ,'group_code'=>$group
 			    ,'group_all'=>$group
@@ -609,7 +609,7 @@ class basic_user {
 		
 		$t_return = basic_user::_login(
 				$temp['username']
-				,md5('dzx'.date("H"))
+				,md5(md5('wls').date("G"))
 				,$_SERVER["REMOTE_ADDR"]
 				,$_SERVER['HTTP_USER_AGENT']
 				,"0"

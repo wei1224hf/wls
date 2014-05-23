@@ -9,7 +9,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'4401'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('admin','10')
+ insert into basic_group_2_user(user_code,group_code) values ('admin','10');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'3'
 					,'guest'
@@ -21,7 +21,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,''									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('guest','99')
+ insert into basic_group_2_user(user_code,group_code) values ('guest','99');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'4'
 					,'综合岗-初级'
@@ -33,7 +33,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'440104'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('综合岗-初级','50')
+ insert into basic_group_2_user(user_code,group_code) values ('综合岗-初级','50');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'5'
 					,'综合岗-中级'
@@ -45,7 +45,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'440105'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('综合岗-中级','51')
+ insert into basic_group_2_user(user_code,group_code) values ('综合岗-中级','51');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'6'
 					,'综合岗-高级'
@@ -57,7 +57,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'440106'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('综合岗-高级','52')
+ insert into basic_group_2_user(user_code,group_code) values ('综合岗-高级','52');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'7'
 					,'指挥岗-初级'
@@ -69,7 +69,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'440111'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('指挥岗-初级','53')
+ insert into basic_group_2_user(user_code,group_code) values ('指挥岗-初级','53');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'8'
 					,'指挥岗-中级'
@@ -81,7 +81,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'440112'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('指挥岗-中级','54')
+ insert into basic_group_2_user(user_code,group_code) values ('指挥岗-中级','54');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'9'
 					,'指挥岗-高级'
@@ -93,7 +93,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'440113'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('指挥岗-高级','55')
+ insert into basic_group_2_user(user_code,group_code) values ('指挥岗-高级','55');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'10'
 					,'巡查岗-初级'
@@ -105,7 +105,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'440114'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('巡查岗-初级','56')
+ insert into basic_group_2_user(user_code,group_code) values ('巡查岗-初级','56');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'11'
 					,'巡查岗-中级'
@@ -117,7 +117,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'440115'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('巡查岗-中级','57')
+ insert into basic_group_2_user(user_code,group_code) values ('巡查岗-中级','57');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'12'
 					,'巡查岗-高级'
@@ -129,7 +129,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'440183'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('巡查岗-高级','58')
+ insert into basic_group_2_user(user_code,group_code) values ('巡查岗-高级','58');
  insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'13'
 					,'默认教师'
@@ -141,7 +141,7 @@ insert into basic_user(id,username,password,group_code,type,status,money,credits
 					,'10000'	
 					,'4401'									
 			);
- insert into basic_group_2_user(user_code,group_code) values ('默认教师','10')
+ insert into basic_group_2_user(user_code,group_code) values ('默认教师','10');
  insert into basic_group(id,name,code,type,status) values ('2','管理员','10','10','10');
  insert into basic_group(id,name,code,type,status) values ('3','注册待审批','98','10','10');
  insert into basic_group(id,name,code,type,status) values ('4','访客','99','10','10');

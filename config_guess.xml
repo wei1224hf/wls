@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE root [<!ELEMENT root ANY><!ELEMENT item ANY><!ATTLIST item ID ID #REQUIRED><!ATTLIST item Explanation CDATA #IMPLIED>]><root>
-<item ID="APPPATH">D:/wls3.5.8_all_in_one_2/Apache2.2/htdocs</item>
 <item ID="IL8N">zh-CN</item>
 <item ID="DB_TYPE">mysql</item>
 <item ID="DB_HOST">localhost:3371</item>
@@ -15,7 +14,7 @@
 <item ID="GROUP_REG">50</item>
 <item ID="reLoad">donothing</item>
 
-<item ID="dzx_defaultStudentGroup">50</item>
-<item ID="dzx_defaultTeacherGroup">10</item>
+<item ID="defaultStudentGroup">50</item>
+<item ID="defaultTeacherGroup">10</item>
 
 </root>

@@ -22,11 +22,9 @@
 	</style>    
 </head>
 <body>
-<fieldset class='f_step'>
-    <legend>
-		<button onclick="step0()" class='btn_step'>Set Language</button>
-	</legend>
-	
+<fieldset >
+
+	<button onclick="step0()" class='btn_step'>Set Language</button>
     <select name='language'>    	
 	    <option value='zh-CN'>Simplified Chinese</option>	 
 	    <option value='en'>Enghlish</option>   
@@ -36,17 +34,17 @@
 </fieldset>
 
 <fieldset class='f_close'>
-    <legend>
+
 		<button onclick="step1()" class='btn_step'>step</button>
-	</legend>
+
 <div class="directions_step"></div>
 <div id='log_environment' class='log'></div>
 </fieldset>
 
 <fieldset class='f_close'>
-	<legend>
+
 		<button onclick="step2()" class='btn_step'>step</button>
-	</legend>
+
 <div class="directions_step"></div><br/>
 <span id='mode'></span>:
 	<select name='mode' onchange='on_mode_changed()'>
@@ -74,17 +72,15 @@
 </fieldset>
 
 <fieldset class='f_close'>
-	<legend>
-		<button onclick="step3()" class='btn_step'>step</button>
-	</legend>
+
+	<button onclick="step3()" class='btn_step'>step</button>
     <div class="directions_step"></div>
     <div class='log'></div>
 </fieldset>
 
 <fieldset class='f_close'>
-	<legend>
-		<button onclick="step4()" class='btn_step'>step</button>
-	</legend>
+
+	<button onclick="step4()" class='btn_step'>step</button>
     <div class="directions_step"></div>
     <div class='log'></div>
 </fieldset>
