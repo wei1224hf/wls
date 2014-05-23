@@ -318,7 +318,7 @@ class install{
 			);";
 			$sqls[] = $sql_insert."\n";
 			
-			$sql_insert = "insert into basic_group_2_user(user_code,group_code) values ('".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('C'.$i)->getValue()."')";
+			$sql_insert = "insert into basic_group_2_user(user_code,group_code) values ('".trim($currentSheet->getCell('A'.$i)->getValue())."','".$currentSheet->getCell('C'.$i)->getValue()."');";
 			$sqls[] = $sql_insert."\n";
 			//$res = tools::query($sql_insert,$conn);
 		}		
