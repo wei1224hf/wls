@@ -302,8 +302,8 @@ class install{
 		$row = $currentSheet->getHighestRow();
 		for($i=2;$i<=$row;$i++){
 			$pwd = md5($currentSheet->getCell('B'.$i)->getValue());
-			if( tools::getConfigItem("MODE")=="DZX" ){
-				$pwd = md5("dzx");
+			if( tools::getConfigItem("MODE")!="independent" ){
+				$pwd = md5("wls");
 			}
 			$sql_insert = "insert into basic_user(id,username,password,group_code,type,status,money,credits,govern_zone) values (
 					'".$i."'
