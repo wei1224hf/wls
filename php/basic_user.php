@@ -641,6 +641,15 @@ class basic_user {
 			$_SESSION['status'] = 1;
 			return $_SESSION;
 		}
+		
+		$conn = tools::getConn();
+		$sql = "select count(*) as count_ from basic_user_session";
+		$res = tools::query($sql, $conn);
+		$row = tools::fetch_assoc($res);
+		if($row['count_']==0){
+			tools::initMemory();
+		}
+		
 		$mode = tools::getConfigItem("MODE");
 		if($mode=='DZX'){
 			$t_return = basic_user::login_dzx();
