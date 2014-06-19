@@ -421,6 +421,7 @@ class basic_user {
             if($temp['group_id']=='5' || $temp['group_id']=='6' || $temp['group_id']=='7'){
                 $type = '30'; $group = $teacher_default; 
             }
+            tools::updateTableId("basic_user");
 			$data = array(
 			    'username'=>$temp['username']
 			    ,'password'=>md5("wls")
@@ -430,7 +431,7 @@ class basic_user {
 			    ,'type'=>$type
 			    ,'id'=>tools::getTableId("basic_user")
 			);
-			
+			$data['id'] ++;
 			$sql = "insert into basic_user (";
     		$sql_ = ") values (";
     		$keys = array_keys($data);
@@ -443,7 +444,7 @@ class basic_user {
     		$sql = $sql.$sql_;		
  	  
     		tools::query($sql,$conn);	
-
+tools::updateTableId("basic_user");
     		$sql = "insert into basic_group_2_user (user_code,group_code) values ('".$temp['username']."','".$group."');";
     		tools::query($sql,$conn);	    		
         }		
@@ -508,6 +509,7 @@ class basic_user {
                 $type = '10'; $group = "10";      
             }            
             if($data_dzx['type']=='special')$group = $data_dzx['groupid'];
+            tools::updateTableId("basic_user");
 			$data = array(
 			    'username'=>$data_dzx['username']
 			    ,'password'=>md5("wls")
@@ -518,7 +520,7 @@ class basic_user {
 			    ,'id'=>tools::getTableId("basic_user")
 			    ,'status'=>'10'
 			);
-			
+			$data['id'] ++;
 			$sql = "insert into basic_user (";
     		$sql_ = ") values (";
     		$keys = array_keys($data);
@@ -531,7 +533,7 @@ class basic_user {
     		$sql = $sql.$sql_;		
  	  
     		tools::query($sql,$conn);	
-
+tools::updateTableId("basic_user");
     		$sql2 = "insert into basic_group_2_user (user_code,group_code) values ('".$data_dzx['username']."','".$group."');";
     		tools::query($sql2,$conn);	    		
         }		
