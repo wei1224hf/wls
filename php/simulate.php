@@ -78,6 +78,7 @@ class simulate{
 						,'directions'=>"试卷说明,说明内容可能很长"
 						,'id'=>$exam_paper__id
 						,'creater_code'=>$teacher['username']
+						,'updater_code'=>$teacher['username']
 						,'creater_group_code'=>$teacher['group_code']
 						,'type'=>10
 						,'status'=>10
@@ -138,8 +139,10 @@ class simulate{
 						,'paper_id'=>$exam_paper__id
 						,'id'=>$exam_question__id
 						,'creater_code'=>$teacher['username']
+						,'updater_code'=>$teacher['username']
 						,'creater_group_code'=>$teacher['group_code']
 						,'type'=>rand(1,3)
+						,'type2'=>rand(1,3)
 						,'status'=>1
 						,'remark'=>'exam_paper'
 					);
@@ -1087,17 +1090,17 @@ else if($functionName=="exam_paper_multionline_step"){
 	}
 
 }
-else if($functionName=="exam_paper_multionline__close"){
+else if($functionName=="exam_paper_multionline__query"){
 	$ids = json_decode2($_REQUEST['ids'],true);
 	for($i=0;$i<count($ids);$i++){
-		exam_paper_multionline::close($ids[$i]);
+		exam_paper_multionline::query($ids[$i]);
 	}
 	$data = array(
 			'msg'=>'ok'
 			,'status'=>'1'
 	);
 }
-else if($functionName=="exam_paper_multionline__close_ids"){
+else if($functionName=="exam_paper_multionline__query_ids"){
 	$data = simulate::exam_paper_multionline__get_ids();
 }
 
