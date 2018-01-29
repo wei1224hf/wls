@@ -139,17 +139,17 @@ class exam_paper {
 		$config = array();
 	
 		$sql = "select code,value from basic_parameter where reference = 'exam_paper__type' order by code";
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		$config['exam_paper__type'] = $data;
 		
 		$sql = "select code,value from basic_parameter where reference = 'exam_paper__status'  order by code";
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		$config['exam_paper__status'] = $data;		
@@ -163,9 +163,9 @@ class exam_paper {
 			$sql = "select code,name as value from exam_subject where code in (select subject_code from exam_subject_2_group where group_code = '".$session['group_code']."'); ";
 		}
 	
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$len = strlen($temp['code']);
 			for($i=1;$i<$len/2;$i++){
 				$temp['value'] = "--".$temp['value'];
@@ -243,15 +243,15 @@ class exam_paper {
     	$sql = str_replace("__offset__", (($page-1)*$pagesize), $sql);
     	$sql = str_replace("__limit__", $pagesize, $sql);  
     	
-    	$res = mysql_query($sql,$conn);
+    	$res = tools::query($sql,$conn);
     	$data = array();
-    	while($temp = mysql_fetch_assoc($res)){
+    	while($temp = tools::fetch_assoc($res)){
     		$data[] = $temp;
     	}
     	
     	$sql_total = "select count(*) as total FROM exam_paper ".$sql_where;
-    	$res = mysql_query($sql_total,$conn);
-    	$total = mysql_fetch_assoc($res);
+    	$res = tools::query($sql_total,$conn);
+    	$total = tools::fetch_assoc($res);
     	
     	$returnData = array(
     			'Rows'=>$data
@@ -267,9 +267,9 @@ class exam_paper {
 		$ids = explode(",", $ids);
 		for($i=0;$i<count($ids);$i++){
 		    $sql = "delete from exam_paper where id = '".$ids[$i]."' ;";
-		    mysql_query($sql,$conn);
+		    tools::query($sql,$conn);
 		    $sql = "delete from exam_question where paper_id = '".$ids[$i]."' ;";
-		    mysql_query($sql,$conn);		    
+		    tools::query($sql,$conn);		    
 		}
 		
 		return  array(
@@ -292,8 +292,8 @@ class exam_paper {
     	    }else{
                 $sql = " update basic_user set money = money - ".$cost." , credits = credits + 3 where username = '".$executor."' and money >= ".$cost."  ;";
     	    }
-            mysql_query($sql,$conn);
-            $count = mysql_affected_rows($conn);
+            tools::query($sql,$conn);
+            $count = tools::affected_rows($conn);
             if($count==0){
                 return array(
                     'status'=>'2'
@@ -307,9 +307,9 @@ class exam_paper {
         $sql = tools::getSQL("exam_paper__questions");            
         $sql = str_replace("__paper_id__", $paper_id, $sql);
         
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
         $data = array();
-        while($temp = mysql_fetch_assoc($res)){
+        while($temp = tools::fetch_assoc($res)){
             $data[] = $temp;
         }
 
@@ -325,8 +325,8 @@ class exam_paper {
         $sql = tools::getSQL("exam_paper__view");            
         $sql = str_replace("__id__", $id, $sql);
 
-        $res = mysql_query($sql,$conn);
-        $data = mysql_fetch_assoc($res);
+        $res = tools::query($sql,$conn);
+        $data = tools::fetch_assoc($res);
 
         return array(
             'data'=>$data
@@ -341,7 +341,7 @@ class exam_paper {
 
 	    $conn = tools::getConn();
         $sql = "update exam_paper set cost = '".$t_data['cost']."' where id = ".$t_data['id'];
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
         if($res==FALSE){
 	        return array(
 	             'msg'=>'sql wrong'
@@ -391,10 +391,10 @@ class exam_paper {
 		$conn = tools::getConn();
 		$sql_answers = tools::getSQL("exam_paper__submit_check");
         $sql_answers = str_replace("__id__", $paper_id, $sql_answers);
-        $res = mysql_query($sql_answers,$conn);
+        $res = tools::query($sql_answers,$conn);
         $answers = array();
         $index_myanswers = 0;
-        while($temp = mysql_fetch_assoc($res)){
+        while($temp = tools::fetch_assoc($res)){
         	$temp['mycent'] = 0;
         	if($temp['type']=="1"||$temp['type']=="2"||$temp['type']=="3"){
         		$t_return['result']['cent'] += $temp['cent'];
@@ -471,7 +471,7 @@ class exam_paper {
 		$id = tools::getTableId("exam_subject_2_user_log",FALSE);
 		$status = ($type=='10')?'10':'20';
 		$kyes = array_keys($result_knowledge);
-		//mysql_query("START TRANSACTION;",$conn);
+		//tools::query("START TRANSACTION;",$conn);
 		
 		for($i=0;$i<count($result_knowledge);$i++){
 			$id++;
@@ -497,9 +497,9 @@ class exam_paper {
 			$values = array_values($data__exam_subject_2_user_log);
 			$values = implode("','",$values);
 			$sql = "insert into exam_subject_2_user_log (".$keys.") values ('".$values."')";
-			mysql_query($sql,$conn);
+			tools::query($sql,$conn);
 		}
-		//mysql_query("COMMIT;",$conn);
+		//tools::query("COMMIT;",$conn);
 		tools::updateTableId("exam_subject_2_user_log");
 		
 		return $t_return;
@@ -508,7 +508,7 @@ class exam_paper {
 	public static function addWrongs($answers,$paper_log__id,$executor,$type='10'){
 		$t_return = array();
 		$conn = tools::getConn();
-		//mysql_query("START TRANSACTION;",$conn);
+		//tools::query("START TRANSACTION;",$conn);
 		tools::updateTableId("exam_question_log_wrongs");
 		$id = tools::getTableId("exam_question_log_wrongs",FALSE);
 		$status = ($type=='10')?'10':'20';
@@ -516,11 +516,11 @@ class exam_paper {
 			if($answers[$i]['result']==0){				
 				$id++;
 				$sql = "insert into exam_question_log_wrongs(id,question_id,paper_log_id,creater_code,type,status) values ('".$id."','".$answers[$i]['id']."','".$paper_log__id."','".$executor."','".$type."','".$status."')";
-				mysql_query($sql,$conn);
+				tools::query($sql,$conn);
 			}
 		}
 		
-		//mysql_query("COMMIT;",$conn);
+		//tools::query("COMMIT;",$conn);
 		tools::updateTableId("exam_question_log_wrongs");
 		return $t_return;
 	}
@@ -546,7 +546,7 @@ class exam_paper {
 			$values = array_values($data___exam_question_log);
 			$values = implode("','",$values);
 			$sql = "insert into exam_question_log (".$keys.") values ('".$values."')";
-			mysql_query($sql,$conn);
+			tools::query($sql,$conn);
 		}
 
 		return $t_return;
@@ -556,7 +556,7 @@ class exam_paper {
 		$t_return = array();
 		$conn = tools::getConn();
 	    $sql = "update exam_paper set count_used = count_used + 1 where id = ".$paper_id;
-	    mysql_query($sql,$conn);
+	    tools::query($sql,$conn);
 	    
 	    $paper_log['id'] = tools::getTableId("exam_paper_log",TRUE);
 	    $paper_log['paper_id'] = $paper_id;
@@ -581,7 +581,7 @@ class exam_paper {
 	    $values = array_values($paper_log);
 	    $values = implode("','",$values);
 	    $sql = "insert into exam_paper_log (".$keys.") values ('".$values."')";
-	    $res4 = mysql_query($sql,$conn);
+	    $res4 = tools::query($sql,$conn);
 	    
 		return $paper_log;
 	}
@@ -652,8 +652,8 @@ class exam_paper {
 	    $subject_code = trim($currentSheet->getCell('A2')->getValue());
 	    $sql__check_paper_subject = "select code from exam_subject where code like '".$subject_code."%' order by code ";;
 	    $arr__subject = array();
-	    $res = mysql_query($sql__check_paper_subject,$conn2);
-	    while ($temp = mysql_fetch_assoc($res)){
+	    $res = tools::query($sql__check_paper_subject,$conn2);
+	    while ($temp = tools::fetch_assoc($res)){
 	    	$arr__subject[] = $temp['code'];
 	    }	    
 	    if(count($arr__subject)==0){
@@ -666,8 +666,8 @@ class exam_paper {
 
 	    $sql__question_type2 = "select code from basic_parameter where reference = 'exam_question__type2'";
 	    $arr__question_type2 = array();
-	    $res = mysql_query($sql__question_type2,$conn2);
-	    while ($temp = mysql_fetch_assoc($res)){
+	    $res = tools::query($sql__question_type2,$conn2);
+	    while ($temp = tools::fetch_assoc($res)){
 	    	$arr__question_type2[] = $temp['code'];
 	    }   
 	    tools::updateTableId("exam_paper");
@@ -965,11 +965,11 @@ class exam_paper {
 		$objPHPExcel->getActiveSheet()->setCellValue('U1', tools::$LANG['exam_paper']['path_img']);		
 		
 		$sql = "select * from exam_question where paper_id = ".$id." order by id";	
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
         $data = array();
         $index = 2;
         $question_id_first = 0;
-        while($temp = mysql_fetch_assoc($res)){
+        while($temp = tools::fetch_assoc($res)){
         	if($question_id_first==0)$question_id_first = $temp['id'];
         	$id_parent = $temp['id_parent'];
         	if($id_parent!=0)$id_parent = $id_parent - $question_id_first + 1;

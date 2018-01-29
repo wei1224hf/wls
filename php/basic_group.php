@@ -300,7 +300,7 @@ class basic_group {
 		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
 		$sql = $sql.$sql_;		
 	
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		
         return array(
             'status'=>"1"

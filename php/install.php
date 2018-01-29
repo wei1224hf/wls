@@ -14,9 +14,10 @@ class install{
 		
 		$version=phpversion();
 		$version_ = explode(".", $version);
-		if($version_[0]<5 || $version_[1]<2){
-			$t_return["msg"] .= "<br/>"." Php version unsupported. System need php 5.2 or heiger , while the environment's ".$version;
+		if($version_[0]<5 ){
+			$t_return["msg"] .= "<br/>"." Php version unsupported. System need php 5 or heiger , while the environment's ".$version;
 		}
+		
 
 		/*
 		if(!function_exists('json_encode')){
@@ -33,7 +34,7 @@ class install{
 		*/
 		
 		$file = tools::$configfilename;
-		if(!is_writable($file)){
+		if(!is_writable("../".$file)){
 			$t_return["msg"] .= "<br/>". "File ".$file." is not writable, change it's mode to 777";
 		}
 		$file = "../sql/sql.sql";
@@ -116,7 +117,7 @@ class install{
 			if($port!="")$host = $host.",".$port;
 		}
 		
-		$file = tools::$configfilename;
+		$file = "../".tools::$configfilename;
 		$fp = fopen($file, 'r');
 		$arr = array();
 		$num = 1;

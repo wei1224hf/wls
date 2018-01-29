@@ -201,15 +201,15 @@ class exam_subject {
 		$sql = tools::getSQL("exam_subject__grid");
 		$sql .= $sql_where." ".$sql_order." limit ".(($page-1)*$pagesize).", ".$pagesize;
 		 
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		 
 		$sql_total = "select count(*) as total FROM exam_subject ".$sql_where;
-		$res = mysql_query($sql_total,$conn);
-		$total = mysql_fetch_assoc($res);
+		$res = tools::query($sql_total,$conn);
+		$total = tools::fetch_assoc($res);
 		 
 		$returnData = array(
 				'Rows'=>$data
@@ -225,7 +225,7 @@ class exam_subject {
 		$codes = explode(",", $codes);
 		for($i=0;$i<count($codes);$i++){
 		    $sql = "delete from exam_subject where code = '".$codes[$i]."' ;";
-		    mysql_query($sql,$conn);
+		    tools::query($sql,$conn);
 		}
 		
 		return  array(
@@ -240,9 +240,9 @@ class exam_subject {
         $config = array();
         
         $sql = "select code,value from basic_parameter where reference = 'exam_subject__type' order by code";
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		$config['type'] = $data;
@@ -283,7 +283,7 @@ class exam_subject {
 		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
 		$sql = $sql.$sql_;		
 	
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		
         return array(
             'status'=>"1"
@@ -294,11 +294,11 @@ class exam_subject {
     public static function group_set($codes=NULL,$code=NULL){
 		$conn = tools::getConn();
 		$sql = "delete from exam_subject_2_group where subject_code = '".$code."' ";
-		mysql_query($sql,$conn);
+		tools::query($sql,$conn);
 		$codes = explode(",", $codes) ;
 		for($i=0;$i<count($codes);$i++){
 			$sql = "insert into exam_subject_2_group (group_code,subject_code) values ( '".$codes[$i]."','".$code."' ); ";
-			mysql_query($sql,$conn);
+			tools::query($sql,$conn);
 		}	
 		$t_return =  array(
 			 'status'=>"1"
@@ -313,9 +313,9 @@ class exam_subject {
 		$sql = tools::getSQL("exam_subject__group_get");
 		$sql = str_replace("__code__", "'".$code."'", $sql);
 
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
         $data = array();
-        while($temp = mysql_fetch_assoc($res)){
+        while($temp = tools::fetch_assoc($res)){
             if ($temp['subject_code']!=NULL) {
                 $temp['ischecked'] = 1;
             }

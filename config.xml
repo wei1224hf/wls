@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE root [<!ELEMENT root ANY><!ELEMENT item ANY><!ATTLIST item ID ID #REQUIRED><!ATTLIST item Explanation CDATA #IMPLIED>]><root>
-<item ID="APPPATH">E:/Users/Administrator/git/hydro</item>
+<item ID="APPPATH">D:/Users/YT2016/github/wls</item>
 <item ID="IL8N">zh-CN</item>
 <item ID="DB_TYPE">mysql</item>
-<item ID="DB_HOST">sqld.duapp.com:4050</item>
-<item ID="DB_NAME">qPAdUepJAnXCmqfOmKwX</item>
-<item ID="DB_USERNAME">Y1Tcjb2vCjpg3L7M8oCemrVm</item>
-<item ID="DB_PASSWORD">hgeMXGH19ZStcC555WSXCza3nKH2bgVd</item>
+<item ID="DB_HOST">localhost:3306</item>
+<item ID="DB_NAME">wls</item>
+<item ID="DB_USERNAME">root</item>
+<item ID="DB_PASSWORD">root</item>
 <item ID="DB_CHARSET">UTF-8</item>
 <item ID="DB_URL" Explanation="only in java need this"><![CDATA[jdbc:sqlite://localhost:3306/myapp?user=root&password=null]]></item>
 <item ID="MODE">independent</item>

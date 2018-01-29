@@ -3,7 +3,7 @@ var language = {
 		 "step":"步骤"
 		,"steps":
 			[
-			  "模拟整个高中<br/>所有科目,知识点;3个年级,每个年级 3到5个班级,每个班级 10到20个学生"
+			  "模拟整个高中<br/>所有科目,知识点;3个年级,每个年级 3到5个班级,每个班级 3到7个学生,科目为 语数外+化学+历史, 5*3年级 = 15个科目, 随机分配给5个老师"
 			 ,"模拟练习卷,"
 			 ,"模拟学生练习记录"
 			 ,"模拟多人考卷"
@@ -109,7 +109,7 @@ var step2 = function(){
 			var date_start,date_stop;
 			date_start = new Date(year,'02','04');
 			date_stop = new Date(year,'06','12');
-			for(var i=date_start.getTime();i<date_stop.getTime();i+=86400000){
+			for(var i=date_start.getTime();i<date_stop.getTime();i+=86400000*3){
 				var d = new Date(i);
 				dates.push(1900+d.getYear()+"-"+(d.getMonth()+1)+"-"+d.getDate());
 			}

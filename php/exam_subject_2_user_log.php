@@ -127,9 +127,9 @@ class exam_subject_2_user_log {
     	$sql = str_replace("__G1-TIME__", $sql_time, $sql);
     	$sql = str_replace("__G2-SUBJECT__", $sql_subject, $sql);
     	    	
-    	$res = mysql_query($sql,$conn);
+    	$res = tools::query($sql,$conn);
     	$data = array();
-    	while($temp = mysql_fetch_assoc($res)){
+    	while($temp = tools::fetch_assoc($res)){
     		if($temp['subject_name']==NULL){
     			$temp['subject_name'] = "all";
     		}
@@ -179,9 +179,9 @@ class exam_subject_2_user_log {
     	$sql = str_replace("__G1-TIME__", $time_group, $sql);
     	$sql = str_replace("__G2-SUBJECT__", $subject_group, $sql);    					
     	//echo $sql;
-    	$res = mysql_query($sql,$conn);
+    	$res = tools::query($sql,$conn);
     	$data = array();
-    	while($temp = mysql_fetch_assoc($res)){
+    	while($temp = tools::fetch_assoc($res)){
     		$data[] = $temp;
     	}
     	$returnData = array(

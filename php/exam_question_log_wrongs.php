@@ -85,9 +85,9 @@ class exam_question_log_wrongs {
 		$config = array();
 	
 		$sql = "select code,value from basic_parameter where reference = 'exam_paper__type' and code not in ('1','9')  order by code";
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		$config['type'] = $data;
@@ -101,9 +101,9 @@ class exam_question_log_wrongs {
 			$sql = "select code,name as value from exam_subject where code in (select subject_code from exam_subject_2_group where group_code = '".$session['group_code']."'); ";
 		}
 	
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$len = strlen($temp['code']);
 			for($i=1;$i<$len/2;$i++){
 				$temp['value'] = "--".$temp['value'];
@@ -113,17 +113,17 @@ class exam_question_log_wrongs {
 		$config['exam_subject__code'] = $data;
 	
 		$sql = "select code,value from basic_parameter where reference = 'exam_paper_log__type' order by code";
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		$config['exam_paper_log__type'] = $data;
 	
 		$sql = "select code,value from basic_parameter where reference = 'exam_paper_log__status' and code not in ('1','9')  order by code";
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		$config['exam_paper_log__status'] = $data;
@@ -170,15 +170,15 @@ class exam_question_log_wrongs {
 		$sql = str_replace("__PAGESIZE__",$pagesize, $sql);
 		$sql = str_replace("__OFFSET__", $pagesize*($page-1), $sql);
 		 
-		$res = mysql_query($sql,$conn);
+		$res = tools::query($sql,$conn);
 		if($res==FALSE)die($sql." ".mysql_errno($conn));
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		 
-		$res = mysql_query($sql_total,$conn);
-		$total = mysql_fetch_assoc($res);
+		$res = tools::query($sql_total,$conn);
+		$total = tools::fetch_assoc($res);
 		 
 		$returnData = array(
 				'Rows'=>$data
@@ -194,7 +194,7 @@ class exam_question_log_wrongs {
 		$ids = explode(",", $ids);
 		for($i=0;$i<count($ids);$i++){
 		    $sql = "delete from exam_question_log_wrongs where id = '".$ids[$i]."' ;";
-		    mysql_query($sql,$conn);	    
+		    tools::query($sql,$conn);	    
 		}
 		
 		return  array(
@@ -209,9 +209,9 @@ class exam_question_log_wrongs {
 	    $sql = tools::getSQL("exam_question_log_wrongs__questions");
 	    $sql = str_replace("__creater_code__", "'".$executor."'", $sql);
 	    //echo $sql;
-	    $res = mysql_query($sql,$conn);
+	    $res = tools::query($sql,$conn);
 		$data = array();
-		while($temp = mysql_fetch_assoc($res)){
+		while($temp = tools::fetch_assoc($res)){
 			$data[] = $temp;
 		}
 		return $data;		

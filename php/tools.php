@@ -29,6 +29,7 @@ class tools{
 	public static $dzxConfig = NULL;
 	public static $joomlaConfig = NULL;
 	public static $configfilename = "config.xml";
+	public static $phpversion = 5;
     
 	public static function getAllFiles($filedir) {
 		$allfiles = array(); 
@@ -96,24 +97,36 @@ class tools{
 			self::$dbtype = $dbtype;
 			self::$dbcharset = tools::getConfigItem("DB_CHARSET");
 			if($dbtype=="mysql"){
-				
-				$conn = mysql_connect($host,$unm,$pwd,$another);
-				if(!$conn)exit("connenct wrong".$host." ".$unm." ".$pwd);
-				mysql_select_db($dbname,$conn);
-				mysql_query("set time_zone='+8:00';");
-				mysql_query("SET NAMES UTF8;");
-				if($another==FALSE){
-					self::$conn = $conn;
+				if(self::$phpversion==5){
+					$conn = mysql_connect($host,$unm,$pwd,$another);
+					if(!$conn)exit("connenct wrong".$host." ".$unm." ".$pwd);
+					mysql_select_db($dbname,$conn);
+					mysql_query("set time_zone='+8:00';");
+					mysql_query("SET NAMES UTF8;");
+					if($another==FALSE){
+						self::$conn = $conn;
+					}
 				}
+				else if(self::$phpversion==7){
+					$conn = new mysqli($host,$unm,$pwd,$dbname);
+					self::$conn = $conn;
+					if(!$conn)exit("connenct wrong".$host." ".$unm." ".$pwd);
+					//mysql_select_db($dbname,$conn);
+					$conn->query("set time_zone='+8:00';");
+					$conn->query("SET NAMES UTF8;");
+				}
+
 			}
 			else if($dbtype=="mssql"){
-				//$conn = sqlsrv_connect( $host, array("UID"=>$unm,"PWD"=>$pwd, "Database"=>$dbname));
-				$conn = mssql_connect($host,$unm,$pwd,TRUE);
-				if(!$conn)exit("connenct wrong".$host.$unm.$pwd);
-				mssql_query("SET TEXTSIZE 655360");
-				mssql_select_db($dbname,$conn);	
-				
-				self::$conn = $conn;
+				if(self::$phpversion==5){
+					//$conn = sqlsrv_connect( $host, array("UID"=>$unm,"PWD"=>$pwd, "Database"=>$dbname));
+					$conn = mssql_connect($host,$unm,$pwd,TRUE);
+					if(!$conn)exit("connenct wrong".$host.$unm.$pwd);
+					mssql_query("SET TEXTSIZE 655360");
+					mssql_select_db($dbname,$conn);	
+					
+					self::$conn = $conn;
+				}
 			}			
 			return $conn;
 		}
@@ -132,7 +145,12 @@ class tools{
 		$dbtype = tools::getConfigItem("DB_TYPE");
 		if($dbtype=="mysql"){
 			//echo $theconn;
-			mysql_close($theconn);
+			if(self::$phpversion==5){
+				mysql_close($theconn);
+			}
+			else if(self::$phpversion==7){
+				self::$conn->close();  
+			}
 		}
 		else if($dbtype=="mssql"){
 // 			sqlsrv_close(self::$conn);
@@ -150,13 +168,25 @@ class tools{
 		}
 
 		if(self::$dbtype=="mysql"){
-			try {
-				$res = mysql_query($sql,$conn);
-				if(!$res)exit($sql." ".self::$dbcharset." ".self::$dbtype." ".mysql_error($conn));
+			if(self::$phpversion==5){
+				try {
+					$res = mysql_query($sql,$conn);
+					if(!$res)exit($sql." ".self::$dbcharset." ".self::$dbtype." ".mysql_error($conn));
+				}
+				catch (Exception $e) {
+					echo "exc ";
+					exit($sql);
+				}
 			}
-			catch (Exception $e) {
-				echo "exc ";
-				exit($sql);
+			else if(self::$phpversion==7){
+				try {
+					$res = $conn->query($sql);
+					if(!$res)exit($sql." ".self::$dbcharset." ".self::$dbtype." ".$conn->error);
+				}
+				catch (Exception $e) {
+					echo "exc ";
+					exit($sql);
+				}
 			}
 		}
 		else if(self::$dbtype=="mssql"){		
@@ -174,7 +204,12 @@ class tools{
 	
 	public static function transaction($conn){
 		if(self::$dbtype=="mysql"){
-			mysql_query('START TRANSACTION;',$conn);
+			if(self::$phpversion==5){
+				mysql_query('START TRANSACTION;',$conn);
+			}
+			else if(self::$phpversion==7){
+				$conn->query("START TRANSACTION;");
+			}
 		}
 		if(self::$dbtype=="mssql"){
 // 			if ( sqlsrv_begin_transaction( $conn ) === false ) {
@@ -186,7 +221,12 @@ class tools{
 	
 	public static function commit($conn){
 		if(self::$dbtype=="mysql"){
-			mysql_query('COMMIT;',$conn);
+			if(self::$phpversion==5){
+				mysql_query('COMMIT;',$conn);
+			}
+			else if(self::$phpversion==7){
+				$conn->query("COMMIT;");
+			}
 		}
 		if(self::$dbtype=="mssql"){
 			//sqlsrv_commit( $conn );
@@ -197,8 +237,12 @@ class tools{
 	public static function fetch_assoc($res){
 		$data = FALSE;
 		if(tools::$dbtype=="mysql"){
-			$data = mysql_fetch_assoc($res);
-			
+			if(self::$phpversion==5){
+				$data = mysql_fetch_assoc($res);
+			}
+			else if(self::$phpversion==7){
+				$data = mysqli_fetch_assoc($res);
+			}
 		}
 		if(tools::$dbtype=="mssql"){
 			//$data = sqlsrv_fetch_array($res,SQLSRV_FETCH_ASSOC);
@@ -209,6 +253,24 @@ class tools{
 			if(tools::$dbcharset!="UTF-8"){
 				$data = tools::changeCharsetInTree($data);
 			}
+		}
+		
+		return $data;
+	}
+	
+	public static function affected_rows($Con){
+		$data = FALSE;
+		if(tools::$dbtype=="mysql"){
+			if(self::$phpversion==5){
+				$data = mysqli_affected_rows($Con);
+			}
+			else if(self::$phpversion==7){
+				$data = $Con -> affected_rows;
+			}
+		}
+		if(tools::$dbtype=="mssql"){
+			//TODO
+
 		}
 		
 		return $data;
@@ -607,3 +669,6 @@ function json_decode2($json_string,$what=TRUE){
 
 date_default_timezone_set('Asia/Shanghai');
 //header("Content-Type: text/html; charset=utf8");
+$version=phpversion();
+$version_ = explode(".", $version);
+tools::$phpversion = $version_[0];

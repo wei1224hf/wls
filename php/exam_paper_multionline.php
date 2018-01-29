@@ -194,14 +194,14 @@ class exam_paper_multionline {
     	$sql = str_replace("__PAGESIZE__",$pagesize, $sql);
     	$sql = str_replace("__OFFSET__", $pagesize*($page-1), $sql);
     	
-    	$res = mysql_query($sql,$conn);
+    	$res = tools::query($sql,$conn);
     	$data = array();
-    	while($temp = mysql_fetch_assoc($res)){
+    	while($temp = tools::fetch_assoc($res)){
     		$data[] = $temp;
     	}    	
     	
-    	$res = mysql_query($sql_total,$conn);
-    	$total = mysql_fetch_assoc($res);
+    	$res = tools::query($sql_total,$conn);
+    	$total = tools::fetch_assoc($res);
     	
     	$returnData = array(
     			'Rows'=>$data
@@ -221,13 +221,13 @@ class exam_paper_multionline {
 			$res_arr = array();
 			
 		    $sql = "delete from exam_paper_multionline where paper_id = '".$ids[$i]."' ;";
-		    $res_arr[] = mysql_query($sql,$conn);		    
+		    $res_arr[] = tools::query($sql,$conn);		    
 		    $sql = "delete from exam_paper where id = '".$ids[$i]."' ;";
-		    $res_arr[] = mysql_query($sql,$conn);
+		    $res_arr[] = tools::query($sql,$conn);
 		    $sql = "delete from exam_paper_log where paper_id = '".$ids[$i]."' ;";
-		    $res_arr[] = mysql_query($sql,$conn);		    
+		    $res_arr[] = tools::query($sql,$conn);		    
 		    $sql = "delete from exam_question where paper_id = '".$ids[$i]."' ;";
-		    $res_arr[] = mysql_query($sql,$conn);	
+		    $res_arr[] = tools::query($sql,$conn);	
 
 		    if($res_arr[0]==FALSE ||$res_arr[1]==FALSE ||$res_arr[2]==FALSE ||$res_arr[3]==FALSE ){
 		    	return  array(
@@ -260,7 +260,7 @@ class exam_paper_multionline {
 	    $cost = $data['data']['cost'];
 
         $sql = " update basic_user set money = money - ".$cost." , credits = credits + 3 where username = '".$executor."' and money >= ".$cost."  ;";
-        mysql_query($sql,$conn);
+        tools::query($sql,$conn);
         $count = mysql_affected_rows($conn);
         if($count==0){
             return array(
@@ -272,7 +272,7 @@ class exam_paper_multionline {
         $sql = tools::getConfigItem("exam_paper_multionline__questions");            
         $sql = str_replace("__paper_id__", $paper_id, $sql);
         
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
         if($res==false){
         	return array(
         			 'sql'=>$sql
@@ -280,7 +280,7 @@ class exam_paper_multionline {
         	);
         }
         $data = array();
-        while($temp = mysql_fetch_assoc($res)){
+        while($temp = tools::fetch_assoc($res)){
             $data[] = $temp;
         }
 
@@ -297,9 +297,9 @@ class exam_paper_multionline {
         $sql = tools::getSQL("exam_paper_multionline__view");            
         $sql = str_replace("__paper_id__", $paper_id, $sql);
        
-        $res = mysql_query($sql,$conn);
+        $res = tools::query($sql,$conn);
         if($res==FALSE)die($sql);
-        $data = mysql_fetch_assoc($res);
+        $data = tools::fetch_assoc($res);
 
         return array(
             'data'=>$data
@@ -322,8 +322,8 @@ class exam_paper_multionline {
             ); 
 	    }
 	    $sql = "select status,id from exam_paper_log where paper_id = '".$paper_id."' and creater_code = '".$executor."';";
-        $res = mysql_query($sql,$conn);
-        $data = mysql_fetch_assoc($res);
+        $res = tools::query($sql,$conn);
+        $data = tools::fetch_assoc($res);
         $logid = $data['id'];
         if($data['status']!='30'){
     	    $msg = tools::readIl8n('exam_paper_multionline','doneAlready');
@@ -357,7 +357,7 @@ class exam_paper_multionline {
 	    }
 	    $sql = substr($sql, 0,strlen($sql)-1);
 	    $sql .= " where id = ".$logid;
-	    mysql_query($sql,$conn);
+	    tools::query($sql,$conn);
 	    
 	    $msg = tools::readIl8n('exam_paper_multionline','submitted');
 	    $msg = str_replace("__time_stop__", $data_m['time_stop'], $msg);
@@ -371,20 +371,20 @@ class exam_paper_multionline {
 		$conn = tools::getConn();
 		$conn2 = tools::getConn(true);
 		$t_return = array();
-		mysql_query("START TRANSACTION;",$conn);
+		tools::query("START TRANSACTION;",$conn);
 		$sql = "select passline from exam_paper_multionline where paper_id = ".$exam_paper__id;
-		$res = mysql_query($sql,$conn2);
-		$d = mysql_fetch_assoc($res);
+		$res = tools::query($sql,$conn2);
+		$d = tools::fetch_assoc($res);
 		$passline = $d['passline'];
 		$sql = "select * from exam_paper_log where paper_id = '".$exam_paper__id."' order by mycent desc ";
-		$res = mysql_query($sql,$conn2);
+		$res = tools::query($sql,$conn2);
 		$rank = 0;
 		$rank2 = 0;
 		$mycent = 0;
 		$count_passed = 0;
 		$count_giveup = 0;
 		$count_failed = 0;
-		while ($temp=mysql_fetch_assoc($res)){
+		while ($temp=tools::fetch_assoc($res)){
 			$rank2 ++;
 			$rank3 = $rank2;
 			if($mycent==$temp['mycent']){
@@ -408,11 +408,11 @@ class exam_paper_multionline {
 				$count_failed ++;
 			}
 			$sql = "update exam_paper_log set rank = '".$rank3."', status = '".$status."' where id = ".$temp['id'];
-			mysql_query($sql,$conn);
-			$sql = "update exam_question_log_wrongs set status = '40',  where paper_log_id = ".$temp['id'];
-			mysql_query($sql,$conn);
-			$sql = "update exam_subject_2_user_log set status = '40',  where paper_log_id = ".$temp['id'];
-			mysql_query($sql,$conn);			
+			tools::query($sql,$conn);
+			$sql = "update exam_question_log_wrongs set status = '40'  where paper_log_id = ".$temp['id'];
+			tools::query($sql,$conn);
+			$sql = "update exam_subject_2_user_log set status = '40'  where paper_log_id = ".$temp['id'];
+			tools::query($sql,$conn);			
 		}
 		
 		$sql = "update exam_paper_multionline set 
@@ -422,8 +422,8 @@ class exam_paper_multionline {
 				,count_failed='".$count_failed."'
 				,proportion='".($count_passed/$rank2)."'
 				 where paper_id =".$exam_paper__id;
-		mysql_query($sql,$conn);
-		mysql_query("COMMIT;",$conn);
+		tools::query($sql,$conn);
+		tools::query("COMMIT;",$conn);
 		$t_return['status']=1;
 		$t_return['msg']=$sql;
 		return $t_return;
@@ -466,7 +466,7 @@ class exam_paper_multionline {
 		$sql = substr($sql, 0,strlen($sql)-1);
 		$sql .= " where paper_id = '".$paper_id."' ";		
 
-		if(mysql_query($sql,$conn)){		
+		if(tools::query($sql,$conn)){		
     		return array(
                 'status'=>'1'
                 ,'msg'=>'ok'
@@ -563,7 +563,7 @@ class exam_paper_multionline {
 	    	$student = $arr_students[$i];
 	    	$sql_check = "select id from basic_user where username = '".$student."' ;";
 
-	    	$res = mysql_query($sql_check,$conn_read);
+	    	$res = tools::query($sql_check,$conn_read);
 	    	
 	    	if($res==FALSE){	    		
 	    		return array(
@@ -596,7 +596,7 @@ class exam_paper_multionline {
 	    			,'status'=>'2'
 	    	);
 	    }
-	    //mysql_query("START TRANSACTION;",$conn);
+	    //tools::query("START TRANSACTION;",$conn);
         $data2 = array(
              'id'=>$exam_paper_multionline__id
             ,'time_start'=>$time_start
@@ -611,21 +611,21 @@ class exam_paper_multionline {
         );
         
         $sql = "update exam_paper set type = '20' where id =".$data['paper_id'];
-        mysql_query($sql,$conn);
+        tools::query($sql,$conn);
         
         $keys = array_keys($data2);
         $keys = implode(",",$keys);
         $values = array_values($data2);
         $values = implode("','",$values);    
         $sql = "insert into exam_paper_multionline (".$keys.") values ('".$values."')";
-        mysql_query($sql,$conn);
+        tools::query($sql,$conn);
         
         for($i=0;$i<count($arr_students);$i++){
         	$exam_paper_log__id ++;
         	$student = $arr_students[$i];
         	$sql = "select group_code from basic_user where username = '".$student."' ";
-        	$res = mysql_query($sql,$conn_read);
-        	$temp = mysql_fetch_assoc($res);
+        	$res = tools::query($sql,$conn_read);
+        	$temp = tools::fetch_assoc($res);
         	$group_code = $temp['group_code'];
         	
         	$data__exam_paper_log = array(
@@ -651,9 +651,9 @@ class exam_paper_multionline {
         	$values = array_values($data__exam_paper_log);
         	$values = implode("','",$values);
         	$sql = "insert into exam_paper_log (".$keys.") values ('".$values."')";
-        	$res = mysql_query($sql,$conn);
+        	$res = tools::query($sql,$conn);
         }
-        //mysql_query("COMMIT;",$conn);
+        //tools::query("COMMIT;",$conn);
         tools::updateTableId("exam_paper_log");
         tools::updateTableId("exam_paper_multionline");
         
@@ -681,9 +681,9 @@ class exam_paper_multionline {
 		$phpexcel->getActiveSheet()->setCellValue('C1', tools::$LANG['exam_paper_multionline']['passline']);
 		$phpexcel->getActiveSheet()->setCellValue('D1', tools::$LANG['exam_paper_multionline']['students']);		
 		$sql = "select creater_code from exam_paper_log where paper_id = ".$data2['id'];
-		$res = mysql_query($sql,$conn_read);
+		$res = tools::query($sql,$conn_read);
 		$arr = array();
-		while($temp=mysql_fetch_assoc($res)){
+		while($temp=tools::fetch_assoc($res)){
 			$arr[] = $temp['creater_code'];
 		}
 		$phpexcel->getActiveSheet()->setCellValue('A2', $data2['time_start']);
@@ -707,8 +707,8 @@ class exam_paper_multionline {
         $sql = str_replace("__paper_id__", $id, $sql);
         
         $data = array();
-        $res = mysql_query($sql,$conn);        
-        while($temp = mysql_fetch_assoc($res)){
+        $res = tools::query($sql,$conn);        
+        while($temp = tools::fetch_assoc($res)){
             $data[] = $temp;
         }
         

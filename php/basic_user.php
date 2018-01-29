@@ -717,15 +717,22 @@ class basic_user {
 		    $temp['session'] = md5($session.date("G"));		   
 		    
 		    //TODO
-		    $ADCD = $temp['zone'];
-		    $len_ = strlen($ADCD);
-		    $RoleId = 1;
-		    if($len_==4)$RoleId = 1;
-		    if($len_==6)$RoleId = 2;
-		    if($len_==9)$RoleId = 5;
-		    for($i3=$len_;$i3<12;$i3++){
-		    	$ADCD .= "0";
-		    }
+			if (array_key_exists('zone', $temp)) {
+				$ADCD = $temp['zone'];
+				$len_ = strlen($ADCD);
+				$RoleId = 1;
+				if($len_==4)$RoleId = 1;
+				if($len_==6)$RoleId = 2;
+				if($len_==9)$RoleId = 5;
+				for($i3=$len_;$i3<12;$i3++){
+					$ADCD .= "0";
+				}
+			}
+			else{
+				$ADCD = 0;
+				$RoleId = 1;
+			}
+
 		    
 		    $temp = array_merge($temp,array(
 		    		 'ADCD'=>$ADCD

@@ -165,15 +165,15 @@ class exam_paper_log {
     	$sql = str_replace("__offset__", (($page-1)*$pagesize), $sql);
     	$sql = str_replace("__limit__", $pagesize, $sql);  
     	
-    	$res = mysql_query($sql,$conn);
+    	$res = tools::query($sql,$conn);
     	$data = array();
-    	while($temp = mysql_fetch_assoc($res)){
+    	while($temp = tools::fetch_assoc($res)){
     		$data[] = $temp;
     	}
     	
     	$sql_total = "select count(*) as total FROM exam_paper_log LEFT JOIN exam_paper ON exam_paper_log.paper_id = exam_paper.id ".$sql_where;
-    	$res = mysql_query($sql_total,$conn);
-    	$total = mysql_fetch_assoc($res);
+    	$res = tools::query($sql_total,$conn);
+    	$total = tools::fetch_assoc($res);
     	
     	$returnData = array(
     			'Rows'=>$data
@@ -238,7 +238,7 @@ class exam_paper_log {
 	    for($i=0;$i<count($arr);$i++){
 	        $mycent += $arr[$i]['mycent'];
 	        $sql = "update exam_question_log set mycent = ".$arr[$i]['mycent']." where question_id = ".$arr[$i]['question_id']." and paper_log_id = ".$_REQUEST['paper_log_id']." ";
-	        mysql_query($sql,$conn);
+	        tools::query($sql,$conn);
 	        if(mysql_affected_rows()=='-1'){
         	    return array(
         	        'status'=>'2'
@@ -248,7 +248,7 @@ class exam_paper_log {
 	    }
 	    
 	    $sql2 = "update exam_paper_log set mycent_subjective = ".$mycent.",mycent = mycent_objective + ".$mycent.",status = '10'  where status = '20' and id = ".$_REQUEST['paper_log_id'];
-	    mysql_query($sql2,$conn);
+	    tools::query($sql2,$conn);
 	    $count = mysql_affected_rows($conn);
 	    
 	    return array(

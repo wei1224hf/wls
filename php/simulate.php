@@ -48,7 +48,7 @@ class simulate{
 		while($temp = tools::fetch_assoc($res)){
 			$a_subject[] = array(
 					'code'=>$temp['code']
-					,'id'=>$temp['id']
+					// ,'id'=>$temp['id']
 					,'name'=>$temp['name']
 			);
 		}		
@@ -284,18 +284,48 @@ class simulate{
 		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
 		$sql = $sql.$sql_;
 		tools::query($sql,$conn);
-		$total_++;					
+		$total_++;	
+
+	
 			
 		$code = "330281-8432-40";
 		//一个高中,三个年级 2013届,2014届,2015届
-		//每个年纪 4 到6个班级
+		//每个年纪 3 到5个班级
 		$basic_group__id = tools::getTableId("basic_group",false);
+		
+		$basic_group__id++;
+	
+		$t_data = array(
+			 'id'=>$basic_group__id
+			,'name'=>"教师"
+			,'code'=>$code."-00"
+			,'type'=>40
+			,'status'=>10
+			,'remark'=>'basic_group'
+			,'count_users'=>5
+		);	
+
+		$sql = "insert into basic_group (";
+		$sql_ = ") values (";
+		$keys = array_keys($t_data);
+		for($j2=0;$j2<count($keys);$j2++){
+			$sql .= $keys[$j2].",";
+			$sql_ .= "'".$t_data[$keys[$j2]]."',";
+		}
+		$sql = substr($sql, 0,strlen($sql)-1);
+		$sql_ = substr($sql_, 0,strlen($sql_)-1).")";
+		$sql = $sql.$sql_;
+		
+		tools::query($sql,$conn);
+		$total_++;		
+		
 		for($i=11;$i<=13;$i++){
 			$basic_group__id++;
 			
+			$code_ = $code."-".$i;
 			$t_data = array(
-				 'name'=>"年级".$i
-				,'code'=> $code."-".$i
+				 'name'=>"学生年级".$i
+				,'code'=> $code_
 				,'tablename'=>'basic_group'
 			);
 			
@@ -314,6 +344,7 @@ class simulate{
 			$total_++;
 				
 			$r = rand(3, 5);
+			$count_student = rand(3,7);
 			for($i2=1;$i2<=$r;$i2++){
 				$code__ = $code_."-0".$i2;
 				$basic_group__id++;
@@ -325,7 +356,7 @@ class simulate{
 					,'type'=>40
 					,'status'=>10
 					,'remark'=>'basic_group'
-					,'count_users'=>rand(1,100)
+					,'count_users'=>$count_student
 				);
 				
 				$sql = "insert into basic_group (";
@@ -405,7 +436,10 @@ class simulate{
 		tools::query($sql,$conn);
 		$total_++;
 	
-		$subjectname = array("语文","数学","外语","物理","化学","生物","历史","地理","政治");
+		// $subjectname = array("语文","数学","外语","物理","化学","生物","历史","地理","政治");
+		// $subjectname2 = array("chinese","math","english","physics","chemistry","biology","history","geography","politic");
+		$subjectname = array("语文","数学","外语","物理","历史");
+		$subjectname2 = array("chinese","math","english","physics","history");
 		for($i=1;$i<=3;$i++){
 			
 			$t_data = array(
@@ -427,7 +461,7 @@ class simulate{
 			$total_++;			
 			
 			for($i2=1;$i2<=count($subjectname);$i2++){
-				$exam_subject__id++;				
+				
 				$t_data = array(
 					 'name'=>$subjectname[$i2-1].$i
 					,'code'=>"8432-0".$i."0".$i2
@@ -452,21 +486,23 @@ class simulate{
 					$sql = "insert into exam_subject_2_group(group_code,subject_code)
 						select code as group_code,'8432-0".$i."0".$i2."' as subject_code from basic_group where code like '%".(14-$i)."-__'";
 				}
-				else if($i2==4||$i2==5||$i2==6){
+				//else if($i2==4||$i2==5||$i2==6){
+				else if($i2==4){
 					$sql = "insert into exam_subject_2_group(group_code,subject_code)
 						select code as group_code,'8432-0".$i."0".$i2."' as subject_code from basic_group where code like '%".(14-$i)."-__' and code not like '%1' and code not like '%2'";
 				}
-				else if($i2==7||$i2==8||$i2==9){
+				//else if($i2==7||$i2==8||$i2==9){
+				else if($i2==5){
 					$sql = "insert into exam_subject_2_group(group_code,subject_code)
 						select code as group_code,'8432-0".$i."0".$i2."' as subject_code from basic_group where code like '%".(14-$i)."-__' and (code like '%1' or code  like '%2')";
 				}
 				tools::query($sql,$conn);
 				$total_++;
 	
-				$r = rand(3, 5);
+				$r = rand(2, 3);
 				$w = 100/$r ;
 				for($i3=1;$i3<=$r;$i3++){
-					$exam_subject__id++;				
+			
 					$t_data = array(
 						 'name'=>"知识点".$i.$i2.$i3
 						,'code'=>"8432-0".$i."0".$i2."-".(($i3>=10)?$i3:"0".$i3)
@@ -486,10 +522,10 @@ class simulate{
 					tools::query($sql,$conn);
 					$total_++;	
 										
-					$r2 = rand(3, 5);
+					$r2 = rand(2, 3);
 					$w2 = 100/$r2 ;
 					for($i4=1;$i4<=$r2;$i4++){
-						$exam_subject__id++;				
+				
 						$t_data = array(
 							 'name'=>"知识点".$i.$i2.$i3.$i4
 							,'code'=>"8432-0".$i."0".$i2."-".(($i3>=10)?$i3:"0".$i3).(($i4>=10)?$i4:"0".$i4)
@@ -534,7 +570,7 @@ class simulate{
 		tools::query("START TRANSACTION;",$conn2);
 		$total_ = 0;
 		while($temp = tools::fetch_assoc($res)){
-			$r = rand(10, 20);
+			$r = rand(3, 7);
 			for($i=0;$i<$r;$i++){
 				$code = $temp['code']."--".$i;
 				
@@ -1030,7 +1066,7 @@ else if($functionName=="exam_paper_log_step"){
 	$a = json_decode2($_REQUEST['dates'], true);
 	$delete = false;
 	if(isset($_REQUEST['delete']))$delete = true;
-	$data = simulate::exam_paper_log_step(20000,array($a[0],end($a)),$_REQUEST['student'],$delete);
+	$data = simulate::exam_paper_log_step(20000,array($a[0],end($a)),$_REQUEST['username'],$delete);
 }
 else if($functionName=="exam_paper_multionline"){
 	$data = simulate::exam_paper_multionline();
@@ -1067,4 +1103,4 @@ else if($functionName=="exam_paper_multionline__close_ids"){
 
 
 echo json_encode($data);
-if(tools::$conn!=null)mysql_close(tools::$conn);
+if(tools::$conn!=null)tools::closeConn();
